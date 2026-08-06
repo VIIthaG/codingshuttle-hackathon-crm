@@ -24,6 +24,12 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+app:
+  jwt:
+    # Override JWT_SECRET in real environments; local default is for hackathon only.
+    secret: ${JWT_SECRET:LocalDevOnlySecretKeyThatIsAtLeast32BytesLong!!}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
 logging:
   level:
     org.springframework.security: INFO

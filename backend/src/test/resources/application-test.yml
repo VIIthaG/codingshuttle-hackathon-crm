@@ -9,3 +9,8 @@ spring:
       ddl-auto: none
   flyway:
     enabled: true
+
+app:
+  jwt:
+    secret: TestOnlyJwtSecretKeyThatIsLongEnoughForHs256Algorithms!
+    expiration-ms: 3600000
