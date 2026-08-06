@@ -1,0 +1,20 @@
+---
+description: FlowCRM project development rules
+alwaysApply: true
+---
+
+- Read docs/PROJECT_PLAN.md before making architectural changes.
+- Use Java 21 and Spring Boot for the backend.
+- Use React, TypeScript and Vite for the frontend.
+- Follow controller-service-repository layering.
+- Use DTOs for API requests and responses.
+- Never expose JPA entities directly from controllers.
+- Validate all user input.
+- Use Flyway migrations rather than Hibernate schema generation.
+- Never hardcode secrets, database passwords or JWT keys.
+- Keep secrets in environment variables.
+- Do not delete or rewrite existing working functionality without explaining why.
+- Implement one feature at a time.
+- Run relevant tests after each implementation.
+- Before modifying more than five files, describe the planned changes.
+- Never commit or push code unless explicitly instructed.

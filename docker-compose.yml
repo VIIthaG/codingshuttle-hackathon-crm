@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: flowcrm-postgres
+    environment:
+      POSTGRES_DB: flowcrm
+      POSTGRES_USER: flowcrm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowcrm}
+    ports:
+      - "5433:5432"
+    volumes:
+      - flowcrm_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flowcrm -d flowcrm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  flowcrm_pg_data:
