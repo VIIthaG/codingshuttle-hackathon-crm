@@ -5,16 +5,22 @@ alwaysApply: true
 
 - Read docs/PROJECT_PLAN.md before making architectural changes.
 - Use Java 21 and Spring Boot for the backend.
-- Use React, TypeScript and Vite for the frontend.
+- Use React, TypeScript and Vite for the frontend when UI work is in scope.
 - Follow controller-service-repository layering.
 - Use DTOs for API requests and responses.
 - Never expose JPA entities directly from controllers.
 - Validate all user input.
 - Use Flyway migrations rather than Hibernate schema generation.
-- Never hardcode secrets, database passwords or JWT keys.
-- Keep secrets in environment variables.
+- Database schema changes must use new Flyway migrations.
+- Never hardcode secrets, database passwords, JWT keys, or infrastructure credentials.
+- Keep secrets and infrastructure configuration externalized through environment variables.
+- Do not add infrastructure patterns merely for appearance; use them only in the planned locations in docs/PROJECT_PLAN.md.
+- Preserve transactional integrity between business writes and outbox writes.
+- Consumers must tolerate duplicate message delivery.
+- Do not implement asynchronous side effects directly inside HTTP controllers.
+- Add tests for failure, retry, and idempotency behavior when those features are implemented.
 - Do not delete or rewrite existing working functionality without explaining why.
 - Implement one feature at a time.
 - Run relevant tests after each implementation.
 - Before modifying more than five files, describe the planned changes.
-- Never commit or push code unless explicitly instructed.
+- Do not commit or push unless explicitly instructed.
