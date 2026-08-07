@@ -1,11 +1,13 @@
 package com.flowcrm.lead;
 
 import com.flowcrm.common.exception.ForbiddenException;
+import com.flowcrm.common.exception.InvalidStatusTransitionException;
 import com.flowcrm.common.exception.ResourceNotFoundException;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
 import com.flowcrm.lead.dto.LeadCreateRequest;
 import com.flowcrm.lead.dto.LeadResponse;
+import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
 import com.flowcrm.lead.dto.LeadUpdateRequest;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
@@ -78,9 +80,17 @@ public class LeadService {
         lead.setPhone(trimToNull(request.phone()));
         lead.setCompany(trimToNull(request.company()));
         lead.setSource(request.source());
-        lead.setStatus(request.status());
+        applyStatusTransition(lead, request.status());
         lead.setAssignedTo(assignee);
 
+        return toResponse(leadRepository.save(lead));
+    }
+
+    @Transactional
+    public LeadResponse changeStatus(UUID id, LeadStatusUpdateRequest request, UserPrincipal principal) {
+        Lead lead = requireLead(id);
+        assertCanAccess(lead, principal);
+        applyStatusTransition(lead, request.status());
         return toResponse(leadRepository.save(lead));
     }
 
@@ -118,6 +128,18 @@ public class LeadService {
         if (!lead.getAssignedTo().getId().equals(principal.getId())) {
             throw new ForbiddenException("You do not have access to this lead");
         }
+    }
+
+    private void applyStatusTransition(Lead lead, LeadStatus targetStatus) {
+        LeadStatus current = lead.getStatus();
+        if (current == targetStatus) {
+            return;
+        }
+        if (!LeadStatusTransitions.canTransition(current, targetStatus)) {
+            throw new InvalidStatusTransitionException(
+                    "Cannot transition lead status from " + current + " to " + targetStatus);
+        }
+        lead.setStatus(targetStatus);
     }
 
     private Lead requireLead(UUID id) {

@@ -3,6 +3,7 @@ package com.flowcrm.lead;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.lead.dto.LeadCreateRequest;
 import com.flowcrm.lead.dto.LeadResponse;
+import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
 import com.flowcrm.lead.dto.LeadUpdateRequest;
 import com.flowcrm.security.UserPrincipal;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -61,6 +63,14 @@ public class LeadController {
             @Valid @RequestBody LeadUpdateRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         return leadService.update(id, request, principal);
+    }
+
+    @PatchMapping("/{id}/status")
+    public LeadResponse changeStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody LeadStatusUpdateRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return leadService.changeStatus(id, request, principal);
     }
 
     @DeleteMapping("/{id}")

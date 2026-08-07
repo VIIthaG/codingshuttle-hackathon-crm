@@ -39,6 +39,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), null);
     }
 
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatusTransition(InvalidStatusTransitionException ex) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid Status Transition", ex.getMessage(), null);
+    }
+
     @ExceptionHandler({UnauthorizedException.class, BadCredentialsException.class, AuthenticationException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException ex) {
         return build(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), null);
