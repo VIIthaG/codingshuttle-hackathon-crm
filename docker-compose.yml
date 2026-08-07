@@ -16,5 +16,22 @@ services:
       timeout: 5s
       retries: 10
 
+  # Local RabbitMQ (AMQP + management UI).
+  # Management UI: http://localhost:15672  (default user/pass: flowcrm / flowcrm)
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: flowcrm-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-flowcrm}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-flowcrm}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   flowcrm_pg_data:

@@ -90,6 +90,7 @@ public class TaskService {
         assertCanAccessTask(task, principal);
 
         Instant previousReminderAt = task.getReminderAt();
+        TaskStatus previousStatus = task.getStatus();
 
         Lead lead = leadService.requireAccessibleLead(request.leadId(), principal);
         User assignee = resolveAssignee(request.assignedToId(), principal);
@@ -103,9 +104,7 @@ public class TaskService {
         task.setStatus(request.status());
 
         Task saved = taskRepository.save(task);
-        if (saved.getReminderAt() != null && !Objects.equals(previousReminderAt, saved.getReminderAt())) {
-            outboxEventRecorder.recordFollowUpScheduled(saved);
-        }
+        syncFollowUpOutbox(saved, previousReminderAt, previousStatus);
         return toResponse(saved);
     }
 
@@ -113,15 +112,49 @@ public class TaskService {
     public TaskResponse complete(UUID id, UserPrincipal principal) {
         Task task = requireTask(id);
         assertCanAccessTask(task, principal);
+        TaskStatus previousStatus = task.getStatus();
+        Instant previousReminderAt = task.getReminderAt();
         task.setStatus(TaskStatus.COMPLETED);
-        return toResponse(taskRepository.save(task));
+        Task saved = taskRepository.save(task);
+        syncFollowUpOutbox(saved, previousReminderAt, previousStatus);
+        return toResponse(saved);
     }
 
     @Transactional
     public void delete(UUID id, UserPrincipal principal) {
         Task task = requireTask(id);
         assertCanAccessTask(task, principal);
+        outboxEventRecorder.supersedePendingFollowUps(task.getId());
         taskRepository.delete(task);
+    }
+
+    /**
+     * Keeps PENDING FOLLOW_UP_SCHEDULED outbox rows aligned with the task.
+     * Reschedule / clear / complete / cancel supersedes prior PENDING schedules;
+     * a new PENDING schedule is written only when an OPEN task has a (new) reminderAt.
+     */
+    private void syncFollowUpOutbox(Task task, Instant previousReminderAt, TaskStatus previousStatus) {
+        boolean reminderChanged = !Objects.equals(previousReminderAt, task.getReminderAt());
+        boolean becameIneligible =
+                isReminderEligible(previousStatus) && !isReminderEligible(task.getStatus());
+        boolean needsSupersede = reminderChanged || becameIneligible;
+
+        if (needsSupersede) {
+            outboxEventRecorder.supersedePendingFollowUps(task.getId());
+        }
+
+        boolean shouldSchedule =
+                isReminderEligible(task.getStatus())
+                        && task.getReminderAt() != null
+                        && reminderChanged;
+
+        if (shouldSchedule) {
+            outboxEventRecorder.recordFollowUpScheduled(task);
+        }
+    }
+
+    private boolean isReminderEligible(TaskStatus status) {
+        return status == TaskStatus.OPEN;
     }
 
     private Specification<Task> buildListSpec(

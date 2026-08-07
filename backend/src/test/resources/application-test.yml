@@ -9,8 +9,20 @@ spring:
       ddl-auto: none
   flyway:
     enabled: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
 app:
   jwt:
     secret: TestOnlyJwtSecretKeyThatIsLongEnoughForHs256Algorithms!
     expiration-ms: 3600000
+  messaging:
+    enabled: false
+  outbox:
+    publisher:
+      enabled: false
+  reminders:
+    fail-delivery: false
+    max-attempts: 3
+    retry-delay-ms: 100

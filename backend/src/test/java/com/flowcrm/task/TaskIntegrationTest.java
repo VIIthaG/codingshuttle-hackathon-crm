@@ -46,8 +46,12 @@ class TaskIntegrationTest {
     @Autowired
     private OutboxEventRepository outboxEventRepository;
 
+    @Autowired
+    private com.flowcrm.reminder.ProcessedMessageRepository processedMessageRepository;
+
     @BeforeEach
     void cleanDatabase() {
+        processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();

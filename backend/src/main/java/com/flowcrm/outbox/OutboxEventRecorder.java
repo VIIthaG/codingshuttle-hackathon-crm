@@ -3,12 +3,13 @@ package com.flowcrm.outbox;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowcrm.task.Task;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Records outbox events inside the caller's transaction.
- * No publishing happens in this phase.
+ * Publishing to RabbitMQ is handled separately by {@link OutboxPublisher}.
  */
 @Service
 public class OutboxEventRecorder {
@@ -23,6 +24,24 @@ public class OutboxEventRecorder {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Marks still-PENDING FOLLOW_UP_SCHEDULED rows for the task as SUPERSEDED.
+     * Preserves audit history; does not delete rows.
+     */
+    @Transactional
+    public int supersedePendingFollowUps(UUID taskId) {
+        return outboxEventRepository.supersedePending(
+                AGGREGATE_TYPE_TASK,
+                taskId,
+                OutboxEventType.FOLLOW_UP_SCHEDULED,
+                OutboxEventStatus.PENDING,
+                OutboxEventStatus.SUPERSEDED);
+    }
+
+    /**
+     * Schedules a follow-up with available_at = reminderAt so the publisher
+     * does not emit to RabbitMQ until the reminder is due.
+     */
     @Transactional
     public OutboxEvent recordFollowUpScheduled(Task task) {
         if (task.getReminderAt() == null) {
@@ -43,6 +62,7 @@ public class OutboxEventRecorder {
         event.setEventType(OutboxEventType.FOLLOW_UP_SCHEDULED);
         event.setPayload(toJson(payload));
         event.setStatus(OutboxEventStatus.PENDING);
+        event.setAvailableAt(task.getReminderAt());
 
         return outboxEventRepository.save(event);
     }

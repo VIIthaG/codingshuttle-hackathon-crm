@@ -51,11 +51,15 @@ class OutboxIntegrationTest {
     @Autowired
     private OutboxEventRepository outboxEventRepository;
 
+    @Autowired
+    private com.flowcrm.reminder.ProcessedMessageRepository processedMessageRepository;
+
     @MockitoSpyBean
     private OutboxEventRecorder outboxEventRecorder;
 
     @BeforeEach
     void cleanDatabase() {
+        processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
@@ -98,6 +102,7 @@ class OutboxIntegrationTest {
         assertThat(event.getAggregateType()).isEqualTo(OutboxEventRecorder.AGGREGATE_TYPE_TASK);
         assertThat(event.getAggregateId()).isEqualTo(taskId);
         assertThat(event.getPublishedAt()).isNull();
+        assertThat(event.getAvailableAt()).isEqualTo(reminderAt);
 
         FollowUpScheduledPayload payload =
                 objectMapper.readValue(event.getPayload(), FollowUpScheduledPayload.class);
@@ -107,6 +112,10 @@ class OutboxIntegrationTest {
         assertThat(payload.title()).isEqualTo("Call back");
         assertThat(payload.reminderAt()).isEqualTo(reminderAt);
         assertThat(payload.dueAt()).isEqualTo(dueAt);
+
+        assertThat(outboxEventRepository.findDueByStatus(
+                        OutboxEventStatus.PENDING, Instant.now(), org.springframework.data.domain.PageRequest.of(0, 50)))
+                .isEmpty();
     }
 
     @Test
@@ -163,7 +172,7 @@ class OutboxIntegrationTest {
     }
 
     @Test
-    void updateReminderAt_createsNewFollowUpEvent_unrelatedUpdateDoesNot() throws Exception {
+    void updateReminderAt_supersedesPreviousAndCreatesNew_unrelatedUpdateDoesNot() throws Exception {
         String token = register("outbox.reschedule@example.com", "Outbox Reschedule");
         String leadId = createLead(token, "Reschedule Lead");
 
@@ -208,7 +217,8 @@ class OutboxIntegrationTest {
 
         assertThat(outboxEventRepository.findByAggregateIdAndEventType(
                         UUID.fromString(taskId), OutboxEventType.FOLLOW_UP_SCHEDULED))
-                .hasSize(1);
+                .hasSize(1)
+                .allMatch(e -> e.getStatus() == OutboxEventStatus.PENDING);
 
         Instant newReminderAt = Instant.now().plus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
         mockMvc.perform(put("/api/v1/tasks/" + taskId)
@@ -229,9 +239,180 @@ class OutboxIntegrationTest {
         List<OutboxEvent> events = outboxEventRepository.findByAggregateIdAndEventType(
                 UUID.fromString(taskId), OutboxEventType.FOLLOW_UP_SCHEDULED);
         assertThat(events).hasSize(2);
+        assertThat(events.stream().filter(e -> e.getStatus() == OutboxEventStatus.SUPERSEDED)).hasSize(1);
+        OutboxEvent active = events.stream()
+                .filter(e -> e.getStatus() == OutboxEventStatus.PENDING)
+                .findFirst()
+                .orElseThrow();
+        assertThat(active.getAvailableAt()).isEqualTo(newReminderAt);
         FollowUpScheduledPayload latest =
-                objectMapper.readValue(events.getLast().getPayload(), FollowUpScheduledPayload.class);
+                objectMapper.readValue(active.getPayload(), FollowUpScheduledPayload.class);
         assertThat(latest.reminderAt()).isEqualTo(newReminderAt);
+    }
+
+    @Test
+    void removeReminderAt_supersedesPendingWithoutReplacement() throws Exception {
+        String token = register("outbox.clear@example.com", "Outbox Clear");
+        String leadId = createLead(token, "Clear Lead");
+
+        Instant dueAt = Instant.now().plus(5, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+        Instant reminderAt = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+
+        MvcResult createResult = mockMvc.perform(post("/api/v1/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "leadId": "%s",
+                                  "title": "Clear reminder",
+                                  "dueAt": "%s",
+                                  "reminderAt": "%s"
+                                }
+                                """.formatted(leadId, dueAt, reminderAt)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        JsonNode created = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        String taskId = created.get("id").asText();
+        String assignedToId = created.get("assignedToId").asText();
+
+        mockMvc.perform(put("/api/v1/tasks/" + taskId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "leadId": "%s",
+                                  "assignedToId": "%s",
+                                  "title": "Clear reminder",
+                                  "dueAt": "%s",
+                                  "status": "OPEN"
+                                }
+                                """.formatted(leadId, assignedToId, dueAt)))
+                .andExpect(status().isOk());
+
+        List<OutboxEvent> events = outboxEventRepository.findByAggregateIdAndEventType(
+                UUID.fromString(taskId), OutboxEventType.FOLLOW_UP_SCHEDULED);
+        assertThat(events).hasSize(1);
+        assertThat(events.getFirst().getStatus()).isEqualTo(OutboxEventStatus.SUPERSEDED);
+        assertThat(outboxEventRepository.countByEventTypeAndStatus(
+                        OutboxEventType.FOLLOW_UP_SCHEDULED, OutboxEventStatus.PENDING))
+                .isZero();
+    }
+
+    @Test
+    void completeTask_supersedesPendingReminder() throws Exception {
+        String token = register("outbox.complete@example.com", "Outbox Complete");
+        String leadId = createLead(token, "Complete Lead");
+
+        Instant dueAt = Instant.now().plus(5, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+        Instant reminderAt = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+
+        MvcResult createResult = mockMvc.perform(post("/api/v1/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "leadId": "%s",
+                                  "title": "Complete me",
+                                  "dueAt": "%s",
+                                  "reminderAt": "%s"
+                                }
+                                """.formatted(leadId, dueAt, reminderAt)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String taskId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/v1/tasks/" + taskId + "/complete")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        List<OutboxEvent> events = outboxEventRepository.findByAggregateIdAndEventType(
+                UUID.fromString(taskId), OutboxEventType.FOLLOW_UP_SCHEDULED);
+        assertThat(events).hasSize(1);
+        assertThat(events.getFirst().getStatus()).isEqualTo(OutboxEventStatus.SUPERSEDED);
+    }
+
+    @Test
+    void cancelTask_supersedesPendingReminder() throws Exception {
+        String token = register("outbox.cancel@example.com", "Outbox Cancel");
+        String leadId = createLead(token, "Cancel Lead");
+
+        Instant dueAt = Instant.now().plus(5, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+        Instant reminderAt = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+
+        MvcResult createResult = mockMvc.perform(post("/api/v1/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "leadId": "%s",
+                                  "title": "Cancel me",
+                                  "dueAt": "%s",
+                                  "reminderAt": "%s"
+                                }
+                                """.formatted(leadId, dueAt, reminderAt)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        JsonNode created = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        String taskId = created.get("id").asText();
+        String assignedToId = created.get("assignedToId").asText();
+
+        mockMvc.perform(put("/api/v1/tasks/" + taskId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "leadId": "%s",
+                                  "assignedToId": "%s",
+                                  "title": "Cancel me",
+                                  "dueAt": "%s",
+                                  "reminderAt": "%s",
+                                  "status": "CANCELLED"
+                                }
+                                """.formatted(leadId, assignedToId, dueAt, reminderAt)))
+                .andExpect(status().isOk());
+
+        List<OutboxEvent> events = outboxEventRepository.findByAggregateIdAndEventType(
+                UUID.fromString(taskId), OutboxEventType.FOLLOW_UP_SCHEDULED);
+        assertThat(events).hasSize(1);
+        assertThat(events.getFirst().getStatus()).isEqualTo(OutboxEventStatus.SUPERSEDED);
+        assertThat(outboxEventRepository.countByEventTypeAndStatus(
+                        OutboxEventType.FOLLOW_UP_SCHEDULED, OutboxEventStatus.PENDING))
+                .isZero();
+    }
+
+    @Test
+    void duePendingEvent_isReturnedByDueQuery_futureIsNot() {
+        Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+
+        OutboxEvent due = new OutboxEvent();
+        due.setAggregateType(OutboxEventRecorder.AGGREGATE_TYPE_TASK);
+        due.setAggregateId(UUID.randomUUID());
+        due.setEventType(OutboxEventType.FOLLOW_UP_SCHEDULED);
+        due.setPayload("{\"taskId\":\"" + due.getAggregateId() + "\"}");
+        due.setStatus(OutboxEventStatus.PENDING);
+        due.setAvailableAt(past);
+        outboxEventRepository.save(due);
+
+        OutboxEvent notDue = new OutboxEvent();
+        notDue.setAggregateType(OutboxEventRecorder.AGGREGATE_TYPE_TASK);
+        notDue.setAggregateId(UUID.randomUUID());
+        notDue.setEventType(OutboxEventType.FOLLOW_UP_SCHEDULED);
+        notDue.setPayload("{\"taskId\":\"" + notDue.getAggregateId() + "\"}");
+        notDue.setStatus(OutboxEventStatus.PENDING);
+        notDue.setAvailableAt(future);
+        outboxEventRepository.save(notDue);
+
+        List<OutboxEvent> found = outboxEventRepository.findDueByStatus(
+                OutboxEventStatus.PENDING,
+                Instant.now(),
+                org.springframework.data.domain.PageRequest.of(0, 50));
+
+        assertThat(found).extracting(OutboxEvent::getId).containsExactly(due.getId());
     }
 
     private String createLead(String token, String fullName) throws Exception {

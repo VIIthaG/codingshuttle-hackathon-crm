@@ -37,6 +37,13 @@ public class OutboxEvent {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    /**
+     * Earliest time this PENDING event may be published to the broker.
+     * For FOLLOW_UP_SCHEDULED this equals reminderAt.
+     */
+    @Column(name = "available_at", nullable = false)
+    private Instant availableAt;
+
     @Column(name = "published_at")
     private Instant publishedAt;
 
@@ -50,6 +57,9 @@ public class OutboxEvent {
         }
         if (createdAt == null) {
             createdAt = Instant.now();
+        }
+        if (availableAt == null) {
+            availableAt = createdAt;
         }
     }
 
@@ -103,6 +113,14 @@ public class OutboxEvent {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getAvailableAt() {
+        return availableAt;
+    }
+
+    public void setAvailableAt(Instant availableAt) {
+        this.availableAt = availableAt;
     }
 
     public Instant getPublishedAt() {
