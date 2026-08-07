@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,8 +42,12 @@ class LeadIntegrationTest {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired
+    private OutboxEventRepository outboxEventRepository;
+
     @BeforeEach
     void cleanDatabase() {
+        outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         userRepository.deleteAll();

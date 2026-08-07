@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowcrm.lead.LeadRepository;
+import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.user.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -42,8 +43,12 @@ class TaskIntegrationTest {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired
+    private OutboxEventRepository outboxEventRepository;
+
     @BeforeEach
     void cleanDatabase() {
+        outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         userRepository.deleteAll();

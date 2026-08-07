@@ -6,6 +6,7 @@ import com.flowcrm.enums.Role;
 import com.flowcrm.enums.TaskStatus;
 import com.flowcrm.lead.Lead;
 import com.flowcrm.lead.LeadService;
+import com.flowcrm.outbox.OutboxEventRecorder;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.task.dto.TaskCreateRequest;
 import com.flowcrm.task.dto.TaskResponse;
@@ -16,6 +17,7 @@ import jakarta.persistence.criteria.Predicate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,11 +31,17 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final LeadService leadService;
+    private final OutboxEventRecorder outboxEventRecorder;
 
-    public TaskService(TaskRepository taskRepository, UserRepository userRepository, LeadService leadService) {
+    public TaskService(
+            TaskRepository taskRepository,
+            UserRepository userRepository,
+            LeadService leadService,
+            OutboxEventRecorder outboxEventRecorder) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.leadService = leadService;
+        this.outboxEventRecorder = outboxEventRecorder;
     }
 
     @Transactional
@@ -50,7 +58,11 @@ public class TaskService {
         task.setReminderAt(request.reminderAt());
         task.setStatus(TaskStatus.OPEN);
 
-        return toResponse(taskRepository.save(task));
+        Task saved = taskRepository.save(task);
+        if (saved.getReminderAt() != null) {
+            outboxEventRecorder.recordFollowUpScheduled(saved);
+        }
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +89,8 @@ public class TaskService {
         Task task = requireTask(id);
         assertCanAccessTask(task, principal);
 
+        Instant previousReminderAt = task.getReminderAt();
+
         Lead lead = leadService.requireAccessibleLead(request.leadId(), principal);
         User assignee = resolveAssignee(request.assignedToId(), principal);
 
@@ -88,7 +102,11 @@ public class TaskService {
         task.setReminderAt(request.reminderAt());
         task.setStatus(request.status());
 
-        return toResponse(taskRepository.save(task));
+        Task saved = taskRepository.save(task);
+        if (saved.getReminderAt() != null && !Objects.equals(previousReminderAt, saved.getReminderAt())) {
+            outboxEventRecorder.recordFollowUpScheduled(saved);
+        }
+        return toResponse(saved);
     }
 
     @Transactional
