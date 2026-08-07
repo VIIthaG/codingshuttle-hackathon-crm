@@ -27,6 +27,19 @@ spring:
     username: ${RABBITMQ_USER:flowcrm}
     password: ${RABBITMQ_PASSWORD:flowcrm}
 
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+      repositories:
+        # This project uses RedisTemplate/cache/locks only — not Spring Data Redis repositories.
+        enabled: false
+
+  cache:
+    type: ${CACHE_TYPE:redis}
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -52,8 +65,27 @@ app:
     max-attempts: ${REMINDERS_MAX_ATTEMPTS:3}
     retry-delay-ms: ${REMINDERS_RETRY_DELAY_MS:5000}
 
+  cache:
+    dashboard-ttl-seconds: ${DASHBOARD_CACHE_TTL_SECONDS:60}
+
+  rate-limit:
+    login:
+      enabled: ${LOGIN_RATE_LIMIT_ENABLED:true}
+      max-requests: ${LOGIN_RATE_LIMIT_MAX:10}
+      window-seconds: ${LOGIN_RATE_LIMIT_WINDOW_SECONDS:60}
+      fail-open: ${LOGIN_RATE_LIMIT_FAIL_OPEN:true}
+
+  locks:
+    outbox:
+      enabled: ${OUTBOX_LOCK_ENABLED:true}
+      key: ${OUTBOX_LOCK_KEY:lock:flowcrm:outbox-publisher}
+      ttl-seconds: ${OUTBOX_LOCK_TTL_SECONDS:30}
+
 logging:
   level:
     org.springframework.security: INFO
     com.flowcrm.reminder: INFO
     com.flowcrm.outbox: INFO
+    com.flowcrm.dashboard: INFO
+    com.flowcrm.ratelimit: INFO
+    com.flowcrm.lock: INFO

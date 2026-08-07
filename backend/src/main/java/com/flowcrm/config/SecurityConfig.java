@@ -1,8 +1,9 @@
 package com.flowcrm.config;
 
-import com.flowcrm.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowcrm.common.exception.ErrorResponse;
+import com.flowcrm.ratelimit.LoginRateLimitFilter;
+import com.flowcrm.security.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Instant;
 import org.springframework.context.annotation.Bean;
@@ -28,10 +29,15 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ObjectMapper objectMapper;
+    private final LoginRateLimitFilter loginRateLimitFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, ObjectMapper objectMapper) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            ObjectMapper objectMapper,
+            LoginRateLimitFilter loginRateLimitFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.objectMapper = objectMapper;
+        this.loginRateLimitFilter = loginRateLimitFilter;
     }
 
     @Bean
@@ -49,6 +55,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler()))
+                .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -80,7 +87,8 @@ public class SecurityConfig {
                 "You do not have permission to access this resource");
     }
 
-    private void writeError(HttpServletResponse response, int status, String error, String message) throws java.io.IOException {
+    private void writeError(HttpServletResponse response, int status, String error, String message)
+            throws java.io.IOException {
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         ErrorResponse body = new ErrorResponse(Instant.now(), status, error, message, null);

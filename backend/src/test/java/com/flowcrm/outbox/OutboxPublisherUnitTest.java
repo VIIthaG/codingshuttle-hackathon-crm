@@ -7,10 +7,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flowcrm.lock.DistributedLock;
+import com.flowcrm.lock.OutboxLockProperties;
 import com.flowcrm.messaging.ReminderMessage;
 import com.flowcrm.messaging.ReminderQueues;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -21,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.PageRequest;
@@ -39,23 +42,34 @@ class OutboxPublisherUnitTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
 
+    @Mock
+    private DistributedLock distributedLock;
+
     private ObjectMapper objectMapper;
     private OutboxPublisher publisher;
+    private OutboxLockProperties lockProperties;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper().findAndRegisterModules();
         OutboxPublisherProperties properties = new OutboxPublisherProperties();
+        lockProperties = new OutboxLockProperties();
         TransactionTemplate transactionTemplate = new TransactionTemplate(new NoOpTransactionManager());
         publisher = new OutboxPublisher(
-                outboxEventRepository, rabbitTemplate, objectMapper, properties, transactionTemplate);
+                outboxEventRepository,
+                rabbitTemplate,
+                objectMapper,
+                properties,
+                transactionTemplate,
+                distributedLock,
+                lockProperties);
     }
 
     @Test
     void publishOne_dueEvent_marksPublished() {
         UUID eventId = UUID.randomUUID();
         OutboxEvent event = pendingEvent(eventId, Instant.now().minus(1, ChronoUnit.MINUTES));
-        Mockito.when(outboxEventRepository.findById(eventId)).thenReturn(Optional.of(event));
+        when(outboxEventRepository.findById(eventId)).thenReturn(Optional.of(event));
 
         boolean published = publisher.publishOne(eventId);
 
@@ -75,7 +89,7 @@ class OutboxPublisherUnitTest {
     void publishOne_futureAvailableAt_leavesPending() {
         UUID eventId = UUID.randomUUID();
         OutboxEvent event = pendingEvent(eventId, Instant.now().plus(2, ChronoUnit.DAYS));
-        Mockito.when(outboxEventRepository.findById(eventId)).thenReturn(Optional.of(event));
+        when(outboxEventRepository.findById(eventId)).thenReturn(Optional.of(event));
 
         boolean published = publisher.publishOne(eventId);
 
@@ -87,8 +101,10 @@ class OutboxPublisherUnitTest {
     }
 
     @Test
-    void publishPendingBatch_queriesOnlyDueEvents() {
-        Mockito.when(outboxEventRepository.findDueByStatus(
+    void publishPendingBatch_queriesOnlyDueEvents_whenLockAcquired() {
+        when(distributedLock.tryAcquire(eq(lockProperties.getKey()), any(Duration.class)))
+                .thenReturn(Optional.of("token-1"));
+        when(outboxEventRepository.findDueByStatus(
                         eq(OutboxEventStatus.PENDING), any(Instant.class), eq(PageRequest.of(0, 50))))
                 .thenReturn(List.of());
 
@@ -96,6 +112,19 @@ class OutboxPublisherUnitTest {
 
         verify(outboxEventRepository)
                 .findDueByStatus(eq(OutboxEventStatus.PENDING), any(Instant.class), eq(PageRequest.of(0, 50)));
+        verify(distributedLock).release(lockProperties.getKey(), "token-1");
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(Object.class));
+    }
+
+    @Test
+    void publishPendingBatch_skipsWhenLockUnavailable() {
+        when(distributedLock.tryAcquire(eq(lockProperties.getKey()), any(Duration.class)))
+                .thenReturn(Optional.empty());
+
+        publisher.publishPendingBatch();
+
+        verify(outboxEventRepository, never()).findDueByStatus(any(), any(), any());
+        verify(distributedLock, never()).release(anyString(), anyString());
         verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(Object.class));
     }
 
@@ -103,7 +132,7 @@ class OutboxPublisherUnitTest {
     void publishOne_brokerFailure_leavesPending() {
         UUID eventId = UUID.randomUUID();
         OutboxEvent event = pendingEvent(eventId, Instant.now().minusSeconds(10));
-        Mockito.when(outboxEventRepository.findById(eventId)).thenReturn(Optional.of(event));
+        when(outboxEventRepository.findById(eventId)).thenReturn(Optional.of(event));
         doThrow(new RuntimeException("broker down"))
                 .when(rabbitTemplate)
                 .convertAndSend(anyString(), anyString(), any(Object.class));

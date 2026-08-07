@@ -1,15 +1,23 @@
 package com.flowcrm;
 
 import com.flowcrm.config.JwtProperties;
+import com.flowcrm.lock.OutboxLockProperties;
 import com.flowcrm.messaging.ReminderProperties;
 import com.flowcrm.outbox.OutboxPublisherProperties;
+import com.flowcrm.ratelimit.LoginRateLimitProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableConfigurationProperties({JwtProperties.class, ReminderProperties.class, OutboxPublisherProperties.class})
+@EnableConfigurationProperties({
+    JwtProperties.class,
+    ReminderProperties.class,
+    OutboxPublisherProperties.class,
+    LoginRateLimitProperties.class,
+    OutboxLockProperties.class
+})
 @EnableScheduling
 public class FlowcrmApplication {
 

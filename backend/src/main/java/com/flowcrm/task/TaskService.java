@@ -2,6 +2,7 @@ package com.flowcrm.task;
 
 import com.flowcrm.common.exception.ForbiddenException;
 import com.flowcrm.common.exception.ResourceNotFoundException;
+import com.flowcrm.dashboard.DashboardService;
 import com.flowcrm.enums.Role;
 import com.flowcrm.enums.TaskStatus;
 import com.flowcrm.lead.Lead;
@@ -32,16 +33,19 @@ public class TaskService {
     private final UserRepository userRepository;
     private final LeadService leadService;
     private final OutboxEventRecorder outboxEventRecorder;
+    private final DashboardService dashboardService;
 
     public TaskService(
             TaskRepository taskRepository,
             UserRepository userRepository,
             LeadService leadService,
-            OutboxEventRecorder outboxEventRecorder) {
+            OutboxEventRecorder outboxEventRecorder,
+            DashboardService dashboardService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.leadService = leadService;
         this.outboxEventRecorder = outboxEventRecorder;
+        this.dashboardService = dashboardService;
     }
 
     @Transactional
@@ -62,6 +66,7 @@ public class TaskService {
         if (saved.getReminderAt() != null) {
             outboxEventRecorder.recordFollowUpScheduled(saved);
         }
+        dashboardService.invalidateAllSummaries();
         return toResponse(saved);
     }
 
@@ -105,6 +110,7 @@ public class TaskService {
 
         Task saved = taskRepository.save(task);
         syncFollowUpOutbox(saved, previousReminderAt, previousStatus);
+        dashboardService.invalidateAllSummaries();
         return toResponse(saved);
     }
 
@@ -117,6 +123,7 @@ public class TaskService {
         task.setStatus(TaskStatus.COMPLETED);
         Task saved = taskRepository.save(task);
         syncFollowUpOutbox(saved, previousReminderAt, previousStatus);
+        dashboardService.invalidateAllSummaries();
         return toResponse(saved);
     }
 
@@ -126,6 +133,7 @@ public class TaskService {
         assertCanAccessTask(task, principal);
         outboxEventRecorder.supersedePendingFollowUps(task.getId());
         taskRepository.delete(task);
+        dashboardService.invalidateAllSummaries();
     }
 
     /**

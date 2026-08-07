@@ -33,5 +33,19 @@ services:
       timeout: 5s
       retries: 10
 
+  # Local Redis (cache, login rate-limit, outbox distributed lock).
+  redis:
+    image: redis:7.4-alpine
+    container_name: flowcrm-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    # Optional password: set REDIS_PASSWORD and uncomment requirepass command.
+    # command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   flowcrm_pg_data:

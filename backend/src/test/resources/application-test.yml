@@ -9,9 +9,17 @@ spring:
       ddl-auto: none
   flyway:
     enabled: true
+  data:
+    redis:
+      repositories:
+        enabled: false
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  cache:
+    type: simple
 
 app:
   jwt:
@@ -26,3 +34,16 @@ app:
     fail-delivery: false
     max-attempts: 3
     retry-delay-ms: 100
+  cache:
+    dashboard-ttl-seconds: 60
+  rate-limit:
+    login:
+      enabled: false
+      max-requests: 10
+      window-seconds: 60
+      fail-open: true
+  locks:
+    outbox:
+      enabled: false
+      key: lock:flowcrm:outbox-publisher
+      ttl-seconds: 30

@@ -3,6 +3,7 @@ package com.flowcrm.lead;
 import com.flowcrm.common.exception.ForbiddenException;
 import com.flowcrm.common.exception.InvalidStatusTransitionException;
 import com.flowcrm.common.exception.ResourceNotFoundException;
+import com.flowcrm.dashboard.DashboardService;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
 import com.flowcrm.lead.dto.LeadCreateRequest;
@@ -23,10 +24,15 @@ public class LeadService {
 
     private final LeadRepository leadRepository;
     private final UserRepository userRepository;
+    private final DashboardService dashboardService;
 
-    public LeadService(LeadRepository leadRepository, UserRepository userRepository) {
+    public LeadService(
+            LeadRepository leadRepository,
+            UserRepository userRepository,
+            DashboardService dashboardService) {
         this.leadRepository = leadRepository;
         this.userRepository = userRepository;
+        this.dashboardService = dashboardService;
     }
 
     @Transactional
@@ -42,7 +48,9 @@ public class LeadService {
         lead.setStatus(request.status() != null ? request.status() : LeadStatus.NEW);
         lead.setAssignedTo(assignee);
 
-        return toResponse(leadRepository.save(lead));
+        LeadResponse response = toResponse(leadRepository.save(lead));
+        dashboardService.invalidateAllSummaries();
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -83,7 +91,9 @@ public class LeadService {
         applyStatusTransition(lead, request.status());
         lead.setAssignedTo(assignee);
 
-        return toResponse(leadRepository.save(lead));
+        LeadResponse response = toResponse(leadRepository.save(lead));
+        dashboardService.invalidateAllSummaries();
+        return response;
     }
 
     @Transactional
@@ -91,7 +101,9 @@ public class LeadService {
         Lead lead = requireLead(id);
         assertCanAccess(lead, principal);
         applyStatusTransition(lead, request.status());
-        return toResponse(leadRepository.save(lead));
+        LeadResponse response = toResponse(leadRepository.save(lead));
+        dashboardService.invalidateAllSummaries();
+        return response;
     }
 
     @Transactional
@@ -99,6 +111,7 @@ public class LeadService {
         Lead lead = requireLead(id);
         assertCanAccess(lead, principal);
         leadRepository.delete(lead);
+        dashboardService.invalidateAllSummaries();
     }
 
     /**

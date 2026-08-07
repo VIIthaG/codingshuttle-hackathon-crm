@@ -2,10 +2,14 @@ package com.flowcrm.outbox;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flowcrm.lock.DistributedLock;
+import com.flowcrm.lock.OutboxLockProperties;
 import com.flowcrm.messaging.ReminderMessage;
 import com.flowcrm.messaging.ReminderQueues;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +29,9 @@ import org.springframework.transaction.support.TransactionTemplate;
  *
  * <p>Future reminders (available_at in the future) stay PENDING and are not
  * published early. The retry queue is not used for scheduling delays.
+ *
+ * <p>Scheduled polls are guarded by a Redis distributed lock so multiple app
+ * instances do not publish the same batch concurrently. Lock failure skips the cycle.
  */
 @Component
 @ConditionalOnProperty(
@@ -40,22 +47,43 @@ public class OutboxPublisher {
     private final ObjectMapper objectMapper;
     private final OutboxPublisherProperties properties;
     private final TransactionTemplate transactionTemplate;
+    private final DistributedLock distributedLock;
+    private final OutboxLockProperties lockProperties;
 
     public OutboxPublisher(
             OutboxEventRepository outboxEventRepository,
             RabbitTemplate rabbitTemplate,
             ObjectMapper objectMapper,
             OutboxPublisherProperties properties,
-            TransactionTemplate transactionTemplate) {
+            TransactionTemplate transactionTemplate,
+            DistributedLock distributedLock,
+            OutboxLockProperties lockProperties) {
         this.outboxEventRepository = outboxEventRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = objectMapper;
         this.properties = properties;
         this.transactionTemplate = transactionTemplate;
+        this.distributedLock = distributedLock;
+        this.lockProperties = lockProperties;
     }
 
     @Scheduled(fixedDelayString = "${app.outbox.publisher.poll-interval-ms:2000}")
     public void publishPendingBatch() {
+        String lockKey = lockProperties.getKey();
+        Duration ttl = Duration.ofSeconds(lockProperties.getTtlSeconds());
+        Optional<String> token = distributedLock.tryAcquire(lockKey, ttl);
+        if (token.isEmpty()) {
+            log.debug("Skipping outbox poll; distributed lock not acquired key={}", lockKey);
+            return;
+        }
+        try {
+            publishDueEvents();
+        } finally {
+            distributedLock.release(lockKey, token.get());
+        }
+    }
+
+    private void publishDueEvents() {
         Instant now = Instant.now();
         List<OutboxEvent> due = outboxEventRepository.findDueByStatus(
                 OutboxEventStatus.PENDING, now, PageRequest.of(0, properties.getBatchSize()));
