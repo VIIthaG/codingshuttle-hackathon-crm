@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +37,12 @@ class LeadPipelineIntegrationTest {
     @Autowired
     private LeadRepository leadRepository;
 
+    @Autowired
+    private TaskRepository taskRepository;
+
     @BeforeEach
     void cleanDatabase() {
+        taskRepository.deleteAll();
         leadRepository.deleteAll();
         userRepository.deleteAll();
     }

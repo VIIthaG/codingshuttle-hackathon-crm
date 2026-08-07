@@ -101,6 +101,16 @@ public class LeadService {
         leadRepository.delete(lead);
     }
 
+    /**
+     * Loads a lead and enforces role-aware visibility. Used by other domains (e.g. tasks).
+     */
+    @Transactional(readOnly = true)
+    public Lead requireAccessibleLead(UUID id, UserPrincipal principal) {
+        Lead lead = requireLead(id);
+        assertCanAccess(lead, principal);
+        return lead;
+    }
+
     private User resolveAssigneeForCreate(UUID assignedToId, UserPrincipal principal) {
         if (assignedToId == null) {
             return requireUser(principal.getId());
