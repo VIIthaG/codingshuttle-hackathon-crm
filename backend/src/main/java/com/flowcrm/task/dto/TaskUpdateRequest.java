@@ -1,6 +1,7 @@
 package com.flowcrm.task.dto;
 
 import com.flowcrm.enums.TaskStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.UUID;
 
+@Schema(description = "Full task update request")
 public record TaskUpdateRequest(
         @NotNull(message = "Lead id is required")
         UUID leadId,
@@ -15,6 +17,7 @@ public record TaskUpdateRequest(
         @NotNull(message = "Assigned user is required")
         UUID assignedToId,
 
+        @Schema(example = "Call prospect")
         @NotBlank(message = "Title is required")
         @Size(max = 255, message = "Title must be at most 255 characters")
         String title,
@@ -27,10 +30,12 @@ public record TaskUpdateRequest(
 
         Instant reminderAt,
 
+        @Schema(example = "OPEN")
         @NotNull(message = "Status is required")
         TaskStatus status) {
 
     @AssertTrue(message = "reminderAt must not be after dueAt")
+    @Schema(hidden = true)
     public boolean isReminderNotAfterDue() {
         return reminderAt == null || dueAt == null || !reminderAt.isAfter(dueAt);
     }

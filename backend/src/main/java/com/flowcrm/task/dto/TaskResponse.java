@@ -1,9 +1,11 @@
 package com.flowcrm.task.dto;
 
 import com.flowcrm.enums.TaskStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
 
+@Schema(description = "Task resource")
 public record TaskResponse(
         UUID id,
         UUID leadId,
