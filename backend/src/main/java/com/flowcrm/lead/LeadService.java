@@ -6,6 +6,8 @@ import com.flowcrm.common.exception.ResourceNotFoundException;
 import com.flowcrm.dashboard.DashboardService;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
+import com.flowcrm.idempotency.IdempotencyOperations;
+import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.dto.LeadCreateRequest;
 import com.flowcrm.lead.dto.LeadResponse;
 import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
@@ -14,8 +16,10 @@ import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
 import java.util.UUID;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,14 +29,20 @@ public class LeadService {
     private final LeadRepository leadRepository;
     private final UserRepository userRepository;
     private final DashboardService dashboardService;
+    private final IdempotencyService idempotencyService;
+    private final LeadService self;
 
     public LeadService(
             LeadRepository leadRepository,
             UserRepository userRepository,
-            DashboardService dashboardService) {
+            DashboardService dashboardService,
+            IdempotencyService idempotencyService,
+            @Lazy LeadService self) {
         this.leadRepository = leadRepository;
         this.userRepository = userRepository;
         this.dashboardService = dashboardService;
+        this.idempotencyService = idempotencyService;
+        this.self = self;
     }
 
     @Transactional
@@ -51,6 +61,20 @@ public class LeadService {
         LeadResponse response = toResponse(leadRepository.save(lead));
         dashboardService.invalidateAllSummaries();
         return response;
+    }
+
+    /**
+     * Idempotent create when {@code idempotencyKey} is present (validated by the controller).
+     */
+    public LeadResponse create(LeadCreateRequest request, UserPrincipal principal, String idempotencyKey) {
+        return idempotencyService.execute(
+                principal.getId(),
+                IdempotencyOperations.LEADS_CREATE,
+                idempotencyKey,
+                request,
+                LeadResponse.class,
+                HttpStatus.CREATED.value(),
+                () -> self.create(request, principal));
     }
 
     @Transactional(readOnly = true)

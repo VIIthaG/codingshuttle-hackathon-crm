@@ -5,6 +5,8 @@ import com.flowcrm.common.exception.ResourceNotFoundException;
 import com.flowcrm.dashboard.DashboardService;
 import com.flowcrm.enums.Role;
 import com.flowcrm.enums.TaskStatus;
+import com.flowcrm.idempotency.IdempotencyOperations;
+import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.Lead;
 import com.flowcrm.lead.LeadService;
 import com.flowcrm.outbox.OutboxEventRecorder;
@@ -20,9 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,18 +38,24 @@ public class TaskService {
     private final LeadService leadService;
     private final OutboxEventRecorder outboxEventRecorder;
     private final DashboardService dashboardService;
+    private final IdempotencyService idempotencyService;
+    private final TaskService self;
 
     public TaskService(
             TaskRepository taskRepository,
             UserRepository userRepository,
             LeadService leadService,
             OutboxEventRecorder outboxEventRecorder,
-            DashboardService dashboardService) {
+            DashboardService dashboardService,
+            IdempotencyService idempotencyService,
+            @Lazy TaskService self) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.leadService = leadService;
         this.outboxEventRecorder = outboxEventRecorder;
         this.dashboardService = dashboardService;
+        this.idempotencyService = idempotencyService;
+        this.self = self;
     }
 
     @Transactional
@@ -68,6 +78,20 @@ public class TaskService {
         }
         dashboardService.invalidateAllSummaries();
         return toResponse(saved);
+    }
+
+    /**
+     * Idempotent create when {@code idempotencyKey} is present (validated by the controller).
+     */
+    public TaskResponse create(TaskCreateRequest request, UserPrincipal principal, String idempotencyKey) {
+        return idempotencyService.execute(
+                principal.getId(),
+                IdempotencyOperations.TASKS_CREATE,
+                idempotencyKey,
+                request,
+                TaskResponse.class,
+                HttpStatus.CREATED.value(),
+                () -> self.create(request, principal));
     }
 
     @Transactional(readOnly = true)

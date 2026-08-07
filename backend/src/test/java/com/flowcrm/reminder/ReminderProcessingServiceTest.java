@@ -11,6 +11,7 @@ import com.flowcrm.enums.LeadSource;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
 import com.flowcrm.enums.TaskStatus;
+import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.Lead;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.messaging.ReminderMessage;
@@ -59,6 +60,9 @@ class ReminderProcessingServiceTest {
     @Autowired
     private OutboxEventRepository outboxEventRepository;
 
+    @Autowired
+    private IdempotencyRecordRepository idempotencyRecordRepository;
+
     @BeforeEach
     void clean() {
         reminderProperties.setFailDelivery(false);
@@ -66,6 +70,7 @@ class ReminderProcessingServiceTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        idempotencyRecordRepository.deleteAll();
         userRepository.deleteAll();
     }
 

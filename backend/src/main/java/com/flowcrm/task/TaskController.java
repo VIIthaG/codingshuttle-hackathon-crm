@@ -1,6 +1,7 @@
 package com.flowcrm.task;
 
 import com.flowcrm.enums.TaskStatus;
+import com.flowcrm.idempotency.IdempotencyKeyValidator;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.task.dto.TaskCreateRequest;
 import com.flowcrm.task.dto.TaskResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -37,8 +39,13 @@ public class TaskController {
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponse create(
             @Valid @RequestBody TaskCreateRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return taskService.create(request, principal);
+        String key = IdempotencyKeyValidator.normalizeOptional(idempotencyKey);
+        if (key == null) {
+            return taskService.create(request, principal);
+        }
+        return taskService.create(request, principal, key);
     }
 
     @GetMapping

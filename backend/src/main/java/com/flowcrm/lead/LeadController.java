@@ -1,6 +1,7 @@
 package com.flowcrm.lead;
 
 import com.flowcrm.enums.LeadStatus;
+import com.flowcrm.idempotency.IdempotencyKeyValidator;
 import com.flowcrm.lead.dto.LeadCreateRequest;
 import com.flowcrm.lead.dto.LeadResponse;
 import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -38,8 +40,13 @@ public class LeadController {
     @ResponseStatus(HttpStatus.CREATED)
     public LeadResponse create(
             @Valid @RequestBody LeadCreateRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return leadService.create(request, principal);
+        String key = IdempotencyKeyValidator.normalizeOptional(idempotencyKey);
+        if (key == null) {
+            return leadService.create(request, principal);
+        }
+        return leadService.create(request, principal, key);
     }
 
     @GetMapping

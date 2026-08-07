@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.task.TaskRepository;
@@ -47,12 +48,16 @@ class AuthIntegrationTest {
     @Autowired
     private com.flowcrm.reminder.ProcessedMessageRepository processedMessageRepository;
 
+    @Autowired
+    private IdempotencyRecordRepository idempotencyRecordRepository;
+
     @BeforeEach
     void cleanDatabase() {
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        idempotencyRecordRepository.deleteAll();
         userRepository.deleteAll();
     }
 

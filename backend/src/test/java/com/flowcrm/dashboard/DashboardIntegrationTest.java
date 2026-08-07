@@ -15,6 +15,7 @@ import com.flowcrm.config.CacheConfig;
 import com.flowcrm.dashboard.dto.DashboardSummaryResponse;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
+import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.reminder.ProcessedMessageRepository;
@@ -75,12 +76,16 @@ class DashboardIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private IdempotencyRecordRepository idempotencyRecordRepository;
+
     @BeforeEach
     void clean() {
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        idempotencyRecordRepository.deleteAll();
         userRepository.deleteAll();
         Cache cache = cacheManager.getCache(CacheConfig.DASHBOARD_SUMMARY_CACHE);
         if (cache != null) {
