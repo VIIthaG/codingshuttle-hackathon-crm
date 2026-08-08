@@ -1,0 +1,20 @@
+import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
+
+export function NotFoundPage() {
+  const { isAuthenticated } = useAuth()
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-6">
+      <p className="text-sm font-semibold text-brand-600">404</p>
+      <h1 className="mt-2 text-2xl font-semibold text-ink">Page not found</h1>
+      <p className="mt-2 text-sm text-muted">That route does not exist in FlowCRM.</p>
+      <Link
+        to={isAuthenticated ? '/dashboard' : '/login'}
+        className="mt-6 text-sm font-medium text-brand-600 hover:text-brand-700"
+      >
+        {isAuthenticated ? 'Go to dashboard' : 'Go to login'}
+      </Link>
+    </div>
+  )
+}

@@ -250,6 +250,7 @@ Optional `Idempotency-Key` is documented on lead/task **create** only.
 - JDK 21+
 - Docker Desktop
 - Maven Wrapper (included under `backend/`)
+- Node.js 20+ (for `frontend/`)
 
 ### 1. Clone and start infrastructure
 
@@ -293,7 +294,17 @@ API base: `http://localhost:8080`
 Invoke-RestMethod http://localhost:8080/api/v1/health
 ```
 
-### 5. Tests
+### 5. Frontend (optional SPA)
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Opens Vite on `http://localhost:5173`. With empty `VITE_API_BASE_URL`, `/api` is proxied to the backend (no CORS changes required). See [frontend/README.md](frontend/README.md).
+
+### 6. Tests
 
 ```powershell
 cd backend
@@ -370,10 +381,11 @@ Summary: Railway Root Directory = `backend`, Dockerfile at `backend/Dockerfile`,
 │   ├── ARCHITECTURE.md         # Design decisions & failure scenarios
 │   ├── architecture.mmd        # Mermaid source
 │   └── DEPLOYMENT.md           # Railway deployment guide
-└── backend/                    # Spring Boot application
-    ├── Dockerfile              # Multi-stage production image
-    ├── railway.toml            # Optional Railway healthcheck/build hints
-    └── .dockerignore
+├── backend/                    # Spring Boot application
+│   ├── Dockerfile
+│   ├── railway.toml
+│   └── .dockerignore
+└── frontend/                   # React + Vite SPA (Phase I)
 ```
 
 ---
