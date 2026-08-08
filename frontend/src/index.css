@@ -27,3 +27,21 @@ body {
   background: var(--color-canvas);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Keyboard focus clarity without changing mouse click chrome. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

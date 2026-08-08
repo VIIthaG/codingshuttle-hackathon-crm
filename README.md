@@ -14,12 +14,13 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 |------------|--------------|
 | JWT authentication | Register / login / me; passwords stored with BCrypt |
 | Roles | `ADMIN` and `SALES_REP` with role-aware data access |
+| React SPA | Vite + React UI for auth, dashboard, leads, and tasks (`frontend/`) |
 | Lead CRUD | Create, list (paginated/filterable), get, update, delete |
 | Lead assignment | Defaults to the current user; only `ADMIN` can assign others |
-| Lead pipeline | Validated transitions: `NEW → CONTACTED → QUALIFIED → CONVERTED`, with `LOST` from active stages |
-| Follow-up tasks | Tasks linked to leads, with `dueAt` / optional `reminderAt` |
-| Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work |
-| Dashboard summary | Per-user aggregates (leads by status, open/overdue tasks, upcoming follow-ups) |
+| Lead pipeline | Validated transitions: `NEW → CONTACTED → QUALIFIED → CONVERTED`, with `LOST` from active stages; SPA pipeline + list views |
+| Follow-up tasks | Tasks linked to leads, with `dueAt` / optional `reminderAt`; SPA list/filters/complete/cancel |
+| Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work (delivery is log-simulated) |
+| Dashboard summary | Per-user aggregates (leads by status, open/overdue tasks, upcoming follow-ups) in API + SPA |
 
 **First-user behavior:** the first registered account becomes `ADMIN`; later registrations become `SALES_REP`.
 
@@ -54,7 +55,7 @@ FlowCRM is a **single Spring Boot application** using distributed infrastructure
 flowchart TB
   subgraph clients [Clients]
     SW[Swagger UI]
-    FE[Future frontend]
+    FE[React SPA]
   end
 
   subgraph app [Spring Boot FlowCRM - modular monolith]
@@ -241,6 +242,7 @@ Optional `Idempotency-Key` is documented on lead/task **create** only.
 | springdoc-openapi | **2.8.8** |
 | Build | Maven Wrapper (`backend/mvnw.cmd`) |
 | Infra | Docker Compose |
+| Frontend | React **19.2**, TypeScript, Vite **8.2**, React Router **7.18**, Tailwind CSS **4.3** (`frontend/package.json`) |
 
 ---
 
@@ -294,7 +296,7 @@ API base: `http://localhost:8080`
 Invoke-RestMethod http://localhost:8080/api/v1/health
 ```
 
-### 5. Frontend (optional SPA)
+### 5. Frontend (React SPA)
 
 ```powershell
 cd frontend
@@ -302,7 +304,14 @@ npm install
 npm run dev
 ```
 
-Opens Vite on `http://localhost:5173`. With empty `VITE_API_BASE_URL`, `/api` is proxied to the backend (no CORS changes required). See [frontend/README.md](frontend/README.md).
+Opens Vite on `http://localhost:5173`.
+
+| Setting | Behavior |
+|---------|----------|
+| Empty `VITE_API_BASE_URL` (local default) | Same-origin `/api` requests; Vite proxies to `http://localhost:8080` (no CORS changes required) |
+| Set `VITE_API_BASE_URL` | SPA calls that hosted backend origin directly (use for a deployed frontend) |
+
+Copy `frontend/.env.example` → `frontend/.env` for local overrides. See [frontend/README.md](frontend/README.md).
 
 ### 6. Tests
 
@@ -337,7 +346,7 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 | Build-A-Thon expectation | FlowCRM implementation |
 |--------------------------|------------------------|
 | Spring Boot backend | `backend/` Spring Boot **3.4.4** modular monolith |
-| Mini CRM | Auth + leads + tasks + dashboard |
+| Mini CRM | Auth + leads + tasks + dashboard (API + React SPA) |
 | Lead pipeline | `LeadStatus` + `LeadStatusTransitions` + `PATCH /api/v1/leads/{id}/status` |
 | Stage workflow | Validated transitions; terminal `LOST` / `CONVERTED` |
 | Automated follow-up reminders | Task `reminderAt` → outbox → RabbitMQ → consumer (log delivery) |
@@ -354,9 +363,9 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 
 ## What this is / is not
 
-**Is:** a production-*oriented* modular Spring Boot CRM backend with durable scheduling and multi-instance-aware infrastructure patterns.
+**Is:** a production-*oriented* modular Spring Boot CRM backend plus a React/Vite SPA, with durable reminder scheduling and multi-instance-aware infrastructure patterns.
 
-**Is not:** a microservices architecture, exactly-once messaging (at-least-once + idempotent consumers), infinite scale claim, or production-certified SaaS. Real email/SMS and React frontend are future work.
+**Is not:** a microservices architecture, exactly-once messaging (at-least-once + idempotent consumers), infinite scale claim, or production-certified SaaS. Reminder delivery remains **log-simulated** (not real email/SMS).
 
 ---
 
@@ -385,7 +394,9 @@ Summary: Railway Root Directory = `backend`, Dockerfile at `backend/Dockerfile`,
 │   ├── Dockerfile
 │   ├── railway.toml
 │   └── .dockerignore
-└── frontend/                   # React + Vite SPA (Phase I)
+└── frontend/                   # React + TypeScript + Vite SPA
+    ├── src/                    # Auth, dashboard, leads, tasks UI
+    └── README.md
 ```
 
 ---

@@ -19,7 +19,7 @@ export function LeadTable({ leads, onOpenLead, onDeleteLead }: LeadTableProps) {
   return (
     <>
       {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface shadow-sm lg:block">
+      <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface shadow-sm lg:block">
         <table className="min-w-full divide-y divide-border text-left text-sm">
           <thead className="bg-canvas text-xs uppercase tracking-wide text-muted">
             <tr>

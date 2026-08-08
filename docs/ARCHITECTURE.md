@@ -16,7 +16,7 @@ FlowCRM is a **modular monolith**:
 - Redis for cache / rate-limit / distributed lock
 - RabbitMQ for asynchronous reminder processing
 
-There is **no** service mesh, **no** separate reminder microservice, and **no** frontend in this phase.
+There is **no** service mesh and **no** separate reminder microservice. A React/Vite SPA lives under `frontend/` and talks to the same JWT-protected REST API (local Vite proxies `/api`).
 
 Reminder delivery is a **logging simulation** (`LoggingReminderDeliveryService`). Email/SMS providers are not integrated.
 
@@ -230,13 +230,13 @@ What is **not** solved here:
 **Not implemented today — do not treat as current features:**
 
 - Real email/SMS/push providers behind `ReminderDeliveryService`
-- React/Vite frontend
 - Outbox row leasing / `SKIP LOCKED` claiming
 - Metrics, tracing, alerting on DLQ depth
 - Idempotency record TTL/cleanup jobs
 - Hardened secrets management (no local JWT defaults in shared envs)
-- Deployment manifests / managed cloud wiring
 - Broader idempotency beyond selected POSTs
+
+(The React/Vite SPA under `frontend/` and Railway-oriented backend packaging under `docs/DEPLOYMENT.md` are implemented; treat remaining items above as still future work.)
 
 ---
 

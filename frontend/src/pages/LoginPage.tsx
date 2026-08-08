@@ -78,7 +78,8 @@ export function LoginPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2"
+                disabled={loading}
+                className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2 disabled:opacity-60"
                 placeholder="you@company.com"
               />
             </label>
@@ -90,7 +91,8 @@ export function LoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2"
+                disabled={loading}
+                className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2 disabled:opacity-60"
                 placeholder="••••••••"
               />
             </label>

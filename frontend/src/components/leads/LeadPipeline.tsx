@@ -17,13 +17,13 @@ export function LeadPipeline({ leads, onOpenLead }: LeadPipelineProps) {
   )
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2">
+    <div className="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:thin]">
       {LEAD_STATUS_ORDER.map((status) => {
         const columnLeads = byStatus[status]
         return (
           <section
             key={status}
-            className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-canvas"
+            className="flex w-[min(18rem,85vw)] shrink-0 flex-col rounded-xl border border-border bg-canvas sm:w-72"
           >
             <header className="flex items-center justify-between border-b border-border px-3 py-3">
               <h3 className="text-sm font-semibold text-ink">{status}</h3>

@@ -13,6 +13,7 @@ export function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -34,7 +35,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [reloadKey])
 
   if (loading) {
     return <div className="text-sm text-muted">Loading dashboard…</div>
@@ -44,6 +45,13 @@ export function DashboardPage() {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
         {error}
+        <button
+          type="button"
+          onClick={() => setReloadKey((k) => k + 1)}
+          className="ml-3 font-medium underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        >
+          Retry
+        </button>
       </div>
     )
   }
@@ -62,7 +70,7 @@ export function DashboardPage() {
       <div>
         <h2 className="text-base font-semibold text-ink">Overview</h2>
         <p className="mt-1 text-sm text-muted">
-          Role-aware summary from <code className="text-xs">GET /api/v1/dashboard/summary</code>
+          Role-aware snapshot of your pipeline and follow-ups.
         </p>
       </div>
 
@@ -117,7 +125,7 @@ export function DashboardPage() {
 
         {data.totalLeads === 0 ? (
           <p className="mt-4 text-sm text-muted">
-            No leads yet. Lead management UI arrives in the next frontend phase.
+            No leads yet. Open Leads to add your first contact and start the pipeline.
           </p>
         ) : null}
       </section>

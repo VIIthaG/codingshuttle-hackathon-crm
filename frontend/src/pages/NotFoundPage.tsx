@@ -11,7 +11,7 @@ export function NotFoundPage() {
       <p className="mt-2 text-sm text-muted">That route does not exist in FlowCRM.</p>
       <Link
         to={isAuthenticated ? '/dashboard' : '/login'}
-        className="mt-6 text-sm font-medium text-brand-600 hover:text-brand-700"
+        className="mt-6 inline-flex rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
       >
         {isAuthenticated ? 'Go to dashboard' : 'Go to login'}
       </Link>
