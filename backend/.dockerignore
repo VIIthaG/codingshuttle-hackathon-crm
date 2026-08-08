@@ -1,0 +1,15 @@
+# Build context is backend/ (Railway Root Directory = backend).
+target/
+.git/
+.gitignore
+.gitattributes
+.idea/
+.vscode/
+*.iml
+*.log
+.env
+.env.*
+*.md
+.DS_Store
+Thumbs.db
+src/test/

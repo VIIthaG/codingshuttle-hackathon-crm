@@ -1,0 +1,2 @@
+# Keep Maven Wrapper shell script Unix-compatible for Docker/Linux builds.
+/backend/mvnw text eol=lf

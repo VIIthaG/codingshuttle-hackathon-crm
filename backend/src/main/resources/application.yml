@@ -26,6 +26,9 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:flowcrm}
     password: ${RABBITMQ_PASSWORD:flowcrm}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    ssl:
+      enabled: ${RABBITMQ_SSL:false}
 
   data:
     redis:
@@ -33,6 +36,8 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: 2s
+      ssl:
+        enabled: ${REDIS_SSL:false}
       repositories:
         # This project uses RedisTemplate/cache/locks only — not Spring Data Redis repositories.
         enabled: false
@@ -40,8 +45,9 @@ spring:
   cache:
     type: ${CACHE_TYPE:redis}
 
+# Railway injects PORT. Prefer PORT, then SERVER_PORT, then local default 8080.
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:${SERVER_PORT:8080}}
 
 springdoc:
   api-docs:
@@ -53,7 +59,7 @@ springdoc:
 
 app:
   jwt:
-    # Override JWT_SECRET in real environments; local default is for hackathon only.
+    # Local fallback is for hackathon/dev only. Set JWT_SECRET in every shared/hosted environment.
     secret: ${JWT_SECRET:LocalDevOnlySecretKeyThatIsAtLeast32BytesLong!!}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 

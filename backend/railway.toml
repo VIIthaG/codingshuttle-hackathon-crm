@@ -1,0 +1,11 @@
+# Minimal Railway config for the FlowCRM backend service.
+# Set this service's Root Directory to `backend` so Dockerfile and this file are at the service root.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/api/v1/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"

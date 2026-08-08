@@ -349,21 +349,35 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 
 ---
 
+## Deployment (Railway)
+
+Production/deployment preparation (Dockerfile, env wiring, healthcheck) is documented in:
+
+**[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
+Summary: Railway Root Directory = `backend`, Dockerfile at `backend/Dockerfile`, healthcheck `GET /api/v1/health`, configure Postgres/Redis/RabbitMQ/JWT via environment variables. This repository does not embed production secrets.
+
+---
+
 ## Project layout
 
 ```text
 .
 ├── README.md
-├── docker-compose.yml          # Postgres 16, RabbitMQ 3.13, Redis 7.4
+├── docker-compose.yml          # Local Postgres 16, RabbitMQ 3.13, Redis 7.4
 ├── docs/
 │   ├── PROJECT_PLAN.md         # Original phased plan
 │   ├── ARCHITECTURE.md         # Design decisions & failure scenarios
-│   └── architecture.mmd        # Mermaid source
+│   ├── architecture.mmd        # Mermaid source
+│   └── DEPLOYMENT.md           # Railway deployment guide
 └── backend/                    # Spring Boot application
+    ├── Dockerfile              # Multi-stage production image
+    ├── railway.toml            # Optional Railway healthcheck/build hints
+    └── .dockerignore
 ```
 
 ---
 
 ## License / hackathon note
 
-Built as a Build-A-Thon submission. Keep real secrets out of git; override local JWT/DB defaults before any shared deployment.
+Built as a Build-A-Thon submission. Keep real secrets out of git; override local JWT/DB defaults before any shared deployment. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for hosted setup.
