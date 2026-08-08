@@ -56,4 +56,6 @@ On 401 from `/api/v1/auth/me` during bootstrap, the SPA clears the stored sessio
 | `/login`, `/register` | Guests only |
 | `/dashboard`, `/leads`, `/tasks` | Authenticated (shell) |
 
-Leads/Tasks pages are placeholders in Phase I-A; dashboard loads live summary data.
+Leads and Tasks pages are live against the Spring Boot API (pipeline/list for leads; follow-up tasks with due/reminder fields). Dashboard loads live summary data.
+
+Reminders are scheduled by sending `reminderAt` to the backend; the SPA does not deliver email/SMS or run local reminder timers.
