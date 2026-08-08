@@ -63,6 +63,11 @@ app:
     secret: ${JWT_SECRET:LocalDevOnlySecretKeyThatIsAtLeast32BytesLong!!}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
+  cors:
+    # Comma-separated browser origins. Production example: https://flowcrm.up.railway.app
+    # Never use * for hosted environments.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
   messaging:
     # Set false for local runs without RabbitMQ / for unit-style tests.
     enabled: ${MESSAGING_ENABLED:true}

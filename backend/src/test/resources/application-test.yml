@@ -25,6 +25,8 @@ app:
   jwt:
     secret: TestOnlyJwtSecretKeyThatIsLongEnoughForHs256Algorithms!
     expiration-ms: 3600000
+  cors:
+    allowed-origins: http://localhost:5173
   messaging:
     enabled: false
   outbox:
