@@ -1,0 +1,44 @@
+flowchart TB
+  subgraph clients [Clients]
+    SW[Swagger UI]
+    FE[Future frontend]
+  end
+
+  subgraph app [Spring Boot FlowCRM - modular monolith]
+    API[REST Controllers / JWT Security]
+    SVC[Services]
+    OUT[OutboxEventRecorder]
+    PUB["@Scheduled OutboxPublisher"]
+    CON[ReminderConsumer]
+    API --> SVC
+    SVC --> OUT
+    PUB -->|poll due PENDING| PG[(PostgreSQL)]
+    PUB -->|publish| RMQ
+    CON -->|consume| RMQ
+    CON --> SVC
+  end
+
+  PG[(PostgreSQL)]
+  RD[(Redis)]
+  RMQ[RabbitMQ]
+
+  SW --> API
+  FE --> API
+  SVC --> PG
+  SVC --> RD
+  PUB --> RD
+
+  PG --- U[users]
+  PG --- L[leads]
+  PG --- T[tasks]
+  PG --- O[outbox_events]
+  PG --- P[processed_messages]
+  PG --- I[idempotency_records]
+
+  RD --- C[dashboard-summary cache]
+  RD --- R[login rate-limit counters]
+  RD --- K["lock:flowcrm:outbox-publisher"]
+
+  RMQ --- Q1[flowcrm.reminders.queue]
+  RMQ --- Q2[flowcrm.reminders.retry.queue]
+  RMQ --- Q3[flowcrm.reminders.dlq]
