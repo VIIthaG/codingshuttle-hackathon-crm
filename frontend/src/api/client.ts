@@ -27,6 +27,7 @@ type RequestOptions = {
   body?: unknown
   token?: string | null
   auth?: boolean
+  headers?: Record<string, string>
 }
 
 async function parseError(response: Response): Promise<ApiError> {
@@ -72,9 +73,10 @@ async function parseError(response: Response): Promise<ApiError> {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, auth = true } = options
+  const { method = 'GET', body, auth = true, headers: extraHeaders } = options
   const headers: Record<string, string> = {
     Accept: 'application/json',
+    ...extraHeaders,
   }
 
   if (body !== undefined) {
