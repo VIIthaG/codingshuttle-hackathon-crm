@@ -5,6 +5,8 @@ import { Sidebar } from './Sidebar'
 
 const titles: Record<string, string> = {
   '/dashboard': 'Dashboard',
+  '/accounts': 'Accounts',
+  '/contacts': 'Contacts',
   '/leads': 'Leads',
   '/tasks': 'Tasks',
 }

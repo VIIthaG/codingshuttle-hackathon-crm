@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.flowcrm.account.AccountRepository;
+import com.flowcrm.contact.ContactRepository;
 import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
@@ -50,6 +52,12 @@ class CorsIntegrationTest {
     private ProcessedMessageRepository processedMessageRepository;
 
     @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private IdempotencyRecordRepository idempotencyRecordRepository;
 
     @BeforeEach
@@ -58,6 +66,8 @@ class CorsIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        contactRepository.deleteAll();
+        accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();
         userRepository.deleteAll();
     }

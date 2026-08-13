@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.flowcrm.account.AccountRepository;
+import com.flowcrm.contact.ContactRepository;
 import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
@@ -46,6 +48,12 @@ class OpenApiIntegrationTest {
     private ProcessedMessageRepository processedMessageRepository;
 
     @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private IdempotencyRecordRepository idempotencyRecordRepository;
 
     @BeforeEach
@@ -54,6 +62,8 @@ class OpenApiIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        contactRepository.deleteAll();
+        accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -73,6 +83,9 @@ class OpenApiIntegrationTest {
         assertThat(body).contains("JWT");
         assertThat(body).contains("Idempotency-Key");
         assertThat(body).contains("Authentication");
+        assertThat(body).contains("Accounts");
+        assertThat(body).contains("Contacts");
+        assertThat(body).contains("Users");
         assertThat(body).contains("Leads");
         assertThat(body).contains("Tasks");
         assertThat(body).contains("Dashboard");
@@ -89,6 +102,9 @@ class OpenApiIntegrationTest {
     @Test
     void businessEndpoints_remainProtectedWithoutJwt() throws Exception {
         mockMvc.perform(get("/api/v1/leads")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/accounts")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/contacts")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/users")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/tasks")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/dashboard/summary")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());

@@ -14,7 +14,9 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 |------------|--------------|
 | JWT authentication | Register / login / me; passwords stored with BCrypt |
 | Roles | `ADMIN` and `SALES_REP` with role-aware data access |
-| React SPA | Vite + React UI for auth, dashboard, leads, and tasks (`frontend/`) |
+| React SPA | Vite + React UI for auth, dashboard, accounts, contacts, leads, and tasks (`frontend/`) |
+| Accounts | Company records with owner scoping (`ADMIN` all / `SALES_REP` owned) |
+| Contacts | People records, optionally linked to an account |
 | Lead CRUD | Create, list (paginated/filterable), get, update, delete |
 | Lead assignment | Defaults to the current user; only `ADMIN` can assign others |
 | Lead pipeline | Validated transitions: `NEW → CONTACTED → QUALIFIED → CONVERTED`, with `LOST` from active stages; SPA pipeline + list views |
@@ -83,6 +85,8 @@ flowchart TB
   PUB --> RD
 
   PG --- U[users]
+  PG --- A[accounts]
+  PG --- C2[contacts]
   PG --- L[leads]
   PG --- T[tasks]
   PG --- O[outbox_events]
@@ -127,6 +131,8 @@ Optional header on:
 
 - `POST /api/v1/leads`
 - `POST /api/v1/tasks`
+- `POST /api/v1/accounts`
+- `POST /api/v1/contacts`
 
 | Concept | Behavior |
 |---------|----------|
@@ -194,6 +200,7 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 | `V6__create_processed_messages.sql` | Consumer idempotency |
 | `V7__outbox_available_at_and_superseded.sql` | Delayed publish + SUPERSEDED |
 | `V8__create_idempotency_records.sql` | HTTP idempotency records |
+| `V9__create_accounts_and_contacts.sql` | Accounts (companies) and contacts |
 
 **Do not edit applied migrations.** Flyway checksums historical files; change schema only with a new versioned migration.
 
@@ -346,18 +353,18 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 | Build-A-Thon expectation | FlowCRM implementation |
 |--------------------------|------------------------|
 | Spring Boot backend | `backend/` Spring Boot **3.4.4** modular monolith |
-| Mini CRM | Auth + leads + tasks + dashboard (API + React SPA) |
+| Mini CRM | Auth + accounts + contacts + leads + tasks + dashboard (API + React SPA) |
 | Lead pipeline | `LeadStatus` + `LeadStatusTransitions` + `PATCH /api/v1/leads/{id}/status` |
 | Stage workflow | Validated transitions; terminal `LOST` / `CONVERTED` |
 | Automated follow-up reminders | Task `reminderAt` → outbox → RabbitMQ → consumer (log delivery) |
-| Idempotency | Durable `Idempotency-Key` on `POST /leads` and `POST /tasks` + consumer `processed_messages` |
+| Idempotency | Durable `Idempotency-Key` on `POST /leads`, `/tasks`, `/accounts`, `/contacts` + consumer `processed_messages` |
 | Transactional outbox | `outbox_events` written in same TX as task changes |
 | Retry / DLQ | Retry queue + DLQ with attempt header and max attempts |
 | Caching | Redis `dashboard-summary` with TTL + invalidation |
 | Rate limiting | Redis login limiter (429 + Retry-After) |
 | Distributed locking | Redis lock around outbox publisher |
 | Swagger | springdoc UI + JWT `bearerAuth` |
-| PostgreSQL | Primary durable store via Flyway V1–V8 |
+| PostgreSQL | Primary durable store via Flyway V1–V9 |
 
 ---
 
@@ -395,7 +402,7 @@ Summary: Railway Root Directory = `backend`, Dockerfile at `backend/Dockerfile`,
 │   ├── railway.toml
 │   └── .dockerignore
 └── frontend/                   # React + TypeScript + Vite SPA
-    ├── src/                    # Auth, dashboard, leads, tasks UI
+    ├── src/                    # Auth, dashboard, accounts, contacts, leads, tasks UI
     └── README.md
 ```
 

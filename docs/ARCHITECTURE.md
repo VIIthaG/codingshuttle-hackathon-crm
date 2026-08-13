@@ -11,7 +11,7 @@ Related diagram source: [architecture.mmd](architecture.mmd)
 FlowCRM is a **modular monolith**:
 
 - One Spring Boot process (`backend/`)
-- Package boundaries by domain (`auth`, `lead`, `task`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
+- Package boundaries by domain (`auth`, `account`, `contact`, `lead`, `task`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
 - Shared PostgreSQL as the durable system of record
 - Redis for cache / rate-limit / distributed lock
 - RabbitMQ for asynchronous reminder processing
@@ -41,16 +41,17 @@ PostgreSQL stores:
 | Table / area | Role |
 |--------------|------|
 | `users` | Auth identity + role |
-| `leads` / `tasks` | CRM domain state |
+| `accounts` / `contacts` | Company and people CRM records |
+| `leads` / `tasks` | Pipeline and follow-up domain state |
 | `outbox_events` | Intended async side effects awaiting publish |
 | `processed_messages` | Consumer receipts (message id = outbox event id) |
 | `idempotency_records` | Durable HTTP create idempotency |
 
-**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V8 version that schema.
+**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V9 version that schema.
 
 ### Why not edit historical Flyway scripts
 
-Applied migrations are checksummed. Rewriting `V1`–`V8` breaks existing databases and CI. Schema evolution must be additive (`V9__…`).
+Applied migrations are checksummed. Rewriting `V1`–`V8` breaks existing databases and CI. Schema evolution must be additive (`V10__…` and later).
 
 ---
 

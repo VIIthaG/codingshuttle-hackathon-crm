@@ -105,6 +105,7 @@ Set these on the **backend** Railway service. Prefer Railway’s “reference va
 | `OUTBOX_PUBLISHER_ENABLED` | `true` | Keep `true` with RabbitMQ |
 | `OUTBOX_LOCK_ENABLED` | `true` | Keep `true` with Redis |
 | `LOGIN_RATE_LIMIT_ENABLED` | `true` | Recommended in production |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | **Required for a separate SPA origin.** Comma-separated exact origins, e.g. `https://flowcrm.up.railway.app`. Do **not** use `*`. |
 
 Other `app.*` knobs (`DASHBOARD_CACHE_TTL_SECONDS`, rate-limit window, reminder attempts, etc.) may stay at defaults unless you intentionally tune them.
 

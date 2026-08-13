@@ -57,11 +57,13 @@ On 401 from `/api/v1/auth/me` during bootstrap, the SPA clears the stored sessio
 |------|--------|
 | `/` | Redirect to `/dashboard` or `/login` |
 | `/login`, `/register` | Guests only |
-| `/dashboard`, `/leads`, `/tasks` | Authenticated (shell) |
+| `/dashboard`, `/accounts`, `/contacts`, `/leads`, `/tasks` | Authenticated (shell) |
 
 Capabilities:
 
 - **Dashboard** — live role-aware summary
+- **Accounts** — company list/search, create/edit/delete, owner assignment (ADMIN)
+- **Contacts** — people list/search, optional account link, create/edit/delete
 - **Leads** — pipeline + list, create/edit/delete, validated status transitions
 - **Tasks** — filters, create/edit, complete/cancel/delete, optional `reminderAt`
 
