@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import type { Lead } from '../../types/lead'
-import type { Task, TaskCreateRequest, TaskUpdateRequest } from '../../types/task'
+import { listAllAccounts } from '../../api/accounts'
+import { listAllContacts } from '../../api/contacts'
+import { listAllDeals } from '../../api/deals'
+import { listAllLeads } from '../../api/leads'
+import type { Account } from '../../types/account'
 import { ApiError } from '../../types/api'
-import { newIdempotencyKey } from '../../utils/idempotency'
+import type { Contact } from '../../types/contact'
+import type { Deal } from '../../types/deal'
+import type { Lead } from '../../types/lead'
+import type { RelatedRecordType, Task, TaskCreateRequest, TaskUpdateRequest } from '../../types/task'
+import { RELATED_RECORD_TYPES, relatedTypeLabel } from '../../types/task'
 import { formatApiError } from '../../utils/errors'
+import { newIdempotencyKey } from '../../utils/idempotency'
 import {
   defaultDueLocal,
   fromDatetimeLocalValue,
@@ -12,12 +20,16 @@ import {
 
 export type TaskFormMode = 'create' | 'edit'
 
+export type TaskRelatedPreset = {
+  type: RelatedRecordType
+  id: string
+}
+
 type TaskFormProps = {
   open: boolean
   mode: TaskFormMode
   task?: Task | null
-  leads: Lead[]
-  leadsLoading?: boolean
+  initialRelated?: TaskRelatedPreset | null
   pending?: boolean
   onClose: () => void
   onCreate: (body: TaskCreateRequest, idempotencyKey: string) => Promise<void>
@@ -25,7 +37,8 @@ type TaskFormProps = {
 }
 
 type FormState = {
-  leadId: string
+  relatedType: RelatedRecordType
+  relatedId: string
   title: string
   description: string
   dueAtLocal: string
@@ -33,9 +46,10 @@ type FormState = {
   clearReminder: boolean
 }
 
-function emptyForm(leads: Lead[]): FormState {
+function emptyForm(preset?: TaskRelatedPreset | null): FormState {
   return {
-    leadId: leads[0]?.id ?? '',
+    relatedType: preset?.type ?? 'LEAD',
+    relatedId: preset?.id ?? '',
     title: '',
     description: '',
     dueAtLocal: defaultDueLocal(),
@@ -44,20 +58,51 @@ function emptyForm(leads: Lead[]): FormState {
   }
 }
 
+function taskToForm(task: Task): FormState {
+  return {
+    relatedType: task.relatedType,
+    relatedId: task.relatedId,
+    title: task.title,
+    description: task.description ?? '',
+    dueAtLocal: toDatetimeLocalValue(task.dueAt),
+    reminderAtLocal: toDatetimeLocalValue(task.reminderAt),
+    clearReminder: false,
+  }
+}
+
+function applyRelatedId(
+  body: TaskCreateRequest | TaskUpdateRequest,
+  type: RelatedRecordType,
+  id: string,
+) {
+  body.leadId = null
+  body.accountId = null
+  body.contactId = null
+  body.dealId = null
+  if (type === 'LEAD') body.leadId = id
+  if (type === 'ACCOUNT') body.accountId = id
+  if (type === 'CONTACT') body.contactId = id
+  if (type === 'DEAL') body.dealId = id
+}
+
 export function TaskForm({
   open,
   mode,
   task,
-  leads,
-  leadsLoading = false,
+  initialRelated = null,
   pending = false,
   onClose,
   onCreate,
   onUpdate,
 }: TaskFormProps) {
-  const [form, setForm] = useState<FormState>(() => emptyForm(leads))
+  const [form, setForm] = useState<FormState>(() => emptyForm(initialRelated))
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [optionsLoading, setOptionsLoading] = useState(false)
   const idempotencyKeyRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -65,26 +110,70 @@ export function TaskForm({
     setError(null)
     setFieldErrors({})
     if (mode === 'edit' && task) {
-      setForm({
-        leadId: task.leadId,
-        title: task.title,
-        description: task.description ?? '',
-        dueAtLocal: toDatetimeLocalValue(task.dueAt),
-        reminderAtLocal: toDatetimeLocalValue(task.reminderAt),
-        clearReminder: false,
-      })
+      setForm(taskToForm(task))
       idempotencyKeyRef.current = null
     } else {
-      setForm(emptyForm(leads))
+      setForm(emptyForm(initialRelated))
       idempotencyKeyRef.current = newIdempotencyKey()
     }
-  }, [open, mode, task, leads])
+  }, [open, mode, task, initialRelated])
+
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    setOptionsLoading(true)
+    void Promise.all([listAllLeads(), listAllAccounts(), listAllContacts(), listAllDeals()])
+      .then(([leadRows, accountRows, contactRows, dealRows]) => {
+        if (cancelled) return
+        setLeads(leadRows)
+        setAccounts(accountRows)
+        setContacts(contactRows)
+        setDeals(dealRows)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setLeads([])
+        setAccounts([])
+        setContacts([])
+        setDeals([])
+      })
+      .finally(() => {
+        if (!cancelled) setOptionsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open])
 
   if (!open) return null
 
+  const relatedOptions: { id: string; label: string }[] = (() => {
+    switch (form.relatedType) {
+      case 'LEAD':
+        return leads.map((l) => ({
+          id: l.id,
+          label: l.company ? `${l.fullName} — ${l.company}` : l.fullName,
+        }))
+      case 'ACCOUNT':
+        return accounts.map((a) => ({ id: a.id, label: a.name }))
+      case 'CONTACT':
+        return contacts.map((c) => ({
+          id: c.id,
+          label: `${c.firstName} ${c.lastName}${c.accountName ? ` — ${c.accountName}` : ''}`,
+        }))
+      case 'DEAL':
+        return deals.map((d) => ({
+          id: d.id,
+          label: d.accountName ? `${d.name} — ${d.accountName}` : d.name,
+        }))
+      default:
+        return []
+    }
+  })()
+
   function validate(): boolean {
     const next: Record<string, string> = {}
-    if (!form.leadId) next.leadId = 'Lead is required'
+    if (!form.relatedId) next.relatedId = 'Related record is required'
     if (!form.title.trim()) next.title = 'Title is required'
     else if (form.title.trim().length > 255) next.title = 'Title must be at most 255 characters'
     if (form.description.trim().length > 2000) {
@@ -127,17 +216,16 @@ export function TaskForm({
           idempotencyKeyRef.current = newIdempotencyKey()
         }
         const body: TaskCreateRequest = {
-          leadId: form.leadId,
           title: form.title.trim(),
           description: form.description.trim() === '' ? null : form.description.trim(),
           dueAt: fromDatetimeLocalValue(form.dueAtLocal),
           reminderAt: resolveReminderIso(),
         }
+        applyRelatedId(body, form.relatedType, form.relatedId)
         await onCreate(body, idempotencyKeyRef.current)
         idempotencyKeyRef.current = newIdempotencyKey()
       } else if (task) {
         const body: TaskUpdateRequest = {
-          leadId: form.leadId,
           assignedToId: task.assignedToId,
           title: form.title.trim(),
           description: form.description.trim() === '' ? null : form.description.trim(),
@@ -145,6 +233,7 @@ export function TaskForm({
           reminderAt: resolveReminderIso(),
           status: task.status,
         }
+        applyRelatedId(body, form.relatedType, form.relatedId)
         await onUpdate(task.id, body)
       }
     } catch (err) {
@@ -171,11 +260,7 @@ export function TaskForm({
             <h2 id="task-form-title" className="text-lg font-semibold text-ink">
               {mode === 'create' ? 'Add task' : 'Edit task'}
             </h2>
-            <p className="mt-1 text-sm text-muted">
-              {mode === 'create'
-                ? 'Creates a follow-up via POST /api/v1/tasks. Assignee defaults to you.'
-                : 'Updates fields via PUT. Status actions stay on Complete / Cancel.'}
-            </p>
+            <p className="mt-1 text-sm text-muted">Related to exactly one Lead, Account, Contact, or Deal.</p>
           </div>
           <button
             type="button"
@@ -188,25 +273,47 @@ export function TaskForm({
         </div>
 
         <form className="mt-5 space-y-4" onSubmit={onSubmit} noValidate>
-          <Field label="Lead" error={fieldErrors.leadId} required>
-            <select
-              value={form.leadId}
-              onChange={(e) => setForm((f) => ({ ...f, leadId: e.target.value }))}
-              disabled={pending || leadsLoading}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
-            >
-              {leads.length === 0 ? (
-                <option value="">No accessible leads</option>
-              ) : (
-                leads.map((lead) => (
-                  <option key={lead.id} value={lead.id}>
-                    {lead.fullName}
-                    {lead.company ? ` — ${lead.company}` : ''}
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-ink">
+              Related to<span className="text-red-500"> *</span>
+            </span>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={form.relatedType}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    relatedType: e.target.value as RelatedRecordType,
+                    relatedId: '',
+                  }))
+                }
+                disabled={pending || optionsLoading}
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              >
+                {RELATED_RECORD_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {relatedTypeLabel(type)}
                   </option>
-                ))
-              )}
-            </select>
-          </Field>
+                ))}
+              </select>
+              <select
+                value={form.relatedId}
+                onChange={(e) => setForm((f) => ({ ...f, relatedId: e.target.value }))}
+                disabled={pending || optionsLoading}
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              >
+                <option value="">{optionsLoading ? 'Loading…' : 'Select record'}</option>
+                {relatedOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {fieldErrors.relatedId ? (
+              <span className="mt-1 block text-xs text-red-600">{fieldErrors.relatedId}</span>
+            ) : null}
+          </div>
 
           <Field label="Title" error={fieldErrors.title} required>
             <input
@@ -306,7 +413,7 @@ export function TaskForm({
             </button>
             <button
               type="submit"
-              disabled={pending || (mode === 'create' && leads.length === 0)}
+              disabled={pending}
               className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
               {pending ? 'Saving…' : mode === 'create' ? 'Create task' : 'Save changes'}

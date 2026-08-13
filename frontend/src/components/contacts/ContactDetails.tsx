@@ -1,3 +1,4 @@
+import { ActivityTimeline } from '../activity/ActivityTimeline'
 import type { Contact } from '../../types/contact'
 import { formatDateTime } from '../../utils/taskDates'
 
@@ -7,9 +8,19 @@ type ContactDetailsProps = {
   onClose: () => void
   onEdit: (contact: Contact) => void
   onDelete: (contact: Contact) => void
+  onAddTask?: (contact: Contact) => void
+  activityRefreshKey?: number
 }
 
-export function ContactDetails({ open, contact, onClose, onEdit, onDelete }: ContactDetailsProps) {
+export function ContactDetails({
+  open,
+  contact,
+  onClose,
+  onEdit,
+  onDelete,
+  onAddTask,
+  activityRefreshKey = 0,
+}: ContactDetailsProps) {
   if (!open || !contact) return null
 
   return (
@@ -44,9 +55,20 @@ export function ContactDetails({ open, contact, onClose, onEdit, onDelete }: Con
           {contact.notes ? (
             <p className="whitespace-pre-wrap text-sm text-slate-700">{contact.notes}</p>
           ) : null}
+
+          <ActivityTimeline entityType="CONTACT" entityId={contact.id} refreshKey={activityRefreshKey} />
         </div>
 
         <footer className="flex gap-2 border-t border-border px-5 py-4">
+          {onAddTask ? (
+            <button
+              type="button"
+              onClick={() => onAddTask(contact)}
+              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              + Add task
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => onEdit(contact)}

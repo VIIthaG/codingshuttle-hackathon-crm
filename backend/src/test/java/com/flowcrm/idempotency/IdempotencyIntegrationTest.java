@@ -258,6 +258,37 @@ class IdempotencyIntegrationTest {
     }
 
     @Test
+    void createTask_sameKeyDifferentRelation_returnsConflict() throws Exception {
+        String token = register("idem.rel@example.com", "Rel Key");
+        String leadId = createLead(token, "Key Lead");
+        String accountId = createAccount(token, "Key Co");
+        String key = "task-rel-key";
+        Instant dueAt = Instant.now().plus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+
+        mockMvc.perform(post("/api/v1/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(taskBody(leadId, "Same title", dueAt, null)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/v1/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "accountId": "%s",
+                                  "title": "Same title",
+                                  "dueAt": "%s"
+                                }
+                                """.formatted(accountId, dueAt)))
+                .andExpect(status().isConflict());
+
+        assertThat(taskRepository.count()).isEqualTo(1);
+    }
+
+    @Test
     void createLead_blankIdempotencyKey_returnsBadRequest() throws Exception {
         String token = register("idem.blank@example.com", "Blank Key");
 
@@ -325,6 +356,18 @@ class IdempotencyIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").asText();
+    }
+
+    private String createAccount(String token, String name) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/accounts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "name": "%s" }
+                                """.formatted(name)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
     }
 
     private String createLead(String token, String fullName) throws Exception {

@@ -1,5 +1,9 @@
 package com.flowcrm.task;
 
+import com.flowcrm.account.Account;
+import com.flowcrm.contact.Contact;
+import com.flowcrm.deal.Deal;
+import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.TaskStatus;
 import com.flowcrm.lead.Lead;
 import com.flowcrm.user.User;
@@ -24,9 +28,21 @@ public class Task {
     @Id
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "lead_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lead_id")
     private Lead lead;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contact_id")
+    private Contact contact;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deal_id")
+    private Deal deal;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "assigned_to_id", nullable = false)
@@ -72,6 +88,47 @@ public class Task {
         updatedAt = Instant.now();
     }
 
+    public void clearRelations() {
+        this.lead = null;
+        this.account = null;
+        this.contact = null;
+        this.deal = null;
+    }
+
+    public RelatedRecordType relatedType() {
+        if (lead != null) {
+            return RelatedRecordType.LEAD;
+        }
+        if (account != null) {
+            return RelatedRecordType.ACCOUNT;
+        }
+        if (contact != null) {
+            return RelatedRecordType.CONTACT;
+        }
+        if (deal != null) {
+            return RelatedRecordType.DEAL;
+        }
+        throw new IllegalStateException("Task has no related record");
+    }
+
+    public UUID relatedId() {
+        return switch (relatedType()) {
+            case LEAD -> lead.getId();
+            case ACCOUNT -> account.getId();
+            case CONTACT -> contact.getId();
+            case DEAL -> deal.getId();
+        };
+    }
+
+    public String relatedName() {
+        return switch (relatedType()) {
+            case LEAD -> lead.getFullName();
+            case ACCOUNT -> account.getName();
+            case CONTACT -> (contact.getFirstName() + " " + contact.getLastName()).trim();
+            case DEAL -> deal.getName();
+        };
+    }
+
     public UUID getId() {
         return id;
     }
@@ -86,6 +143,30 @@ public class Task {
 
     public void setLead(Lead lead) {
         this.lead = lead;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public Contact getContact() {
+        return contact;
+    }
+
+    public void setContact(Contact contact) {
+        this.contact = contact;
+    }
+
+    public Deal getDeal() {
+        return deal;
+    }
+
+    public void setDeal(Deal deal) {
+        this.deal = deal;
     }
 
     public User getAssignedTo() {

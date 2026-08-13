@@ -34,7 +34,7 @@ flowchart TB
   PG --- C2[contacts]
   PG --- D[deals]
   PG --- L[leads]
-  PG --- T[tasks]
+  PG --- T[tasks XOR lead/account/contact/deal]
   PG --- O[outbox_events]
   PG --- P[processed_messages]
   PG --- I[idempotency_records]

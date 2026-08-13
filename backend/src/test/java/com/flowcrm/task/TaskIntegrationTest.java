@@ -101,6 +101,8 @@ class TaskIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Call prospect"))
                 .andExpect(jsonPath("$.leadId").value(leadId))
+                .andExpect(jsonPath("$.relatedType").value("LEAD"))
+                .andExpect(jsonPath("$.relatedId").value(leadId))
                 .andExpect(jsonPath("$.status").value("OPEN"))
                 .andExpect(jsonPath("$.assignedToId").isNotEmpty());
     }

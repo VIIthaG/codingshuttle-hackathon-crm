@@ -31,6 +31,7 @@ import com.flowcrm.lead.dto.LeadResponse;
 import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
 import com.flowcrm.lead.dto.LeadUpdateRequest;
 import com.flowcrm.security.UserPrincipal;
+import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
 import java.util.UUID;
@@ -50,6 +51,7 @@ public class LeadService {
     private final ContactService contactService;
     private final DealService dealService;
     private final DealRepository dealRepository;
+    private final TaskRepository taskRepository;
     private final DashboardService dashboardService;
     private final IdempotencyService idempotencyService;
     private final LeadService self;
@@ -61,6 +63,7 @@ public class LeadService {
             ContactService contactService,
             DealService dealService,
             DealRepository dealRepository,
+            TaskRepository taskRepository,
             DashboardService dashboardService,
             IdempotencyService idempotencyService,
             @Lazy LeadService self) {
@@ -70,6 +73,7 @@ public class LeadService {
         this.contactService = contactService;
         this.dealService = dealService;
         this.dealRepository = dealRepository;
+        this.taskRepository = taskRepository;
         this.dashboardService = dashboardService;
         this.idempotencyService = idempotencyService;
         this.self = self;
@@ -164,6 +168,9 @@ public class LeadService {
     public void delete(UUID id, UserPrincipal principal) {
         Lead lead = requireLead(id);
         assertCanAccess(lead, principal);
+        if (taskRepository.existsByLead_Id(id)) {
+            throw new ConflictException("Cannot delete lead while tasks still reference it");
+        }
         leadRepository.delete(lead);
         dashboardService.invalidateAllSummaries();
     }

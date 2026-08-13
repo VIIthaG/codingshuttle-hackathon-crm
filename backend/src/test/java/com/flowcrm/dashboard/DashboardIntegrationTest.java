@@ -377,4 +377,48 @@ class DashboardIntegrationTest {
                                 """.formatted(leadId, dueAt, reminderAt)))
                 .andExpect(status().isCreated());
     }
+
+    @Test
+    void summary_includesTasksLinkedToAccounts() throws Exception {
+        String token = register("dash.acct.task@example.com", "Acct Task");
+        String accountId = createAccount(token, "Metric Co", null);
+        Instant overdueDue = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+        Instant upcomingDue = Instant.now().plus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
+        Instant reminderAt = Instant.now().plus(1, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MILLIS);
+
+        mockMvc.perform(get("/api/v1/dashboard/summary").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openTasks").value(0));
+
+        mockMvc.perform(post("/api/v1/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "accountId": "%s",
+                                  "title": "Overdue account task",
+                                  "dueAt": "%s"
+                                }
+                                """.formatted(accountId, overdueDue)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/v1/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "accountId": "%s",
+                                  "title": "Upcoming account follow-up",
+                                  "dueAt": "%s",
+                                  "reminderAt": "%s"
+                                }
+                                """.formatted(accountId, upcomingDue, reminderAt)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/dashboard/summary").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openTasks").value(2))
+                .andExpect(jsonPath("$.overdueTasks").value(1))
+                .andExpect(jsonPath("$.upcomingFollowUps").value(1));
+    }
 }

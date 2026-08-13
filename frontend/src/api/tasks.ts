@@ -1,10 +1,14 @@
 import { apiRequest } from './client'
 import type { Page } from '../types/api'
-import type { Task, TaskCreateRequest, TaskStatus, TaskUpdateRequest } from '../types/task'
+import type { RelatedRecordType, Task, TaskCreateRequest, TaskStatus, TaskUpdateRequest } from '../types/task'
 
 export type ListTasksParams = {
   status?: TaskStatus
   leadId?: string
+  accountId?: string
+  contactId?: string
+  dealId?: string
+  relatedType?: RelatedRecordType
   assignedToId?: string
   overdue?: boolean
   page?: number
@@ -16,6 +20,10 @@ export function listTasks(params: ListTasksParams = {}): Promise<Page<Task>> {
   const search = new URLSearchParams()
   if (params.status) search.set('status', params.status)
   if (params.leadId) search.set('leadId', params.leadId)
+  if (params.accountId) search.set('accountId', params.accountId)
+  if (params.contactId) search.set('contactId', params.contactId)
+  if (params.dealId) search.set('dealId', params.dealId)
+  if (params.relatedType) search.set('relatedType', params.relatedType)
   if (params.assignedToId) search.set('assignedToId', params.assignedToId)
   if (params.overdue === true) search.set('overdue', 'true')
   search.set('page', String(params.page ?? 0))

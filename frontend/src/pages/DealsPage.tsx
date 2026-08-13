@@ -18,6 +18,9 @@ import { DealDetails } from '../components/deals/DealDetails'
 import { DealForm } from '../components/deals/DealForm'
 import { DealPipeline } from '../components/deals/DealPipeline'
 import { DealTable } from '../components/deals/DealTable'
+import { TaskForm, type TaskRelatedPreset } from '../components/tasks/TaskForm'
+import { createTask } from '../api/tasks'
+import type { TaskCreateRequest } from '../types/task'
 import type { Account } from '../types/account'
 import type { User } from '../types/auth'
 import type { Deal, DealCreateRequest, DealStage, DealUpdateRequest } from '../types/deal'
@@ -56,6 +59,10 @@ export function DealsPage() {
   const [stageError, setStageError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null)
   const [deletePending, setDeletePending] = useState(false)
+  const [taskPreset, setTaskPreset] = useState<TaskRelatedPreset | null>(null)
+  const [taskFormOpen, setTaskFormOpen] = useState(false)
+  const [taskFormPending, setTaskFormPending] = useState(false)
+  const [activityKey, setActivityKey] = useState(0)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -422,6 +429,30 @@ export function DealsPage() {
         }}
         onDelete={(deal) => setDeleteTarget(deal)}
         onChangeStage={(deal, stage, lostReason) => void handleStageChange(deal, stage, lostReason)}
+        onAddTask={(deal) => {
+          setTaskPreset({ type: 'DEAL', id: deal.id })
+          setTaskFormOpen(true)
+        }}
+        activityRefreshKey={activityKey}
+      />
+
+      <TaskForm
+        open={taskFormOpen}
+        mode="create"
+        initialRelated={taskPreset}
+        pending={taskFormPending}
+        onClose={() => setTaskFormOpen(false)}
+        onCreate={async (body: TaskCreateRequest, key: string) => {
+          setTaskFormPending(true)
+          try {
+            await createTask(body, key)
+            setTaskFormOpen(false)
+            setActivityKey((k) => k + 1)
+          } finally {
+            setTaskFormPending(false)
+          }
+        }}
+        onUpdate={async () => undefined}
       />
 
       <DealForm

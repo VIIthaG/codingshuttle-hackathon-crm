@@ -1,7 +1,9 @@
 package com.flowcrm.task;
 
+import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.TaskStatus;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,6 +19,22 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
     long countByStatusAndDueAtBefore(TaskStatus status, Instant dueBefore);
 
     long countByAssignedToIdAndStatusAndDueAtBefore(UUID assignedToId, TaskStatus status, Instant dueBefore);
+
+    boolean existsByLead_Id(UUID leadId);
+
+    boolean existsByAccount_Id(UUID accountId);
+
+    boolean existsByContact_Id(UUID contactId);
+
+    boolean existsByDeal_Id(UUID dealId);
+
+    List<Task> findByLead_IdOrderByCreatedAtDesc(UUID leadId);
+
+    List<Task> findByAccount_IdOrderByCreatedAtDesc(UUID accountId);
+
+    List<Task> findByContact_IdOrderByCreatedAtDesc(UUID contactId);
+
+    List<Task> findByDeal_IdOrderByCreatedAtDesc(UUID dealId);
 
     /**
      * OPEN tasks with reminderAt in [now, until] (inclusive window start exclusive end via query bounds).

@@ -94,6 +94,7 @@ class OpenApiIntegrationTest {
         assertThat(body).contains("Users");
         assertThat(body).contains("Leads");
         assertThat(body).contains("Tasks");
+        assertThat(body).contains("Activities");
         assertThat(body).contains("Dashboard");
         assertThat(body).contains("Health");
     }
@@ -113,6 +114,10 @@ class OpenApiIntegrationTest {
         mockMvc.perform(get("/api/v1/deals")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/users")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/tasks")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/activities/timeline")
+                        .param("entityType", "LEAD")
+                        .param("entityId", "00000000-0000-0000-0000-000000000001"))
+                .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/dashboard/summary")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
 

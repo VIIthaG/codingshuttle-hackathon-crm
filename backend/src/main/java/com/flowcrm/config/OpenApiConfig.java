@@ -44,7 +44,8 @@ public class OpenApiConfig {
                         new Tag().name("Deals").description("Opportunity pipeline with validated stage transitions"),
                         new Tag().name("Users").description("Directory of users for assignment (ADMIN)"),
                         new Tag().name("Leads").description("Lead CRUD, pipeline status transitions, and QUALIFIED lead conversion"),
-                        new Tag().name("Tasks").description("Follow-up tasks and reminders"),
+                        new Tag().name("Tasks").description("Follow-up tasks related to a lead, account, contact, or deal"),
+                        new Tag().name("Activities").description("Unified activity timeline foundation for CRM records"),
                         new Tag().name("Dashboard").description("Pipeline and task summary metrics"),
                         new Tag().name("Health").description("Service health check")));
     }

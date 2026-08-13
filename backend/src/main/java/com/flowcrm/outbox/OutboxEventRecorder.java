@@ -48,13 +48,7 @@ public class OutboxEventRecorder {
             throw new IllegalArgumentException("Cannot schedule follow-up without reminderAt");
         }
 
-        FollowUpScheduledPayload payload = new FollowUpScheduledPayload(
-                task.getId(),
-                task.getLead().getId(),
-                task.getAssignedTo().getId(),
-                task.getTitle(),
-                task.getReminderAt(),
-                task.getDueAt());
+        FollowUpScheduledPayload payload = FollowUpScheduledPayload.from(task);
 
         OutboxEvent event = new OutboxEvent();
         event.setAggregateType(AGGREGATE_TYPE_TASK);

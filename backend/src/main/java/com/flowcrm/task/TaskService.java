@@ -1,8 +1,16 @@
 package com.flowcrm.task;
 
+import com.flowcrm.account.Account;
+import com.flowcrm.account.AccountService;
+import com.flowcrm.common.exception.BadRequestException;
 import com.flowcrm.common.exception.ForbiddenException;
 import com.flowcrm.common.exception.ResourceNotFoundException;
+import com.flowcrm.contact.Contact;
+import com.flowcrm.contact.ContactService;
 import com.flowcrm.dashboard.DashboardService;
+import com.flowcrm.deal.Deal;
+import com.flowcrm.deal.DealService;
+import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.Role;
 import com.flowcrm.enums.TaskStatus;
 import com.flowcrm.idempotency.IdempotencyOperations;
@@ -36,6 +44,9 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final LeadService leadService;
+    private final AccountService accountService;
+    private final ContactService contactService;
+    private final DealService dealService;
     private final OutboxEventRecorder outboxEventRecorder;
     private final DashboardService dashboardService;
     private final IdempotencyService idempotencyService;
@@ -45,6 +56,9 @@ public class TaskService {
             TaskRepository taskRepository,
             UserRepository userRepository,
             LeadService leadService,
+            AccountService accountService,
+            ContactService contactService,
+            DealService dealService,
             OutboxEventRecorder outboxEventRecorder,
             DashboardService dashboardService,
             IdempotencyService idempotencyService,
@@ -52,6 +66,9 @@ public class TaskService {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.leadService = leadService;
+        this.accountService = accountService;
+        this.contactService = contactService;
+        this.dealService = dealService;
         this.outboxEventRecorder = outboxEventRecorder;
         this.dashboardService = dashboardService;
         this.idempotencyService = idempotencyService;
@@ -60,11 +77,10 @@ public class TaskService {
 
     @Transactional
     public TaskResponse create(TaskCreateRequest request, UserPrincipal principal) {
-        Lead lead = leadService.requireAccessibleLead(request.leadId(), principal);
         User assignee = resolveAssignee(request.assignedToId(), principal);
 
         Task task = new Task();
-        task.setLead(lead);
+        applyRelation(task, request.leadId(), request.accountId(), request.contactId(), request.dealId(), principal);
         task.setAssignedTo(assignee);
         task.setTitle(request.title().trim());
         task.setDescription(trimToNull(request.description()));
@@ -98,11 +114,16 @@ public class TaskService {
     public Page<TaskResponse> list(
             TaskStatus status,
             UUID leadId,
+            UUID accountId,
+            UUID contactId,
+            UUID dealId,
+            RelatedRecordType relatedType,
             UUID assignedToId,
             Boolean overdue,
             UserPrincipal principal,
             Pageable pageable) {
-        Specification<Task> spec = buildListSpec(status, leadId, assignedToId, overdue, principal);
+        Specification<Task> spec =
+                buildListSpec(status, leadId, accountId, contactId, dealId, relatedType, assignedToId, overdue, principal);
         return taskRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
@@ -121,10 +142,9 @@ public class TaskService {
         Instant previousReminderAt = task.getReminderAt();
         TaskStatus previousStatus = task.getStatus();
 
-        Lead lead = leadService.requireAccessibleLead(request.leadId(), principal);
         User assignee = resolveAssignee(request.assignedToId(), principal);
 
-        task.setLead(lead);
+        applyRelation(task, request.leadId(), request.accountId(), request.contactId(), request.dealId(), principal);
         task.setAssignedTo(assignee);
         task.setTitle(request.title().trim());
         task.setDescription(trimToNull(request.description()));
@@ -189,9 +209,48 @@ public class TaskService {
         return status == TaskStatus.OPEN;
     }
 
+    private void applyRelation(
+            Task task, UUID leadId, UUID accountId, UUID contactId, UUID dealId, UserPrincipal principal) {
+        int count = 0;
+        if (leadId != null) {
+            count++;
+        }
+        if (accountId != null) {
+            count++;
+        }
+        if (contactId != null) {
+            count++;
+        }
+        if (dealId != null) {
+            count++;
+        }
+        if (count != 1) {
+            throw new BadRequestException("Exactly one of leadId, accountId, contactId, or dealId is required");
+        }
+
+        task.clearRelations();
+        if (leadId != null) {
+            Lead lead = leadService.requireAccessibleLead(leadId, principal);
+            task.setLead(lead);
+        } else if (accountId != null) {
+            Account account = accountService.requireAccessibleAccount(accountId, principal);
+            task.setAccount(account);
+        } else if (contactId != null) {
+            Contact contact = contactService.requireAccessibleContact(contactId, principal);
+            task.setContact(contact);
+        } else {
+            Deal deal = dealService.requireAccessibleDeal(dealId, principal);
+            task.setDeal(deal);
+        }
+    }
+
     private Specification<Task> buildListSpec(
             TaskStatus status,
             UUID leadId,
+            UUID accountId,
+            UUID contactId,
+            UUID dealId,
+            RelatedRecordType relatedType,
             UUID assignedToId,
             Boolean overdue,
             UserPrincipal principal) {
@@ -209,6 +268,23 @@ public class TaskService {
             }
             if (leadId != null) {
                 predicates.add(cb.equal(root.get("lead").get("id"), leadId));
+            }
+            if (accountId != null) {
+                predicates.add(cb.equal(root.get("account").get("id"), accountId));
+            }
+            if (contactId != null) {
+                predicates.add(cb.equal(root.get("contact").get("id"), contactId));
+            }
+            if (dealId != null) {
+                predicates.add(cb.equal(root.get("deal").get("id"), dealId));
+            }
+            if (relatedType != null) {
+                switch (relatedType) {
+                    case LEAD -> predicates.add(cb.isNotNull(root.get("lead")));
+                    case ACCOUNT -> predicates.add(cb.isNotNull(root.get("account")));
+                    case CONTACT -> predicates.add(cb.isNotNull(root.get("contact")));
+                    case DEAL -> predicates.add(cb.isNotNull(root.get("deal")));
+                }
             }
             if (Boolean.TRUE.equals(overdue)) {
                 predicates.add(cb.equal(root.get("status"), TaskStatus.OPEN));
@@ -249,10 +325,25 @@ public class TaskService {
     }
 
     private TaskResponse toResponse(Task task) {
+        RelatedRecordType type = task.relatedType();
+        Lead lead = task.getLead();
+        Account account = task.getAccount();
+        Contact contact = task.getContact();
+        Deal deal = task.getDeal();
+        String contactName = contact == null ? null : (contact.getFirstName() + " " + contact.getLastName()).trim();
         return new TaskResponse(
                 task.getId(),
-                task.getLead().getId(),
-                task.getLead().getFullName(),
+                type,
+                task.relatedId(),
+                task.relatedName(),
+                lead == null ? null : lead.getId(),
+                lead == null ? null : lead.getFullName(),
+                account == null ? null : account.getId(),
+                account == null ? null : account.getName(),
+                contact == null ? null : contact.getId(),
+                contactName,
+                deal == null ? null : deal.getId(),
+                deal == null ? null : deal.getName(),
                 task.getAssignedTo().getId(),
                 task.getAssignedTo().getFullName(),
                 task.getTitle(),

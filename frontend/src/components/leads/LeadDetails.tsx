@@ -1,3 +1,4 @@
+import { ActivityTimeline } from '../activity/ActivityTimeline'
 import { Link } from 'react-router-dom'
 import type { Lead, LeadStatus } from '../../types/lead'
 import { allowedLeadTransitions, isTerminalLeadStatus } from '../../utils/leadTransitions'
@@ -13,6 +14,8 @@ type LeadDetailsProps = {
   onDelete: (lead: Lead) => void
   onChangeStatus: (lead: Lead, status: LeadStatus) => void
   onConvert: (lead: Lead) => void
+  onAddTask: (lead: Lead) => void
+  activityRefreshKey?: number
 }
 
 export function LeadDetails({
@@ -25,6 +28,8 @@ export function LeadDetails({
   onDelete,
   onChangeStatus,
   onConvert,
+  onAddTask,
+  activityRefreshKey = 0,
 }: LeadDetailsProps) {
   if (!open || !lead) return null
 
@@ -172,9 +177,19 @@ export function LeadDetails({
               </div>
             ) : null}
           </section>
+
+          <ActivityTimeline entityType="LEAD" entityId={lead.id} refreshKey={activityRefreshKey} />
         </div>
 
         <footer className="flex gap-2 border-t border-border px-5 py-4">
+          <button
+            type="button"
+            onClick={() => onAddTask(lead)}
+            disabled={statusPending}
+            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            + Add task
+          </button>
           <button
             type="button"
             onClick={() => onEdit(lead)}

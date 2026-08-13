@@ -8,11 +8,19 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.UUID;
 
-@Schema(description = "Create follow-up task request")
+@Schema(description = "Create follow-up task request. Supply exactly one of leadId, accountId, contactId, dealId.")
 public record TaskCreateRequest(
-        @Schema(description = "Lead this task belongs to")
-        @NotNull(message = "Lead id is required")
+        @Schema(description = "Relate to this lead (exactly one related id)")
         UUID leadId,
+
+        @Schema(description = "Relate to this account")
+        UUID accountId,
+
+        @Schema(description = "Relate to this contact")
+        UUID contactId,
+
+        @Schema(description = "Relate to this deal")
+        UUID dealId,
 
         @Schema(description = "Optional assignee; defaults to current user. Only ADMIN may assign others.")
         UUID assignedToId,
@@ -37,5 +45,28 @@ public record TaskCreateRequest(
     @Schema(hidden = true)
     public boolean isReminderNotAfterDue() {
         return reminderAt == null || dueAt == null || !reminderAt.isAfter(dueAt);
+    }
+
+    @AssertTrue(message = "Exactly one of leadId, accountId, contactId, or dealId is required")
+    @Schema(hidden = true)
+    public boolean isExactlyOneRelatedRecord() {
+        return relatedCount() == 1;
+    }
+
+    private int relatedCount() {
+        int count = 0;
+        if (leadId != null) {
+            count++;
+        }
+        if (accountId != null) {
+            count++;
+        }
+        if (contactId != null) {
+            count++;
+        }
+        if (dealId != null) {
+            count++;
+        }
+        return count;
     }
 }

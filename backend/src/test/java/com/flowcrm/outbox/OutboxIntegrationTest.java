@@ -132,6 +132,8 @@ class OutboxIntegrationTest {
         assertThat(payload.title()).isEqualTo("Call back");
         assertThat(payload.reminderAt()).isEqualTo(reminderAt);
         assertThat(payload.dueAt()).isEqualTo(dueAt);
+        assertThat(payload.relatedType()).isEqualTo(com.flowcrm.enums.RelatedRecordType.LEAD);
+        assertThat(payload.relatedId()).isEqualTo(UUID.fromString(leadId));
 
         assertThat(outboxEventRepository.findDueByStatus(
                         OutboxEventStatus.PENDING, Instant.now(), org.springframework.data.domain.PageRequest.of(0, 50)))

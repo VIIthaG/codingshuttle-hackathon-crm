@@ -11,7 +11,7 @@ Related diagram source: [architecture.mmd](architecture.mmd)
 FlowCRM is a **modular monolith**:
 
 - One Spring Boot process (`backend/`)
-- Package boundaries by domain (`auth`, `account`, `contact`, `lead`, `task`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
+- Package boundaries by domain (`auth`, `account`, `contact`, `lead`, `deal`, `task`, `activity`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
 - Shared PostgreSQL as the durable system of record
 - Redis for cache / rate-limit / distributed lock
 - RabbitMQ for asynchronous reminder processing
@@ -43,18 +43,18 @@ PostgreSQL stores:
 | `users` | Auth identity + role |
 | `accounts` / `contacts` | Company and people CRM records |
 | `deals` | Opportunity pipeline (`DealStage`); account required; primary contact optional (`ON DELETE SET NULL`) |
-| `leads` / `tasks` | Pipeline and follow-up domain state. Converted leads store `converted_at` plus FKs to the resulting account, contact, and optional deal (`V11`; `ON DELETE RESTRICT` so conversion history is not silently dropped) |
+| `leads` / `tasks` | Pipeline and follow-up domain state. Converted leads store `converted_at` plus FKs to the resulting account, contact, and optional deal (`V11`; `ON DELETE RESTRICT` so conversion history is not silently dropped). Tasks (`V12`) belong to **exactly one** of lead/account/contact/deal (portable CHECK). Linked tasks block parent delete (HTTP 409); FKs do not cascade-delete follow-ups. |
 | `outbox_events` | Intended async side effects awaiting publish |
 | `processed_messages` | Consumer receipts (message id = outbox event id) |
 | `idempotency_records` | Durable HTTP create idempotency |
 
-**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V11 version that schema.
+**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V12 version that schema.
 
 ### Why not edit historical Flyway scripts
 
-Applied migrations are checksummed. Rewriting `V1`–`V9` breaks existing databases and CI. Schema evolution must be additive (`V11__…` and later).
+Applied migrations are checksummed. Rewriting `V1`–`V11` breaks existing databases and CI. Schema evolution must be additive (`V12__…` and later).
 
-Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check), and while converted leads still reference the account/contact/deal. Deleting a contact unlinks `deals.primary_contact_id`.
+Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check), while converted leads still reference the account/contact/deal, and while tasks still reference the record. Deleting a contact unlinks `deals.primary_contact_id`.
 
 ---
 
@@ -131,7 +131,15 @@ Applied only to:
 - Loser awaits/replays or returns 409 on fingerprint mismatch.
 - Failed business work releases the STARTED claim so the client may retry the same key.
 
-This is **request idempotency**, not “exactly-once messaging.”
+This is **request idempotency**, not “exactly-once messaging.” Task create fingerprints include the related record ids, so the same key cannot replay a Lead-linked body as a Deal-linked body.
+
+---
+
+## Activity timeline (foundation)
+
+`GET /api/v1/activities/timeline?entityType=&entityId=` aggregates data the database already stores: record created, record updated when `updatedAt` is meaningfully after create, lead conversion when present, and related tasks (created plus current completed/cancelled status). Due/reminder times appear as metadata, not invented historical events.
+
+It is **not** an immutable audit log and does **not** reconstruct unsaved status/stage transitions. Access is checked with the same ADMIN / SALES_REP record scoping as the parent entity.
 
 ---
 

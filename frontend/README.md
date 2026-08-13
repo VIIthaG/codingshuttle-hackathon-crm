@@ -65,7 +65,8 @@ Capabilities:
 - **Accounts** — company list/search, create/edit/delete, owner assignment (ADMIN)
 - **Contacts** — people list/search, optional account link, create/edit/delete
 - **Deals** — kanban + table, create/edit/delete, validated stage transitions
-- **Leads** — pipeline + list, create/edit/delete, validated status transitions, QUALIFIED convert (account + contact + optional deal)
-- **Tasks** — filters, create/edit, complete/cancel/delete, optional `reminderAt`
+- **Leads** — pipeline + list, create/edit/delete, validated status transitions, QUALIFIED convert (account + contact + optional deal), activity + Add task
+- **Accounts / Contacts / Deals** — details include the same reusable activity timeline and contextual Add task
+- **Tasks** — related to exactly one Lead/Account/Contact/Deal; filters include relation type; create/edit/complete/cancel/delete; optional `reminderAt`
 
 Reminders are scheduled by sending `reminderAt` to the backend; the SPA does not deliver email/SMS or run local reminder timers.

@@ -1,3 +1,4 @@
+import { ActivityTimeline } from '../activity/ActivityTimeline'
 import { useState } from 'react'
 import type { Deal, DealStage } from '../../types/deal'
 import { allowedDealTransitions, formatDealStage, isTerminalDealStage } from '../../utils/dealTransitions'
@@ -13,6 +14,8 @@ type DealDetailsProps = {
   onEdit: (deal: Deal) => void
   onDelete: (deal: Deal) => void
   onChangeStage: (deal: Deal, stage: DealStage, lostReason?: string | null) => void
+  onAddTask?: (deal: Deal) => void
+  activityRefreshKey?: number
 }
 
 export function DealDetails({
@@ -24,6 +27,8 @@ export function DealDetails({
   onEdit,
   onDelete,
   onChangeStage,
+  onAddTask,
+  activityRefreshKey = 0,
 }: DealDetailsProps) {
   const [lostReason, setLostReason] = useState('')
   if (!open || !deal) return null
@@ -115,9 +120,21 @@ export function DealDetails({
               </div>
             ) : null}
           </section>
+
+          <ActivityTimeline entityType="DEAL" entityId={deal.id} refreshKey={activityRefreshKey} />
         </div>
 
         <footer className="flex gap-2 border-t border-border px-5 py-4">
+          {onAddTask ? (
+            <button
+              type="button"
+              onClick={() => onAddTask(deal)}
+              disabled={stagePending}
+              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            >
+              + Add task
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => onEdit(deal)}

@@ -9,10 +9,12 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.UUID;
 
-@Schema(description = "Full task update request")
+@Schema(description = "Full task update request. Supply exactly one of leadId, accountId, contactId, dealId.")
 public record TaskUpdateRequest(
-        @NotNull(message = "Lead id is required")
         UUID leadId,
+        UUID accountId,
+        UUID contactId,
+        UUID dealId,
 
         @NotNull(message = "Assigned user is required")
         UUID assignedToId,
@@ -38,5 +40,24 @@ public record TaskUpdateRequest(
     @Schema(hidden = true)
     public boolean isReminderNotAfterDue() {
         return reminderAt == null || dueAt == null || !reminderAt.isAfter(dueAt);
+    }
+
+    @AssertTrue(message = "Exactly one of leadId, accountId, contactId, or dealId is required")
+    @Schema(hidden = true)
+    public boolean isExactlyOneRelatedRecord() {
+        int count = 0;
+        if (leadId != null) {
+            count++;
+        }
+        if (accountId != null) {
+            count++;
+        }
+        if (contactId != null) {
+            count++;
+        }
+        if (dealId != null) {
+            count++;
+        }
+        return count == 1;
     }
 }

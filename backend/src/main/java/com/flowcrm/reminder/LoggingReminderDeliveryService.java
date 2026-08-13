@@ -29,11 +29,12 @@ public class LoggingReminderDeliveryService implements ReminderDeliveryService {
         }
 
         log.info(
-                "Reminder processed taskId={} leadId={} assignedToId={} title=\"{}\" reminderAt={} dueAt={}",
+                "Reminder processed taskId={} title=\"{}\" relatedTo={} — {} assignedToId={} reminderAt={} dueAt={}",
                 payload.taskId(),
-                payload.leadId(),
-                payload.assignedToId(),
                 payload.title(),
+                payload.relatedType(),
+                payload.relatedName(),
+                payload.assignedToId(),
                 payload.reminderAt(),
                 payload.dueAt());
     }

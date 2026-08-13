@@ -2,6 +2,7 @@ package com.flowcrm.task;
 
 import com.flowcrm.common.exception.ErrorResponse;
 import com.flowcrm.config.OpenApiConfig;
+import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.TaskStatus;
 import com.flowcrm.idempotency.IdempotencyKeyValidator;
 import com.flowcrm.security.UserPrincipal;
@@ -53,7 +54,8 @@ public class TaskController {
     @Operation(
             summary = "Create task",
             description =
-                    "Creates a follow-up task. When reminderAt is set, a FOLLOW_UP_SCHEDULED outbox event is recorded. "
+                    "Creates a follow-up task related to exactly one Lead, Account, Contact, or Deal. "
+                            + "When reminderAt is set, a FOLLOW_UP_SCHEDULED outbox event is recorded. "
                             + "Optionally send Idempotency-Key for durable create idempotency.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Task created (or idempotent replay)"),
@@ -71,7 +73,7 @@ public class TaskController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Lead not found / not accessible",
+                    description = "Related record not found / not accessible",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
                     responseCode = "409",
@@ -99,7 +101,11 @@ public class TaskController {
     }
 
     @GetMapping
-    @Operation(summary = "List tasks", description = "Paginated tasks with optional filters. SALES_REP sees assigned tasks only.")
+    @Operation(
+            summary = "List tasks",
+            description =
+                    "Paginated tasks with optional filters (status, leadId, accountId, contactId, dealId, relatedType, overdue). "
+                            + "SALES_REP sees assigned tasks only.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Page of tasks"),
             @ApiResponse(
@@ -110,12 +116,18 @@ public class TaskController {
     public Page<TaskResponse> list(
             @Parameter(description = "Optional task status filter") @RequestParam(required = false) TaskStatus status,
             @Parameter(description = "Filter by lead id") @RequestParam(required = false) UUID leadId,
+            @Parameter(description = "Filter by account id") @RequestParam(required = false) UUID accountId,
+            @Parameter(description = "Filter by contact id") @RequestParam(required = false) UUID contactId,
+            @Parameter(description = "Filter by deal id") @RequestParam(required = false) UUID dealId,
+            @Parameter(description = "Filter by related record type") @RequestParam(required = false)
+                    RelatedRecordType relatedType,
             @Parameter(description = "ADMIN only: filter by assignee") @RequestParam(required = false) UUID assignedToId,
             @Parameter(description = "When true, only OPEN tasks past dueAt") @RequestParam(required = false)
                     Boolean overdue,
             Pageable pageable,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return taskService.list(status, leadId, assignedToId, overdue, principal, pageable);
+        return taskService.list(
+                status, leadId, accountId, contactId, dealId, relatedType, assignedToId, overdue, principal, pageable);
     }
 
     @GetMapping("/{id}")
@@ -158,7 +170,7 @@ public class TaskController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Task or lead not found",
+                    description = "Task or related record not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public TaskResponse update(

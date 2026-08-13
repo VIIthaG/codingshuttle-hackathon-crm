@@ -12,6 +12,7 @@ import com.flowcrm.enums.Role;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.LeadRepository;
+import com.flowcrm.task.TaskRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
@@ -34,6 +35,7 @@ public class ContactService {
     private final AccountService accountService;
     private final UserRepository userRepository;
     private final LeadRepository leadRepository;
+    private final TaskRepository taskRepository;
     private final IdempotencyService idempotencyService;
     private final ContactService self;
 
@@ -42,12 +44,14 @@ public class ContactService {
             AccountService accountService,
             UserRepository userRepository,
             LeadRepository leadRepository,
+            TaskRepository taskRepository,
             IdempotencyService idempotencyService,
             @Lazy ContactService self) {
         this.contactRepository = contactRepository;
         this.accountService = accountService;
         this.userRepository = userRepository;
         this.leadRepository = leadRepository;
+        this.taskRepository = taskRepository;
         this.idempotencyService = idempotencyService;
         this.self = self;
     }
@@ -131,6 +135,9 @@ public class ContactService {
         assertCanAccess(contact, principal);
         if (leadRepository.existsByConvertedContactId(id)) {
             throw new ConflictException("Cannot delete contact while converted leads still reference it");
+        }
+        if (taskRepository.existsByContact_Id(id)) {
+            throw new ConflictException("Cannot delete contact while tasks still reference it");
         }
         contactRepository.delete(contact);
     }

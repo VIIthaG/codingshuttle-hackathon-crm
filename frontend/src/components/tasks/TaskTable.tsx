@@ -1,4 +1,5 @@
 import type { Task } from '../../types/task'
+import { formatRelatedRecord } from '../../types/task'
 import { TaskStatusBadge } from '../StatusBadge'
 import { dueState, dueStateLabel, formatDateTime } from '../../utils/taskDates'
 import { TaskCard } from './TaskCard'
@@ -35,7 +36,7 @@ export function TaskTable({
           <thead className="bg-canvas text-xs uppercase tracking-wide text-muted">
             <tr>
               <th className="px-4 py-3 font-semibold">Title</th>
-              <th className="px-4 py-3 font-semibold">Lead</th>
+              <th className="px-4 py-3 font-semibold">Related to</th>
               <th className="px-4 py-3 font-semibold">Due</th>
               <th className="px-4 py-3 font-semibold">Reminder</th>
               <th className="px-4 py-3 font-semibold">Status</th>
@@ -58,7 +59,9 @@ export function TaskTable({
                       </div>
                     ) : null}
                   </td>
-                  <td className="max-w-[10rem] truncate px-4 py-3 text-slate-600">{task.leadName}</td>
+                  <td className="max-w-[12rem] truncate px-4 py-3 text-slate-600">
+                    {formatRelatedRecord(task)}
+                  </td>
                   <td className="whitespace-nowrap px-4 py-3 text-slate-600">
                     <div>{formatDateTime(task.dueAt)}</div>
                     {label ? (

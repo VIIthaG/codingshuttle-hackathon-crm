@@ -1,3 +1,4 @@
+import { ActivityTimeline } from '../activity/ActivityTimeline'
 import type { Account } from '../../types/account'
 import type { Contact } from '../../types/contact'
 import { formatDateTime } from '../../utils/taskDates'
@@ -11,6 +12,8 @@ type AccountDetailsProps = {
   onEdit: (account: Account) => void
   onDelete: (account: Account) => void
   onOpenContact?: (contact: Contact) => void
+  onAddTask?: (account: Account) => void
+  activityRefreshKey?: number
 }
 
 export function AccountDetails({
@@ -22,6 +25,8 @@ export function AccountDetails({
   onEdit,
   onDelete,
   onOpenContact,
+  onAddTask,
+  activityRefreshKey = 0,
 }: AccountDetailsProps) {
   if (!open || !account) return null
 
@@ -82,9 +87,20 @@ export function AccountDetails({
               </ul>
             )}
           </section>
+
+          <ActivityTimeline entityType="ACCOUNT" entityId={account.id} refreshKey={activityRefreshKey} />
         </div>
 
         <footer className="flex gap-2 border-t border-border px-5 py-4">
+          {onAddTask ? (
+            <button
+              type="button"
+              onClick={() => onAddTask(account)}
+              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              + Add task
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => onEdit(account)}

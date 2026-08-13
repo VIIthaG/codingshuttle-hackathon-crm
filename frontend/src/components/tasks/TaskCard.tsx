@@ -1,4 +1,5 @@
 import type { Task } from '../../types/task'
+import { formatRelatedRecord } from '../../types/task'
 import { TaskStatusBadge } from '../StatusBadge'
 import { dueState, dueStateLabel, formatDateTime } from '../../utils/taskDates'
 
@@ -20,7 +21,7 @@ export function TaskCard({ task, onOpen }: TaskCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-ink">{task.title}</div>
-          <div className="mt-0.5 truncate text-xs text-muted">Lead: {task.leadName}</div>
+          <div className="mt-0.5 truncate text-xs text-muted">{formatRelatedRecord(task)}</div>
         </div>
         <TaskStatusBadge status={task.status} />
       </div>

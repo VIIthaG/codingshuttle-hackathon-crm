@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, RefreshCw } from 'lucide-react'
-import { listAllLeads } from '../api/leads'
 import {
   completeTask,
   createTask,
@@ -14,8 +13,8 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { TaskDetails } from '../components/tasks/TaskDetails'
 import { TaskForm } from '../components/tasks/TaskForm'
 import { TaskTable } from '../components/tasks/TaskTable'
-import type { Lead } from '../types/lead'
-import type { Task, TaskCreateRequest, TaskStatus, TaskUpdateRequest } from '../types/task'
+import type { RelatedRecordType, Task, TaskCreateRequest, TaskStatus, TaskUpdateRequest } from '../types/task'
+import { RELATED_RECORD_TYPES, relatedTypeLabel, relationFields } from '../types/task'
 import { formatApiError } from '../utils/errors'
 
 type StatusFilter = 'ALL' | TaskStatus | 'OVERDUE'
@@ -23,12 +22,10 @@ type StatusFilter = 'ALL' | TaskStatus | 'OVERDUE'
 export function TasksPage() {
   const { user } = useAuth()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('OPEN')
-  const [leadFilter, setLeadFilter] = useState<string>('')
+  const [relatedTypeFilter, setRelatedTypeFilter] = useState<RelatedRecordType | ''>('')
 
   const [tasks, setTasks] = useState<Task[]>([])
-  const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
-  const [leadsLoading, setLeadsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const [selected, setSelected] = useState<Task | null>(null)
@@ -52,9 +49,9 @@ export function TasksPage() {
     } else if (statusFilter !== 'ALL') {
       params.status = statusFilter
     }
-    if (leadFilter) params.leadId = leadFilter
+    if (relatedTypeFilter) params.relatedType = relatedTypeFilter
     return params
-  }, [statusFilter, leadFilter])
+  }, [statusFilter, relatedTypeFilter])
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -76,25 +73,6 @@ export function TasksPage() {
   useEffect(() => {
     void refresh()
   }, [refresh])
-
-  useEffect(() => {
-    let cancelled = false
-    async function loadLeads() {
-      setLeadsLoading(true)
-      try {
-        const data = await listAllLeads()
-        if (!cancelled) setLeads(data)
-      } catch {
-        if (!cancelled) setLeads([])
-      } finally {
-        if (!cancelled) setLeadsLoading(false)
-      }
-    }
-    void loadLeads()
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   function openTask(task: Task) {
     setSelected(task)
@@ -168,7 +146,7 @@ export function TasksPage() {
     setActionError(null)
     try {
       const body: TaskUpdateRequest = {
-        leadId: cancelTarget.leadId,
+        ...relationFields(cancelTarget),
         assignedToId: cancelTarget.assignedToId,
         title: cancelTarget.title,
         description: cancelTarget.description,
@@ -223,7 +201,7 @@ export function TasksPage() {
         <div>
           <h2 className="text-xl font-semibold tracking-tight text-ink">Tasks</h2>
           <p className="mt-1 max-w-xl text-sm text-muted">
-            Follow-ups linked to leads, with optional reminder scheduling on the backend.
+            Follow-ups linked to a lead, account, contact, or deal.
             {user?.role === 'SALES_REP'
               ? ' You see tasks assigned to you.'
               : ' Admins see all tasks across the team.'}
@@ -267,16 +245,16 @@ export function TasksPage() {
           ))}
         </div>
         <label className="flex items-center gap-2 text-sm text-muted">
-          <span className="whitespace-nowrap">Lead</span>
+          <span className="whitespace-nowrap">Related</span>
           <select
-            value={leadFilter}
-            onChange={(e) => setLeadFilter(e.target.value)}
-            className="min-w-[12rem] rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand-500"
+            value={relatedTypeFilter}
+            onChange={(e) => setRelatedTypeFilter(e.target.value as RelatedRecordType | '')}
+            className="min-w-[10rem] rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand-500"
           >
-            <option value="">All leads</option>
-            {leads.map((lead) => (
-              <option key={lead.id} value={lead.id}>
-                {lead.fullName}
+            <option value="">All types</option>
+            {RELATED_RECORD_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {relatedTypeLabel(type)}
               </option>
             ))}
           </select>
@@ -300,20 +278,16 @@ export function TasksPage() {
         <div className="rounded-xl border border-dashed border-border bg-surface px-6 py-14 text-center">
           <h3 className="text-base font-semibold text-ink">No tasks yet</h3>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-            Create a follow-up linked to a lead. Optional reminders are scheduled by the backend.
+            Create a follow-up linked to a CRM record. Optional reminders are scheduled by the backend.
           </p>
           <button
             type="button"
             onClick={openCreate}
-            disabled={leads.length === 0}
-            className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
           >
             <Plus className="h-4 w-4" />
             Add task
           </button>
-          {leads.length === 0 && !leadsLoading ? (
-            <p className="mt-3 text-xs text-muted">Create a lead first — tasks require a leadId.</p>
-          ) : null}
         </div>
       ) : null}
 
@@ -347,8 +321,6 @@ export function TasksPage() {
         open={formOpen}
         mode={formMode}
         task={formMode === 'edit' ? selected : null}
-        leads={leads}
-        leadsLoading={leadsLoading}
         pending={formPending}
         onClose={() => setFormOpen(false)}
         onCreate={handleCreate}

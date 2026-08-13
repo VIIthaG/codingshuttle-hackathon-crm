@@ -8,6 +8,9 @@ import { useAuth } from '../auth/useAuth'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { AccountDetails } from '../components/accounts/AccountDetails'
 import { AccountForm } from '../components/accounts/AccountForm'
+import { TaskForm, type TaskRelatedPreset } from '../components/tasks/TaskForm'
+import { createTask } from '../api/tasks'
+import type { TaskCreateRequest } from '../types/task'
 import type { Account, AccountCreateRequest, AccountUpdateRequest } from '../types/account'
 import type { Contact } from '../types/contact'
 import type { User } from '../types/auth'
@@ -38,6 +41,10 @@ export function AccountsPage() {
   const [formPending, setFormPending] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null)
   const [deletePending, setDeletePending] = useState(false)
+  const [taskPreset, setTaskPreset] = useState<TaskRelatedPreset | null>(null)
+  const [taskFormOpen, setTaskFormOpen] = useState(false)
+  const [taskFormPending, setTaskFormPending] = useState(false)
+  const [activityKey, setActivityKey] = useState(0)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -346,6 +353,30 @@ export function AccountsPage() {
           setFormOpen(true)
         }}
         onDelete={setDeleteTarget}
+        onAddTask={(account) => {
+          setTaskPreset({ type: 'ACCOUNT', id: account.id })
+          setTaskFormOpen(true)
+        }}
+        activityRefreshKey={activityKey}
+      />
+
+      <TaskForm
+        open={taskFormOpen}
+        mode="create"
+        initialRelated={taskPreset}
+        pending={taskFormPending}
+        onClose={() => setTaskFormOpen(false)}
+        onCreate={async (body: TaskCreateRequest, key: string) => {
+          setTaskFormPending(true)
+          try {
+            await createTask(body, key)
+            setTaskFormOpen(false)
+            setActivityKey((k) => k + 1)
+          } finally {
+            setTaskFormPending(false)
+          }
+        }}
+        onUpdate={async () => undefined}
       />
 
       <AccountForm

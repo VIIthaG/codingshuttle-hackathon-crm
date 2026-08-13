@@ -11,6 +11,9 @@ import { useAuth } from '../auth/useAuth'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ConvertLeadModal } from '../components/leads/ConvertLeadModal'
 import { LeadDetails } from '../components/leads/LeadDetails'
+import { TaskForm, type TaskRelatedPreset } from '../components/tasks/TaskForm'
+import { createTask } from '../api/tasks'
+import type { TaskCreateRequest } from '../types/task'
 import { LeadForm } from '../components/leads/LeadForm'
 import { LeadPipeline } from '../components/leads/LeadPipeline'
 import { LeadTable } from '../components/leads/LeadTable'
@@ -40,6 +43,10 @@ export function LeadsPage() {
   const [deletePending, setDeletePending] = useState(false)
 
   const [convertTarget, setConvertTarget] = useState<Lead | null>(null)
+  const [taskPreset, setTaskPreset] = useState<TaskRelatedPreset | null>(null)
+  const [taskFormOpen, setTaskFormOpen] = useState(false)
+  const [taskFormPending, setTaskFormPending] = useState(false)
+  const [activityKey, setActivityKey] = useState(0)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -137,6 +144,17 @@ export function LeadsPage() {
       setDeleteTarget(null)
     } finally {
       setDeletePending(false)
+    }
+  }
+
+  async function handleTaskCreate(body: TaskCreateRequest, idempotencyKey: string) {
+    setTaskFormPending(true)
+    try {
+      await createTask(body, idempotencyKey)
+      setTaskFormOpen(false)
+      setActivityKey((k) => k + 1)
+    } finally {
+      setTaskFormPending(false)
     }
   }
 
@@ -259,6 +277,11 @@ export function LeadsPage() {
         onDelete={(lead) => setDeleteTarget(lead)}
         onChangeStatus={handleStatusChange}
         onConvert={(lead) => setConvertTarget(lead)}
+        onAddTask={(lead) => {
+          setTaskPreset({ type: 'LEAD', id: lead.id })
+          setTaskFormOpen(true)
+        }}
+        activityRefreshKey={activityKey}
       />
 
       <ConvertLeadModal
@@ -270,6 +293,16 @@ export function LeadsPage() {
           setSelected(converted)
           setDetailsOpen(true)
         }}
+      />
+
+      <TaskForm
+        open={taskFormOpen}
+        mode="create"
+        initialRelated={taskPreset}
+        pending={taskFormPending}
+        onClose={() => setTaskFormOpen(false)}
+        onCreate={handleTaskCreate}
+        onUpdate={async () => undefined}
       />
 
       <LeadForm

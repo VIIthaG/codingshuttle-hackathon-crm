@@ -1,4 +1,5 @@
 import type { Task } from '../../types/task'
+import { formatRelatedRecord } from '../../types/task'
 import { TaskStatusBadge } from '../StatusBadge'
 import { dueState, dueStateLabel, formatDateTime } from '../../utils/taskDates'
 
@@ -45,7 +46,7 @@ export function TaskDetails({
             <h2 id="task-details-title" className="truncate text-lg font-semibold text-ink">
               {task.title}
             </h2>
-            <p className="mt-0.5 text-sm text-muted">Lead: {task.leadName}</p>
+            <p className="mt-0.5 text-sm text-muted">{formatRelatedRecord(task)}</p>
           </div>
           <button
             type="button"
