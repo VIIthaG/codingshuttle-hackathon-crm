@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, CheckSquare, Clock3, Users } from 'lucide-react'
+import { AlertCircle, CheckSquare, CircleDollarSign, Clock3, Handshake, Trophy, Users } from 'lucide-react'
 import { fetchDashboardSummary } from '../api/dashboard'
 import { MetricCard } from '../components/MetricCard'
-import { LeadStatusBadge } from '../components/StatusBadge'
+import { DealStageBadge, LeadStatusBadge } from '../components/StatusBadge'
 import type { DashboardSummary } from '../types/dashboard'
+import type { DealStage } from '../types/deal'
 import type { LeadStatus } from '../types/lead'
+import { DEAL_STAGE_ORDER } from '../utils/dealTransitions'
+import { formatMoney } from '../utils/money'
 import { formatApiError } from '../utils/errors'
 
 const PIPELINE_ORDER: LeadStatus[] = ['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED', 'LOST']
@@ -99,10 +102,56 @@ export function DashboardPage() {
         />
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Open Deals"
+          value={data.openDeals}
+          icon={<Handshake className="h-5 w-5" />}
+        />
+        <MetricCard
+          label="Pipeline Value"
+          value={formatMoney(data.openPipelineValue)}
+          hint="Open deal amounts"
+          icon={<CircleDollarSign className="h-5 w-5" />}
+        />
+        <MetricCard
+          label="Weighted Pipeline"
+          value={formatMoney(data.weightedPipelineValue)}
+          hint="Amount × probability"
+          icon={<CircleDollarSign className="h-5 w-5" />}
+        />
+        <MetricCard
+          label="Won Deals"
+          value={data.wonDeals}
+          hint={formatMoney(data.wonDealValue)}
+          icon={<Trophy className="h-5 w-5" />}
+        />
+      </div>
+
       <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-ink">Pipeline breakdown</h3>
+            <h3 className="text-sm font-semibold text-ink">Deal stages</h3>
+            <p className="text-xs text-muted">Counts by opportunity stage</p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {DEAL_STAGE_ORDER.map((stage: DealStage) => {
+            const count = data.dealsByStage?.[stage] ?? 0
+            return (
+              <div key={stage} className="rounded-lg border border-border bg-canvas px-3 py-3">
+                <DealStageBadge stage={stage} />
+                <div className="mt-3 text-2xl font-semibold text-ink">{count}</div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-ink">Lead pipeline</h3>
             <p className="text-xs text-muted">Lead counts by status</p>
           </div>
           <div className="text-xs text-muted">{totalPipeline} total in pipeline map</div>

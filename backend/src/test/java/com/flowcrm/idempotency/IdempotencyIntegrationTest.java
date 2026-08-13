@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowcrm.account.AccountRepository;
 import com.flowcrm.contact.ContactRepository;
+import com.flowcrm.deal.DealRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEvent;
 import com.flowcrm.outbox.OutboxEventRepository;
@@ -62,6 +63,9 @@ class IdempotencyIntegrationTest {
     private ProcessedMessageRepository processedMessageRepository;
 
     @Autowired
+    private DealRepository dealRepository;
+
+    @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
@@ -76,6 +80,7 @@ class IdempotencyIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        dealRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();

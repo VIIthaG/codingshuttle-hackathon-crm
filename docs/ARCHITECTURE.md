@@ -42,16 +42,19 @@ PostgreSQL stores:
 |--------------|------|
 | `users` | Auth identity + role |
 | `accounts` / `contacts` | Company and people CRM records |
+| `deals` | Opportunity pipeline (`DealStage`); account required; primary contact optional (`ON DELETE SET NULL`) |
 | `leads` / `tasks` | Pipeline and follow-up domain state |
 | `outbox_events` | Intended async side effects awaiting publish |
 | `processed_messages` | Consumer receipts (message id = outbox event id) |
 | `idempotency_records` | Durable HTTP create idempotency |
 
-**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V9 version that schema.
+**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V10 version that schema.
 
 ### Why not edit historical Flyway scripts
 
-Applied migrations are checksummed. Rewriting `V1`–`V8` breaks existing databases and CI. Schema evolution must be additive (`V10__…` and later).
+Applied migrations are checksummed. Rewriting `V1`–`V9` breaks existing databases and CI. Schema evolution must be additive (`V11__…` and later).
+
+Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check). Deleting a contact unlinks `deals.primary_contact_id`.
 
 ---
 

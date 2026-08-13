@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowcrm.account.AccountRepository;
+import com.flowcrm.deal.DealRepository;
 import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
@@ -48,6 +49,9 @@ class ContactIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private DealRepository dealRepository;
+
+    @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
@@ -68,6 +72,7 @@ class ContactIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        dealRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();

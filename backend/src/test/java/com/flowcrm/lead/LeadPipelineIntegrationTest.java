@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowcrm.account.AccountRepository;
 import com.flowcrm.contact.ContactRepository;
+import com.flowcrm.deal.DealRepository;
 import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.task.TaskRepository;
@@ -51,6 +52,9 @@ class LeadPipelineIntegrationTest {
     private com.flowcrm.reminder.ProcessedMessageRepository processedMessageRepository;
 
     @Autowired
+    private DealRepository dealRepository;
+
+    @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
@@ -65,6 +69,7 @@ class LeadPipelineIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        dealRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();

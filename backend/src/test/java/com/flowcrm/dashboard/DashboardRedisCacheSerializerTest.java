@@ -48,7 +48,18 @@ class DashboardRedisCacheSerializerTest {
             byStatus.put(status, status == LeadStatus.CONTACTED ? 1L : 0L);
         }
         DashboardSummaryResponse original =
-                new DashboardSummaryResponse(1, byStatus, 4, 2, 1);
+                new DashboardSummaryResponse(
+                        1,
+                        byStatus,
+                        4,
+                        2,
+                        1,
+                        0,
+                        java.math.BigDecimal.ZERO.setScale(2),
+                        java.math.BigDecimal.ZERO.setScale(2),
+                        java.util.Map.of(),
+                        0,
+                        java.math.BigDecimal.ZERO.setScale(2));
 
         GenericJackson2JsonRedisSerializer generic = new GenericJackson2JsonRedisSerializer();
         Object restored = generic.deserialize(generic.serialize(original));

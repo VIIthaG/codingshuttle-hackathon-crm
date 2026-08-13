@@ -110,6 +110,16 @@ public class ContactService {
         return toResponse(contactRepository.save(contact));
     }
 
+    /**
+     * Loads a contact and enforces role-aware visibility. Used by deals.
+     */
+    @Transactional(readOnly = true)
+    public Contact requireAccessibleContact(UUID id, UserPrincipal principal) {
+        Contact contact = requireContact(id);
+        assertCanAccess(contact, principal);
+        return contact;
+    }
+
     @Transactional
     public void delete(UUID id, UserPrincipal principal) {
         Contact contact = requireContact(id);

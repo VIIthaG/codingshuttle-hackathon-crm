@@ -21,7 +21,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("FlowCRM API")
                         .description(
-                                "Mini CRM backend with accounts, contacts, lead pipeline management, follow-up tasks, reminders, "
+                                "Mini CRM backend with accounts, contacts, deals, lead pipeline management, follow-up tasks, reminders, "
                                         + "durable idempotency, Redis caching/rate limiting/distributed locking, "
                                         + "transactional outbox, and RabbitMQ processing.")
                         .version("1.0.0"))
@@ -41,6 +41,7 @@ public class OpenApiConfig {
                         new Tag().name("Authentication").description("Register, login, and current user"),
                         new Tag().name("Accounts").description("Company/account CRM records"),
                         new Tag().name("Contacts").description("People records, optionally linked to an account"),
+                        new Tag().name("Deals").description("Opportunity pipeline with validated stage transitions"),
                         new Tag().name("Users").description("Directory of users for assignment (ADMIN)"),
                         new Tag().name("Leads").description("Lead CRUD and pipeline status transitions"),
                         new Tag().name("Tasks").description("Follow-up tasks and reminders"),

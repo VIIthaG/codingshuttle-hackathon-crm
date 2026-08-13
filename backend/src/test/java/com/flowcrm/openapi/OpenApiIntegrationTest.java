@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.flowcrm.account.AccountRepository;
 import com.flowcrm.contact.ContactRepository;
+import com.flowcrm.deal.DealRepository;
 import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
@@ -48,6 +49,9 @@ class OpenApiIntegrationTest {
     private ProcessedMessageRepository processedMessageRepository;
 
     @Autowired
+    private DealRepository dealRepository;
+
+    @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
@@ -62,6 +66,7 @@ class OpenApiIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        dealRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();
@@ -85,6 +90,7 @@ class OpenApiIntegrationTest {
         assertThat(body).contains("Authentication");
         assertThat(body).contains("Accounts");
         assertThat(body).contains("Contacts");
+        assertThat(body).contains("Deals");
         assertThat(body).contains("Users");
         assertThat(body).contains("Leads");
         assertThat(body).contains("Tasks");
@@ -104,6 +110,7 @@ class OpenApiIntegrationTest {
         mockMvc.perform(get("/api/v1/leads")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/accounts")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/contacts")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/deals")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/users")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/tasks")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/dashboard/summary")).andExpect(status().isUnauthorized());

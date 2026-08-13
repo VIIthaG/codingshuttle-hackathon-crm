@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowcrm.account.AccountRepository;
 import com.flowcrm.contact.ContactRepository;
+import com.flowcrm.deal.DealRepository;
 import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
@@ -51,6 +52,9 @@ class AuthIntegrationTest {
     private com.flowcrm.reminder.ProcessedMessageRepository processedMessageRepository;
 
     @Autowired
+    private DealRepository dealRepository;
+
+    @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
@@ -65,6 +69,7 @@ class AuthIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        dealRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import com.flowcrm.account.AccountRepository;
 import com.flowcrm.contact.ContactRepository;
+import com.flowcrm.deal.DealRepository;
 import com.flowcrm.enums.LeadSource;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
@@ -63,6 +64,9 @@ class ReminderProcessingServiceTest {
     private OutboxEventRepository outboxEventRepository;
 
     @Autowired
+    private DealRepository dealRepository;
+
+    @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
@@ -78,6 +82,7 @@ class ReminderProcessingServiceTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        dealRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();

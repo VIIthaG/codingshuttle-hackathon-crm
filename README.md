@@ -14,15 +14,16 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 |------------|--------------|
 | JWT authentication | Register / login / me; passwords stored with BCrypt |
 | Roles | `ADMIN` and `SALES_REP` with role-aware data access |
-| React SPA | Vite + React UI for auth, dashboard, accounts, contacts, leads, and tasks (`frontend/`) |
+| React SPA | Vite + React UI for auth, dashboard, accounts, contacts, deals, leads, and tasks (`frontend/`) |
 | Accounts | Company records with owner scoping (`ADMIN` all / `SALES_REP` owned) |
 | Contacts | People records, optionally linked to an account |
+| Deals | Opportunity pipeline (`DealStage`) with validated transitions, amounts, and owner scoping |
 | Lead CRUD | Create, list (paginated/filterable), get, update, delete |
 | Lead assignment | Defaults to the current user; only `ADMIN` can assign others |
 | Lead pipeline | Validated transitions: `NEW → CONTACTED → QUALIFIED → CONVERTED`, with `LOST` from active stages; SPA pipeline + list views |
 | Follow-up tasks | Tasks linked to leads, with `dueAt` / optional `reminderAt`; SPA list/filters/complete/cancel |
 | Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work (delivery is log-simulated) |
-| Dashboard summary | Per-user aggregates (leads by status, open/overdue tasks, upcoming follow-ups) in API + SPA |
+| Dashboard summary | Per-user aggregates (leads, deals/pipeline value, open/overdue tasks, upcoming follow-ups) in API + SPA |
 
 **First-user behavior:** the first registered account becomes `ADMIN`; later registrations become `SALES_REP`.
 
@@ -41,7 +42,7 @@ These are not decorative patterns—they map to real CRM failure modes.
 | **Dead-letter queue (DLQ)** | After repeated failures, poison messages must be isolated for inspection instead of looping forever. |
 | **Consumer idempotency (`processed_messages`)** | Brokers can redeliver. FlowCRM treats duplicate `eventId`s as already handled. |
 | **Redis dashboard caching** | Dashboard reads are hot and relatively expensive aggregates; a short TTL cache reduces load. |
-| **Cache invalidation** | Lead/task mutations clear dashboard cache so summaries do not stay stale after writes. |
+| **Cache invalidation** | Lead/task/deal mutations clear dashboard cache so summaries do not stay stale after writes. |
 | **Redis login rate limiting** | Login is a high-abuse surface; per-IP limits reduce credential stuffing without putting counters in the app JVM. |
 | **Redis distributed locking** | Multiple app instances may run the outbox scheduler; a lock prevents concurrent publish of the same batch. |
 | **Flyway migrations** | Schema evolves safely and reproducibly across environments. |
@@ -87,6 +88,7 @@ flowchart TB
   PG --- U[users]
   PG --- A[accounts]
   PG --- C2[contacts]
+  PG --- D[deals]
   PG --- L[leads]
   PG --- T[tasks]
   PG --- O[outbox_events]
@@ -133,6 +135,7 @@ Optional header on:
 - `POST /api/v1/tasks`
 - `POST /api/v1/accounts`
 - `POST /api/v1/contacts`
+- `POST /api/v1/deals`
 
 | Concept | Behavior |
 |---------|----------|
@@ -201,6 +204,7 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 | `V7__outbox_available_at_and_superseded.sql` | Delayed publish + SUPERSEDED |
 | `V8__create_idempotency_records.sql` | HTTP idempotency records |
 | `V9__create_accounts_and_contacts.sql` | Accounts (companies) and contacts |
+| `V10__create_deals.sql` | Deals / opportunity pipeline |
 
 **Do not edit applied migrations.** Flyway checksums historical files; change schema only with a new versioned migration.
 
@@ -211,8 +215,8 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 - **JWT** bearer auth (stateless Spring Security session)
 - **BCrypt** password hashes
 - Public: `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `GET /api/v1/health`, Swagger/OpenAPI paths
-- `ADMIN`: full lead/task visibility; can assign to other users
-- `SALES_REP`: assigned leads/tasks only
+- `ADMIN`: full lead/task/account/contact/deal visibility; can assign to other users
+- `SALES_REP`: owned/assigned records only
 - Override `JWT_SECRET` outside local hackathon defaults
 
 ---
@@ -353,18 +357,19 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 | Build-A-Thon expectation | FlowCRM implementation |
 |--------------------------|------------------------|
 | Spring Boot backend | `backend/` Spring Boot **3.4.4** modular monolith |
-| Mini CRM | Auth + accounts + contacts + leads + tasks + dashboard (API + React SPA) |
+| Mini CRM | Auth + accounts + contacts + deals + leads + tasks + dashboard (API + React SPA) |
 | Lead pipeline | `LeadStatus` + `LeadStatusTransitions` + `PATCH /api/v1/leads/{id}/status` |
+| Deal pipeline | `DealStage` + `DealStageTransitions` + `PATCH /api/v1/deals/{id}/stage` |
 | Stage workflow | Validated transitions; terminal `LOST` / `CONVERTED` |
 | Automated follow-up reminders | Task `reminderAt` → outbox → RabbitMQ → consumer (log delivery) |
-| Idempotency | Durable `Idempotency-Key` on `POST /leads`, `/tasks`, `/accounts`, `/contacts` + consumer `processed_messages` |
+| Idempotency | Durable `Idempotency-Key` on `POST /leads`, `/tasks`, `/accounts`, `/contacts`, `/deals` + consumer `processed_messages` |
 | Transactional outbox | `outbox_events` written in same TX as task changes |
 | Retry / DLQ | Retry queue + DLQ with attempt header and max attempts |
 | Caching | Redis `dashboard-summary` with TTL + invalidation |
 | Rate limiting | Redis login limiter (429 + Retry-After) |
 | Distributed locking | Redis lock around outbox publisher |
 | Swagger | springdoc UI + JWT `bearerAuth` |
-| PostgreSQL | Primary durable store via Flyway V1–V9 |
+| PostgreSQL | Primary durable store via Flyway V1–V10 |
 
 ---
 
@@ -402,7 +407,7 @@ Summary: Railway Root Directory = `backend`, Dockerfile at `backend/Dockerfile`,
 │   ├── railway.toml
 │   └── .dockerignore
 └── frontend/                   # React + TypeScript + Vite SPA
-    ├── src/                    # Auth, dashboard, accounts, contacts, leads, tasks UI
+    ├── src/                    # Auth, dashboard, accounts, contacts, deals, leads, tasks UI
     └── README.md
 ```
 

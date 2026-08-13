@@ -17,6 +17,7 @@ import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
 import com.flowcrm.account.AccountRepository;
 import com.flowcrm.contact.ContactRepository;
+import com.flowcrm.deal.DealRepository;
 import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
@@ -79,6 +80,9 @@ class DashboardIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
+    private DealRepository dealRepository;
+
+    @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
@@ -93,6 +97,7 @@ class DashboardIntegrationTest {
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
+        dealRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
         idempotencyRecordRepository.deleteAll();
@@ -130,6 +135,90 @@ class DashboardIntegrationTest {
                 .andExpect(jsonPath("$.leadsByStatus.NEW").value(1))
                 .andExpect(jsonPath("$.openTasks").value(0))
                 .andExpect(jsonPath("$.upcomingFollowUps").value(0));
+    }
+
+    @Test
+    void dealMetrics_areRoleScoped_andInvalidatedOnMutation() throws Exception {
+        String adminToken = register("dash.deal.admin@example.com", "Deal Admin");
+        String repToken = registerSecondAsSalesRep("dash.deal.rep@example.com", "Deal Rep");
+        String repUserId = meId(repToken);
+
+        String adminAccount = createAccount(adminToken, "Admin Deal Co", null);
+        String repAccount = createAccount(adminToken, "Rep Deal Co", repUserId);
+
+        mockMvc.perform(post("/api/v1/deals")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Admin Open",
+                                  "accountId": "%s",
+                                  "amount": 1000
+                                }
+                                """.formatted(adminAccount)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/v1/deals")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Rep Open",
+                                  "accountId": "%s",
+                                  "ownerId": "%s",
+                                  "amount": 4000,
+                                  "probability": 25
+                                }
+                                """.formatted(repAccount, repUserId)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/dashboard/summary").header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openDeals").value(2))
+                .andExpect(jsonPath("$.openPipelineValue").value(5000.0))
+                .andExpect(jsonPath("$.weightedPipelineValue").value(1100.0))
+                .andExpect(jsonPath("$.dealsByStage.PROSPECTING").value(2))
+                .andExpect(jsonPath("$.wonDeals").value(0));
+
+        mockMvc.perform(get("/api/v1/dashboard/summary").header("Authorization", "Bearer " + repToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openDeals").value(1))
+                .andExpect(jsonPath("$.openPipelineValue").value(4000.0))
+                .andExpect(jsonPath("$.weightedPipelineValue").value(1000.0));
+
+        UserPrincipal principal = principalForEmail("dash.deal.admin@example.com");
+        Cache cache = cacheManager.getCache(CacheConfig.DASHBOARD_SUMMARY_CACHE);
+        assertThat(cache).isNotNull();
+        dashboardService.getSummary(principal);
+        assertThat(cache.get(principal.getId())).isNotNull();
+
+        String wonDeal = objectMapper
+                .readTree(mockMvc.perform(post("/api/v1/deals")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "name": "Won Deal",
+                                          "accountId": "%s",
+                                          "amount": 8000,
+                                          "stage": "CLOSED_WON"
+                                        }
+                                        """.formatted(adminAccount)))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString())
+                .get("id")
+                .asText();
+        assertThat(wonDeal).isNotBlank();
+        assertThat(cache.get(principal.getId())).isNull();
+
+        mockMvc.perform(get("/api/v1/dashboard/summary").header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openDeals").value(2))
+                .andExpect(jsonPath("$.wonDeals").value(1))
+                .andExpect(jsonPath("$.wonDealValue").value(8000.0))
+                .andExpect(jsonPath("$.dealsByStage.CLOSED_WON").value(1));
     }
 
     @Test
@@ -249,6 +338,23 @@ class DashboardIntegrationTest {
                 """.formatted(fullName, fullName.replace(" ", "").toLowerCase(), assignedToId);
 
         MvcResult result = mockMvc.perform(post("/api/v1/leads")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
+    }
+
+    private String createAccount(String token, String name, String ownerId) throws Exception {
+        String body = ownerId == null
+                ? """
+                        { "name": "%s" }
+                        """.formatted(name)
+                : """
+                        { "name": "%s", "ownerId": "%s" }
+                        """.formatted(name, ownerId);
+        MvcResult result = mockMvc.perform(post("/api/v1/accounts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
