@@ -25,6 +25,7 @@ flowchart TB
   SW --> API
   FE --> API
   SVC --> PG
+  SVC -->|convert QUALIFIED lead| PG
   SVC --> RD
   PUB --> RD
 

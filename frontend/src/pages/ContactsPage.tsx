@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Plus, RefreshCw, Search, UserRound } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { listAllAccounts } from '../api/accounts'
-import { createContact, deleteContact, listContacts, updateContact } from '../api/contacts'
+import { createContact, deleteContact, getContact, listContacts, updateContact } from '../api/contacts'
 import { listUsers } from '../api/users'
 import { useAuth } from '../auth/useAuth'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -15,6 +16,8 @@ import { formatApiError } from '../utils/errors'
 export function ContactsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
+  const [searchParams] = useSearchParams()
+  const openId = searchParams.get('open')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [accountFilter, setAccountFilter] = useState('')
@@ -60,6 +63,21 @@ export function ContactsPage() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!openId) return
+    let cancelled = false
+    void getContact(openId)
+      .then((contact) => {
+        if (cancelled) return
+        setSelected(contact)
+        setDetailsOpen(true)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [openId])
 
   useEffect(() => {
     void listAllAccounts()

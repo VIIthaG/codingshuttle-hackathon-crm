@@ -1,13 +1,31 @@
 package com.flowcrm.lead;
 
+import com.flowcrm.account.Account;
+import com.flowcrm.account.AccountService;
+import com.flowcrm.account.dto.AccountCreateRequest;
+import com.flowcrm.account.dto.AccountResponse;
+import com.flowcrm.common.exception.BadRequestException;
+import com.flowcrm.common.exception.ConflictException;
 import com.flowcrm.common.exception.ForbiddenException;
 import com.flowcrm.common.exception.InvalidStatusTransitionException;
 import com.flowcrm.common.exception.ResourceNotFoundException;
+import com.flowcrm.contact.Contact;
+import com.flowcrm.contact.ContactService;
+import com.flowcrm.contact.dto.ContactCreateRequest;
+import com.flowcrm.contact.dto.ContactResponse;
 import com.flowcrm.dashboard.DashboardService;
+import com.flowcrm.deal.Deal;
+import com.flowcrm.deal.DealRepository;
+import com.flowcrm.deal.DealService;
+import com.flowcrm.deal.dto.DealCreateRequest;
+import com.flowcrm.deal.dto.DealResponse;
+import com.flowcrm.enums.DealStage;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.enums.Role;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
+import com.flowcrm.lead.dto.LeadConvertIdempotencyPayload;
+import com.flowcrm.lead.dto.LeadConvertRequest;
 import com.flowcrm.lead.dto.LeadCreateRequest;
 import com.flowcrm.lead.dto.LeadResponse;
 import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
@@ -28,6 +46,10 @@ public class LeadService {
 
     private final LeadRepository leadRepository;
     private final UserRepository userRepository;
+    private final AccountService accountService;
+    private final ContactService contactService;
+    private final DealService dealService;
+    private final DealRepository dealRepository;
     private final DashboardService dashboardService;
     private final IdempotencyService idempotencyService;
     private final LeadService self;
@@ -35,11 +57,19 @@ public class LeadService {
     public LeadService(
             LeadRepository leadRepository,
             UserRepository userRepository,
+            AccountService accountService,
+            ContactService contactService,
+            DealService dealService,
+            DealRepository dealRepository,
             DashboardService dashboardService,
             IdempotencyService idempotencyService,
             @Lazy LeadService self) {
         this.leadRepository = leadRepository;
         this.userRepository = userRepository;
+        this.accountService = accountService;
+        this.contactService = contactService;
+        this.dealService = dealService;
+        this.dealRepository = dealRepository;
         this.dashboardService = dashboardService;
         this.idempotencyService = idempotencyService;
         this.self = self;
@@ -138,6 +168,68 @@ public class LeadService {
         dashboardService.invalidateAllSummaries();
     }
 
+    public LeadResponse convert(UUID leadId, LeadConvertRequest request, UserPrincipal principal, String idempotencyKey) {
+        return idempotencyService.execute(
+                principal.getId(),
+                IdempotencyOperations.LEADS_CONVERT,
+                idempotencyKey,
+                new LeadConvertIdempotencyPayload(leadId, request),
+                LeadResponse.class,
+                HttpStatus.OK.value(),
+                () -> self.convert(leadId, request, principal));
+    }
+
+    @Transactional
+    public LeadResponse convert(UUID leadId, LeadConvertRequest request, UserPrincipal principal) {
+        Lead lead = leadRepository.findByIdForUpdate(leadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead not found: " + leadId));
+        assertCanAccess(lead, principal);
+
+        if (lead.getStatus() != LeadStatus.QUALIFIED) {
+            throw new ConflictException("Lead cannot be converted from status " + lead.getStatus());
+        }
+        if (lead.getConvertedAt() != null) {
+            throw new ConflictException("Lead has already been converted");
+        }
+
+        UUID ownerId = lead.getAssignedTo().getId();
+        Account account = resolveConversionAccount(request, principal, ownerId, lead);
+        Contact contact = resolveConversionContact(request, principal, ownerId, account, lead);
+
+        Deal deal = null;
+        if (Boolean.TRUE.equals(request.createDeal())) {
+            if (request.dealName() == null || request.dealName().isBlank()) {
+                throw new BadRequestException("Deal name is required when createDeal is true");
+            }
+            DealResponse createdDeal = dealService.create(
+                    new DealCreateRequest(
+                            request.dealName().trim(),
+                            account.getId(),
+                            contact.getId(),
+                            ownerId,
+                            DealStage.PROSPECTING,
+                            request.amount(),
+                            request.currency(),
+                            null,
+                            request.expectedCloseDate(),
+                            trimToNull(request.description()),
+                            null),
+                    principal);
+            deal = dealRepository.findById(createdDeal.id())
+                    .orElseThrow(() -> new ResourceNotFoundException("Deal not found: " + createdDeal.id()));
+        }
+
+        lead.setStatus(LeadStatus.CONVERTED);
+        lead.setConvertedAt(java.time.Instant.now());
+        lead.setConvertedAccount(account);
+        lead.setConvertedContact(contact);
+        lead.setConvertedDeal(deal);
+
+        LeadResponse response = toResponse(leadRepository.save(lead));
+        dashboardService.invalidateAllSummaries();
+        return response;
+    }
+
     /**
      * Loads a lead and enforces role-aware visibility. Used by other domains (e.g. tasks).
      */
@@ -182,6 +274,10 @@ public class LeadService {
         if (current == targetStatus) {
             return;
         }
+        if (targetStatus == LeadStatus.CONVERTED) {
+            throw new InvalidStatusTransitionException(
+                    "CONVERTED can only be reached through POST /api/v1/leads/{id}/convert");
+        }
         if (!LeadStatusTransitions.canTransition(current, targetStatus)) {
             throw new InvalidStatusTransitionException(
                     "Cannot transition lead status from " + current + " to " + targetStatus);
@@ -201,6 +297,13 @@ public class LeadService {
 
     private LeadResponse toResponse(Lead lead) {
         User assignee = lead.getAssignedTo();
+        Account convertedAccount = lead.getConvertedAccount();
+        Contact convertedContact = lead.getConvertedContact();
+        Deal convertedDeal = lead.getConvertedDeal();
+        String convertedContactName = null;
+        if (convertedContact != null) {
+            convertedContactName = (convertedContact.getFirstName() + " " + convertedContact.getLastName()).trim();
+        }
         return new LeadResponse(
                 lead.getId(),
                 lead.getFullName(),
@@ -212,7 +315,102 @@ public class LeadService {
                 assignee.getId(),
                 assignee.getFullName(),
                 lead.getCreatedAt(),
-                lead.getUpdatedAt());
+                lead.getUpdatedAt(),
+                lead.getConvertedAt(),
+                convertedAccount == null ? null : convertedAccount.getId(),
+                convertedAccount == null ? null : convertedAccount.getName(),
+                convertedContact == null ? null : convertedContact.getId(),
+                convertedContactName,
+                convertedDeal == null ? null : convertedDeal.getId(),
+                convertedDeal == null ? null : convertedDeal.getName());
+    }
+
+    private Account resolveConversionAccount(
+            LeadConvertRequest request, UserPrincipal principal, UUID ownerId, Lead lead) {
+        if (request.useExistingAccountId() != null) {
+            return accountService.requireAccessibleAccount(request.useExistingAccountId(), principal);
+        }
+        String name = trimToNull(request.accountName());
+        if (name == null) {
+            name = trimToNull(lead.getCompany());
+        }
+        if (name == null) {
+            throw new BadRequestException("Account name is required when not using an existing account");
+        }
+        AccountResponse created = accountService.create(
+                new AccountCreateRequest(
+                        name,
+                        trimToNull(request.accountWebsite()),
+                        trimToNull(request.accountPhone()),
+                        trimToNull(request.accountIndustry()),
+                        null,
+                        ownerId),
+                principal);
+        return accountService.requireAccessibleAccount(created.id(), principal);
+    }
+
+    private Contact resolveConversionContact(
+            LeadConvertRequest request,
+            UserPrincipal principal,
+            UUID ownerId,
+            Account account,
+            Lead lead) {
+        if (request.useExistingContactId() != null) {
+            Contact contact = contactService.requireAccessibleContact(request.useExistingContactId(), principal);
+            if (contact.getAccount() != null && !contact.getAccount().getId().equals(account.getId())) {
+                throw new BadRequestException("Existing contact must belong to the selected account");
+            }
+            return contact;
+        }
+        String[] names = splitPersonName(request.contactFirstName(), request.contactLastName(), lead.getFullName());
+        ContactResponse created = contactService.create(
+                new ContactCreateRequest(
+                        names[0],
+                        names[1],
+                        firstNonBlank(request.contactEmail(), lead.getEmail()),
+                        firstNonBlank(request.contactPhone(), lead.getPhone()),
+                        trimToNull(request.contactJobTitle()),
+                        null,
+                        account.getId(),
+                        ownerId),
+                principal);
+        return contactService.requireAccessibleContact(created.id(), principal);
+    }
+
+    private String[] splitPersonName(String firstName, String lastName, String fullName) {
+        String first = trimToNull(firstName);
+        String last = trimToNull(lastName);
+        if (first != null && last != null) {
+            return new String[] {first, last};
+        }
+        String source = first != null ? first : (last != null ? last : trimToNull(fullName));
+        if (source == null) {
+            throw new BadRequestException("Contact name is required when not using an existing contact");
+        }
+        int space = source.indexOf(' ');
+        if (space < 0) {
+            return new String[] {source, source};
+        }
+        String parsedFirst = source.substring(0, space).trim();
+        String parsedLast = source.substring(space + 1).trim();
+        if (parsedFirst.isEmpty()) {
+            parsedFirst = source;
+        }
+        if (parsedLast.isEmpty()) {
+            parsedLast = parsedFirst;
+        }
+        if (first != null) {
+            parsedFirst = first;
+        }
+        if (last != null) {
+            parsedLast = last;
+        }
+        return new String[] {parsedFirst, parsedLast};
+    }
+
+    private String firstNonBlank(String primary, String fallback) {
+        String value = trimToNull(primary);
+        return value != null ? value : trimToNull(fallback);
     }
 
     private String normalizeOptionalEmail(String email) {

@@ -65,7 +65,7 @@ Capabilities:
 - **Accounts** — company list/search, create/edit/delete, owner assignment (ADMIN)
 - **Contacts** — people list/search, optional account link, create/edit/delete
 - **Deals** — kanban + table, create/edit/delete, validated stage transitions
-- **Leads** — pipeline + list, create/edit/delete, validated status transitions
+- **Leads** — pipeline + list, create/edit/delete, validated status transitions, QUALIFIED convert (account + contact + optional deal)
 - **Tasks** — filters, create/edit, complete/cancel/delete, optional `reminderAt`
 
 Reminders are scheduled by sending `reminderAt` to the backend; the SPA does not deliver email/SMS or run local reminder timers.

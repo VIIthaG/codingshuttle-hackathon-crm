@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Pipeline status transition request")
 public record LeadStatusUpdateRequest(
         @Schema(
-                description = "New pipeline status. Allowed transitions: NEW→CONTACTED→QUALIFIED→CONVERTED; LOST from active stages.",
+                description = "New pipeline status. Allowed: NEW→CONTACTED→QUALIFIED; LOST from active stages. CONVERTED is not allowed here.",
                 example = "CONTACTED")
         @NotNull(message = "Status is required")
         LeadStatus status) {

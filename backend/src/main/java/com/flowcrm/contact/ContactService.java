@@ -2,6 +2,7 @@ package com.flowcrm.contact;
 
 import com.flowcrm.account.Account;
 import com.flowcrm.account.AccountService;
+import com.flowcrm.common.exception.ConflictException;
 import com.flowcrm.common.exception.ForbiddenException;
 import com.flowcrm.common.exception.ResourceNotFoundException;
 import com.flowcrm.contact.dto.ContactCreateRequest;
@@ -10,6 +11,7 @@ import com.flowcrm.contact.dto.ContactUpdateRequest;
 import com.flowcrm.enums.Role;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
+import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
@@ -31,6 +33,7 @@ public class ContactService {
     private final ContactRepository contactRepository;
     private final AccountService accountService;
     private final UserRepository userRepository;
+    private final LeadRepository leadRepository;
     private final IdempotencyService idempotencyService;
     private final ContactService self;
 
@@ -38,11 +41,13 @@ public class ContactService {
             ContactRepository contactRepository,
             AccountService accountService,
             UserRepository userRepository,
+            LeadRepository leadRepository,
             IdempotencyService idempotencyService,
             @Lazy ContactService self) {
         this.contactRepository = contactRepository;
         this.accountService = accountService;
         this.userRepository = userRepository;
+        this.leadRepository = leadRepository;
         this.idempotencyService = idempotencyService;
         this.self = self;
     }
@@ -124,6 +129,9 @@ public class ContactService {
     public void delete(UUID id, UserPrincipal principal) {
         Contact contact = requireContact(id);
         assertCanAccess(contact, principal);
+        if (leadRepository.existsByConvertedContactId(id)) {
+            throw new ConflictException("Cannot delete contact while converted leads still reference it");
+        }
         contactRepository.delete(contact);
     }
 

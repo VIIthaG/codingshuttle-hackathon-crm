@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Lead, LeadStatus } from '../../types/lead'
 import { allowedLeadTransitions, isTerminalLeadStatus } from '../../utils/leadTransitions'
 import { LeadSourceBadge, LeadStatusBadge } from '../StatusBadge'
@@ -11,6 +12,7 @@ type LeadDetailsProps = {
   onEdit: (lead: Lead) => void
   onDelete: (lead: Lead) => void
   onChangeStatus: (lead: Lead, status: LeadStatus) => void
+  onConvert: (lead: Lead) => void
 }
 
 export function LeadDetails({
@@ -22,6 +24,7 @@ export function LeadDetails({
   onEdit,
   onDelete,
   onChangeStatus,
+  onConvert,
 }: LeadDetailsProps) {
   if (!open || !lead) return null
 
@@ -71,6 +74,71 @@ export function LeadDetails({
             <Row label="Created" value={formatDate(lead.createdAt)} />
             <Row label="Updated" value={formatDate(lead.updatedAt)} />
           </dl>
+
+          {lead.status === 'QUALIFIED' ? (
+            <button
+              type="button"
+              disabled={statusPending}
+              onClick={() => onConvert(lead)}
+              className="w-full rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              Convert lead
+            </button>
+          ) : null}
+
+          {lead.status === 'CONVERTED' ? (
+            <section className="rounded-lg border border-border bg-canvas px-3 py-3">
+              <h3 className="text-sm font-semibold text-ink">Conversion</h3>
+              <dl className="mt-3 space-y-3 text-sm">
+                <Row label="Converted at" value={lead.convertedAt ? formatDate(lead.convertedAt) : '—'} />
+                <div className="grid grid-cols-[7rem_1fr] gap-2">
+                  <dt className="text-muted">Account</dt>
+                  <dd>
+                    {lead.convertedAccountId ? (
+                      <Link
+                        to={`/accounts?open=${lead.convertedAccountId}`}
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {lead.convertedAccountName || 'View account'}
+                      </Link>
+                    ) : (
+                      '—'
+                    )}
+                  </dd>
+                </div>
+                <div className="grid grid-cols-[7rem_1fr] gap-2">
+                  <dt className="text-muted">Contact</dt>
+                  <dd>
+                    {lead.convertedContactId ? (
+                      <Link
+                        to={`/contacts?open=${lead.convertedContactId}`}
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {lead.convertedContactName || 'View contact'}
+                      </Link>
+                    ) : (
+                      '—'
+                    )}
+                  </dd>
+                </div>
+                <div className="grid grid-cols-[7rem_1fr] gap-2">
+                  <dt className="text-muted">Deal</dt>
+                  <dd>
+                    {lead.convertedDealId ? (
+                      <Link
+                        to={`/deals?open=${lead.convertedDealId}`}
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {lead.convertedDealName || 'View deal'}
+                      </Link>
+                    ) : (
+                      'None'
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+          ) : null}
 
           <section>
             <h3 className="text-sm font-semibold text-ink">Move status</h3>

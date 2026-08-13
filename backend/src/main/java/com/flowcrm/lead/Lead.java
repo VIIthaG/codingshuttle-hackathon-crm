@@ -1,5 +1,8 @@
 package com.flowcrm.lead;
 
+import com.flowcrm.account.Account;
+import com.flowcrm.contact.Contact;
+import com.flowcrm.deal.Deal;
 import com.flowcrm.enums.LeadSource;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.user.User;
@@ -47,6 +50,21 @@ public class Lead {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "assigned_to_id", nullable = false)
     private User assignedTo;
+
+    @Column(name = "converted_at")
+    private Instant convertedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "converted_account_id")
+    private Account convertedAccount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "converted_contact_id")
+    private Contact convertedContact;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "converted_deal_id")
+    private Deal convertedDeal;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -134,6 +152,38 @@ public class Lead {
 
     public void setAssignedTo(User assignedTo) {
         this.assignedTo = assignedTo;
+    }
+
+    public Instant getConvertedAt() {
+        return convertedAt;
+    }
+
+    public void setConvertedAt(Instant convertedAt) {
+        this.convertedAt = convertedAt;
+    }
+
+    public Account getConvertedAccount() {
+        return convertedAccount;
+    }
+
+    public void setConvertedAccount(Account convertedAccount) {
+        this.convertedAccount = convertedAccount;
+    }
+
+    public Contact getConvertedContact() {
+        return convertedContact;
+    }
+
+    public void setConvertedContact(Contact convertedContact) {
+        this.convertedContact = convertedContact;
+    }
+
+    public Deal getConvertedDeal() {
+        return convertedDeal;
+    }
+
+    public void setConvertedDeal(Deal convertedDeal) {
+        this.convertedDeal = convertedDeal;
     }
 
     public Instant getCreatedAt() {

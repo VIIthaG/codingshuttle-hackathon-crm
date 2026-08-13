@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Handshake, LayoutGrid, List, Plus, RefreshCw, Search } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { listAllAccounts } from '../api/accounts'
 import {
   changeDealStage,
   createDeal,
   deleteDeal,
+  getDeal,
   listAllDeals,
   listDeals,
   updateDeal,
@@ -27,6 +29,8 @@ type ViewMode = 'pipeline' | 'list'
 export function DealsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
+  const [searchParams] = useSearchParams()
+  const openId = searchParams.get('open')
   const [view, setView] = useState<ViewMode>('pipeline')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -86,6 +90,22 @@ export function DealsPage() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!openId) return
+    let cancelled = false
+    void getDeal(openId)
+      .then((deal) => {
+        if (cancelled) return
+        setSelected(deal)
+        setDetailsOpen(true)
+        setStageError(null)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [openId])
 
   useEffect(() => {
     void listAllAccounts()

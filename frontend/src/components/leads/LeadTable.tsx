@@ -5,9 +5,10 @@ type LeadTableProps = {
   leads: Lead[]
   onOpenLead: (lead: Lead) => void
   onDeleteLead: (lead: Lead) => void
+  onConvertLead: (lead: Lead) => void
 }
 
-export function LeadTable({ leads, onOpenLead, onDeleteLead }: LeadTableProps) {
+export function LeadTable({ leads, onOpenLead, onDeleteLead, onConvertLead }: LeadTableProps) {
   if (leads.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-12 text-center text-sm text-muted">
@@ -56,6 +57,15 @@ export function LeadTable({ leads, onOpenLead, onDeleteLead }: LeadTableProps) {
                     >
                       Open
                     </button>
+                    {lead.status === 'QUALIFIED' ? (
+                      <button
+                        type="button"
+                        onClick={() => onConvertLead(lead)}
+                        className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                      >
+                        Convert
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => onDeleteLead(lead)}
@@ -101,6 +111,15 @@ export function LeadTable({ leads, onOpenLead, onDeleteLead }: LeadTableProps) {
               >
                 Open
               </button>
+              {lead.status === 'QUALIFIED' ? (
+                <button
+                  type="button"
+                  onClick={() => onConvertLead(lead)}
+                  className="text-sm font-medium text-brand-600"
+                >
+                  Convert
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => onDeleteLead(lead)}

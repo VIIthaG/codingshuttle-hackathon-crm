@@ -3,6 +3,7 @@ import type { Page } from '../types/api'
 import type {
   Lead,
   LeadCreateRequest,
+  LeadConvertRequest,
   LeadStatus,
   LeadStatusUpdateRequest,
   LeadUpdateRequest,
@@ -60,6 +61,14 @@ export function changeLeadStatus(id: string, body: LeadStatusUpdateRequest): Pro
   return apiRequest<Lead>(`/api/v1/leads/${id}/status`, {
     method: 'PATCH',
     body,
+  })
+}
+
+export function convertLead(id: string, body: LeadConvertRequest, idempotencyKey: string): Promise<Lead> {
+  return apiRequest<Lead>(`/api/v1/leads/${id}/convert`, {
+    method: 'POST',
+    body,
+    headers: { 'Idempotency-Key': idempotencyKey },
   })
 }
 

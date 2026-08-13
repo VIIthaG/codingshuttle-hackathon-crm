@@ -4,6 +4,7 @@ import com.flowcrm.common.exception.ErrorResponse;
 import com.flowcrm.config.OpenApiConfig;
 import com.flowcrm.enums.LeadStatus;
 import com.flowcrm.idempotency.IdempotencyKeyValidator;
+import com.flowcrm.lead.dto.LeadConvertRequest;
 import com.flowcrm.lead.dto.LeadCreateRequest;
 import com.flowcrm.lead.dto.LeadResponse;
 import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
@@ -164,7 +165,7 @@ public class LeadController {
     @PatchMapping("/{id}/status")
     @Operation(
             summary = "Change lead pipeline status",
-            description = "Applies a validated pipeline transition (NEW → CONTACTED → QUALIFIED → CONVERTED; LOST from active stages).")
+            description = "Applies a validated pipeline transition (NEW → CONTACTED → QUALIFIED; LOST from active stages). CONVERTED is only set by POST /{id}/convert.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Status updated"),
             @ApiResponse(
@@ -211,5 +212,54 @@ public class LeadController {
     })
     public void delete(@PathVariable UUID id, @AuthenticationPrincipal UserPrincipal principal) {
         leadService.delete(id, principal);
+    }
+
+    @PostMapping("/{id}/convert")
+    @Operation(
+            summary = "Convert a QUALIFIED lead",
+            description =
+                    "Atomically creates or reuses an account and contact, optionally a deal, then marks the lead CONVERTED. "
+                            + "Optional Idempotency-Key. Same key + same lead + same body replays; different body or different lead id in the fingerprint returns 409.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lead converted (or idempotent replay)"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation failed",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Lead not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Not QUALIFIED, already converted, or idempotency mismatch",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public LeadResponse convert(
+            @PathVariable UUID id,
+            @Valid @RequestBody LeadConvertRequest request,
+            @Parameter(
+                            name = "Idempotency-Key",
+                            in = ParameterIn.HEADER,
+                            required = false,
+                            description =
+                                    "Optional. Fingerprint includes lead id so a key cannot replay another lead's conversion.",
+                            schema = @Schema(type = "string", maxLength = 255, example = "demo-convert-001"))
+                    @RequestHeader(value = "Idempotency-Key", required = false)
+                    String idempotencyKey,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        String key = IdempotencyKeyValidator.normalizeOptional(idempotencyKey);
+        if (key == null) {
+            return leadService.convert(id, request, principal);
+        }
+        return leadService.convert(id, request, principal, key);
     }
 }

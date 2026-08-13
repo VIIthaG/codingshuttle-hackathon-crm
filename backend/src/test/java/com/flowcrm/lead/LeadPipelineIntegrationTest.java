@@ -99,6 +99,50 @@ class LeadPipelineIntegrationTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("QUALIFIED"));
+
+        mockMvc.perform(patch("/api/v1/leads/" + leadId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "status": "LOST" }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("LOST"));
+    }
+
+    @Test
+    void changeStatus_qualifiedToConverted_isRejected() throws Exception {
+        String token = registerAndGetToken("pipeline.convert.patch@example.com", "Patch Convert");
+        String leadId = createLead(token, "Must Convert Via Api", "NEW");
+        mockMvc.perform(patch("/api/v1/leads/" + leadId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "status": "CONTACTED" }
+                                """))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/leads/" + leadId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "status": "QUALIFIED" }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/v1/leads/" + leadId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "status": "CONVERTED" }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid Status Transition"));
+
+        mockMvc.perform(get("/api/v1/leads/" + leadId).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("QUALIFIED"))
+                .andExpect(jsonPath("$.convertedAt").isEmpty())
+                .andExpect(jsonPath("$.convertedAccountId").isEmpty());
     }
 
     @Test

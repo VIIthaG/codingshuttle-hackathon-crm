@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Building2, Plus, RefreshCw, Search } from 'lucide-react'
-import { createAccount, deleteAccount, listAccounts, updateAccount } from '../api/accounts'
+import { useSearchParams } from 'react-router-dom'
+import { createAccount, deleteAccount, getAccount, listAccounts, updateAccount } from '../api/accounts'
 import { listContacts } from '../api/contacts'
 import { listUsers } from '../api/users'
 import { useAuth } from '../auth/useAuth'
@@ -15,6 +16,8 @@ import { formatApiError } from '../utils/errors'
 export function AccountsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
+  const [searchParams] = useSearchParams()
+  const openId = searchParams.get('open')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
@@ -55,6 +58,21 @@ export function AccountsPage() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!openId) return
+    let cancelled = false
+    void getAccount(openId)
+      .then((account) => {
+        if (cancelled) return
+        setSelected(account)
+        setDetailsOpen(true)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [openId])
 
   useEffect(() => {
     if (!isAdmin) return

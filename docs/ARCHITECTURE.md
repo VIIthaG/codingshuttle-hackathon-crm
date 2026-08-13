@@ -43,18 +43,18 @@ PostgreSQL stores:
 | `users` | Auth identity + role |
 | `accounts` / `contacts` | Company and people CRM records |
 | `deals` | Opportunity pipeline (`DealStage`); account required; primary contact optional (`ON DELETE SET NULL`) |
-| `leads` / `tasks` | Pipeline and follow-up domain state |
+| `leads` / `tasks` | Pipeline and follow-up domain state. Converted leads store `converted_at` plus FKs to the resulting account, contact, and optional deal (`V11`; `ON DELETE RESTRICT` so conversion history is not silently dropped) |
 | `outbox_events` | Intended async side effects awaiting publish |
 | `processed_messages` | Consumer receipts (message id = outbox event id) |
 | `idempotency_records` | Durable HTTP create idempotency |
 
-**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V10 version that schema.
+**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V11 version that schema.
 
 ### Why not edit historical Flyway scripts
 
 Applied migrations are checksummed. Rewriting `V1`–`V9` breaks existing databases and CI. Schema evolution must be additive (`V11__…` and later).
 
-Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check). Deleting a contact unlinks `deals.primary_contact_id`.
+Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check), and while converted leads still reference the account/contact/deal. Deleting a contact unlinks `deals.primary_contact_id`.
 
 ---
 
@@ -114,6 +114,10 @@ Applied only to:
 
 - `POST /api/v1/leads` → operation `LEADS_CREATE`
 - `POST /api/v1/tasks` → operation `TASKS_CREATE`
+- `POST /api/v1/accounts` → operation `ACCOUNTS_CREATE`
+- `POST /api/v1/contacts` → operation `CONTACTS_CREATE`
+- `POST /api/v1/deals` → operation `DEALS_CREATE`
+- `POST /api/v1/leads/{id}/convert` → operation `LEADS_CONVERT` (fingerprint includes lead id + body so a key cannot replay another lead)
 
 **Scope:** authenticated `user_id` + operation + `Idempotency-Key`.
 
@@ -160,8 +164,8 @@ This reduces concurrent double-publish races across instances. It does **not** r
 
 | Role | Behavior |
 |------|----------|
-| `ADMIN` | Sees all leads/tasks; may assign to other users |
-| `SALES_REP` | Sees assigned leads/tasks; self-assign by default |
+| `ADMIN` | Sees all leads/tasks/accounts/contacts/deals; may assign to other users; may convert accessible QUALIFIED leads |
+| `SALES_REP` | Sees owned/assigned records only; may convert only own QUALIFIED leads and reuse only accessible accounts/contacts |
 
 First registered user → `ADMIN`; subsequent → `SALES_REP`.
 
@@ -239,6 +243,7 @@ What is **not** solved here:
 - Idempotency record TTL/cleanup jobs
 - Hardened secrets management (no local JWT defaults in shared envs)
 - Broader idempotency beyond selected POSTs
+- Cascade-delete of converted accounts/contacts/deals (conversion FKs stay RESTRICT)
 
 (The React/Vite SPA under `frontend/` and Railway-oriented backend packaging under `docs/DEPLOYMENT.md` are implemented; treat remaining items above as still future work.)
 

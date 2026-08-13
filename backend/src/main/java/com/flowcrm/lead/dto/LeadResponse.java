@@ -18,5 +18,12 @@ public record LeadResponse(
         UUID assignedToId,
         String assignedToName,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        Instant convertedAt,
+        UUID convertedAccountId,
+        String convertedAccountName,
+        UUID convertedContactId,
+        String convertedContactName,
+        UUID convertedDealId,
+        String convertedDealName) {
 }

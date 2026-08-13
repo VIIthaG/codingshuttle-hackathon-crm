@@ -10,6 +10,7 @@ public final class IdempotencyOperations {
     public static final String ACCOUNTS_CREATE = "ACCOUNTS_CREATE";
     public static final String CONTACTS_CREATE = "CONTACTS_CREATE";
     public static final String DEALS_CREATE = "DEALS_CREATE";
+    public static final String LEADS_CONVERT = "LEADS_CONVERT";
 
     private IdempotencyOperations() {
     }

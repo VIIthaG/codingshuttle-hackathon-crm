@@ -20,7 +20,7 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 | Deals | Opportunity pipeline (`DealStage`) with validated transitions, amounts, and owner scoping |
 | Lead CRUD | Create, list (paginated/filterable), get, update, delete |
 | Lead assignment | Defaults to the current user; only `ADMIN` can assign others |
-| Lead pipeline | Validated transitions: `NEW → CONTACTED → QUALIFIED → CONVERTED`, with `LOST` from active stages; SPA pipeline + list views |
+| Lead pipeline | Validated PATCH transitions: `NEW → CONTACTED → QUALIFIED`, with `LOST` from active stages; `CONVERTED` only via convert API |
 | Follow-up tasks | Tasks linked to leads, with `dueAt` / optional `reminderAt`; SPA list/filters/complete/cancel |
 | Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work (delivery is log-simulated) |
 | Dashboard summary | Per-user aggregates (leads, deals/pipeline value, open/overdue tasks, upcoming follow-ups) in API + SPA |
@@ -136,6 +136,7 @@ Optional header on:
 - `POST /api/v1/accounts`
 - `POST /api/v1/contacts`
 - `POST /api/v1/deals`
+- `POST /api/v1/leads/{id}/convert`
 
 | Concept | Behavior |
 |---------|----------|
@@ -143,7 +144,7 @@ Optional header on:
 | Scope | `(user_id, operation, idempotency_key)` — not global across users/operations |
 | Fingerprint | SHA-256 of canonical JSON request payload |
 | Claim | PostgreSQL unique constraint + `INSERT … ON CONFLICT DO NOTHING` |
-| Same key + same body | Replay original **201** body/resource id (no second create) |
+| Same key + same body | Replay original **201** (creates) or **200** (lead convert) body/resource id |
 | Same key + different body | **409** Conflict |
 | Concurrent same key | Only the claim owner executes business create |
 
@@ -156,7 +157,7 @@ Because task create + outbox write are one transactional unit for the claim owne
 ### Dashboard caching
 - Cache name: `dashboard-summary`, keyed by authenticated user id
 - Default TTL: **60 seconds** (`app.cache.dashboard-ttl-seconds`)
-- Lead/task mutations call cache eviction (`allEntries`) so ADMIN and assignee views stay coherent
+- Lead/task/deal/conversion mutations call cache eviction (`allEntries`) so ADMIN and assignee views stay coherent
 
 ### Login rate limiting
 - Per client IP key: `ratelimit:login:<ip>`
@@ -205,6 +206,7 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 | `V8__create_idempotency_records.sql` | HTTP idempotency records |
 | `V9__create_accounts_and_contacts.sql` | Accounts (companies) and contacts |
 | `V10__create_deals.sql` | Deals / opportunity pipeline |
+| `V11__add_lead_conversion.sql` | Lead conversion metadata (`converted_at` + account/contact/deal FKs, `ON DELETE` RESTRICT) |
 
 **Do not edit applied migrations.** Flyway checksums historical files; change schema only with a new versioned migration.
 
@@ -233,9 +235,9 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 1. Call **Authentication → register** or **login**
 2. Copy `accessToken` from the response
 3. Click **Authorize** → paste token into `bearerAuth`
-4. Create a lead → change pipeline status → create a task → open dashboard summary
+4. Create a lead → qualify → convert to account/contact (optional deal) → create a task → open dashboard summary
 
-Optional `Idempotency-Key` is documented on lead/task **create** only.
+Optional `Idempotency-Key` is documented on lead/task/account/contact/deal **create** and lead **convert**.
 
 ---
 
@@ -340,7 +342,7 @@ Tests use the `test` profile (H2 in PostgreSQL mode; RabbitMQ/Redis autoconfig e
 Automated coverage includes:
 
 - Authentication / first-user role / JWT `me`
-- Lead CRUD + pipeline transitions
+- Lead CRUD + pipeline transitions + QUALIFIED conversion
 - Tasks + reminder scheduling rules
 - Outbox transactional writes, SUPERSEDED behavior
 - Reminder processing, stale skip, retry/DLQ unit paths
@@ -357,19 +359,20 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 | Build-A-Thon expectation | FlowCRM implementation |
 |--------------------------|------------------------|
 | Spring Boot backend | `backend/` Spring Boot **3.4.4** modular monolith |
-| Mini CRM | Auth + accounts + contacts + deals + leads + tasks + dashboard (API + React SPA) |
-| Lead pipeline | `LeadStatus` + `LeadStatusTransitions` + `PATCH /api/v1/leads/{id}/status` |
+| Mini CRM | Auth + accounts + contacts + deals + lead conversion + leads + tasks + dashboard (API + React SPA) |
+| Lead pipeline | `LeadStatus` + `LeadStatusTransitions` + `PATCH /api/v1/leads/{id}/status` (cannot set CONVERTED) |
+| Lead conversion | `POST /api/v1/leads/{id}/convert` — QUALIFIED → account + contact + optional deal, then `CONVERTED` (one TX) |
 | Deal pipeline | `DealStage` + `DealStageTransitions` + `PATCH /api/v1/deals/{id}/stage` |
 | Stage workflow | Validated transitions; terminal `LOST` / `CONVERTED` |
 | Automated follow-up reminders | Task `reminderAt` → outbox → RabbitMQ → consumer (log delivery) |
-| Idempotency | Durable `Idempotency-Key` on `POST /leads`, `/tasks`, `/accounts`, `/contacts`, `/deals` + consumer `processed_messages` |
+| Idempotency | Durable `Idempotency-Key` on `POST /leads`, `/tasks`, `/accounts`, `/contacts`, `/deals`, `/leads/{id}/convert` + consumer `processed_messages` |
 | Transactional outbox | `outbox_events` written in same TX as task changes |
 | Retry / DLQ | Retry queue + DLQ with attempt header and max attempts |
 | Caching | Redis `dashboard-summary` with TTL + invalidation |
 | Rate limiting | Redis login limiter (429 + Retry-After) |
 | Distributed locking | Redis lock around outbox publisher |
 | Swagger | springdoc UI + JWT `bearerAuth` |
-| PostgreSQL | Primary durable store via Flyway V1–V10 |
+| PostgreSQL | Primary durable store via Flyway V1–V11 |
 
 ---
 

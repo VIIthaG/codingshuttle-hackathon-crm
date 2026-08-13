@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Allowed lead pipeline transitions.
+ * Allowed ordinary PATCH pipeline transitions.
+ * CONVERTED is not reachable here — only POST /leads/{id}/convert may set it.
  * Terminal statuses LOST and CONVERTED cannot move further.
  */
 public final class LeadStatusTransitions {
@@ -17,7 +18,7 @@ public final class LeadStatusTransitions {
     static {
         ALLOWED.put(LeadStatus.NEW, EnumSet.of(LeadStatus.CONTACTED, LeadStatus.LOST));
         ALLOWED.put(LeadStatus.CONTACTED, EnumSet.of(LeadStatus.QUALIFIED, LeadStatus.LOST));
-        ALLOWED.put(LeadStatus.QUALIFIED, EnumSet.of(LeadStatus.CONVERTED, LeadStatus.LOST));
+        ALLOWED.put(LeadStatus.QUALIFIED, EnumSet.of(LeadStatus.LOST));
         ALLOWED.put(LeadStatus.LOST, EnumSet.noneOf(LeadStatus.class));
         ALLOWED.put(LeadStatus.CONVERTED, EnumSet.noneOf(LeadStatus.class));
     }

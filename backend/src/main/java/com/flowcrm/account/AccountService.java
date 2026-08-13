@@ -8,6 +8,7 @@ import com.flowcrm.common.exception.ForbiddenException;
 import com.flowcrm.common.exception.ResourceNotFoundException;
 import com.flowcrm.contact.ContactRepository;
 import com.flowcrm.deal.DealRepository;
+import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.enums.Role;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
@@ -32,6 +33,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final ContactRepository contactRepository;
     private final DealRepository dealRepository;
+    private final LeadRepository leadRepository;
     private final UserRepository userRepository;
     private final IdempotencyService idempotencyService;
     private final AccountService self;
@@ -40,12 +42,14 @@ public class AccountService {
             AccountRepository accountRepository,
             ContactRepository contactRepository,
             DealRepository dealRepository,
+            LeadRepository leadRepository,
             UserRepository userRepository,
             IdempotencyService idempotencyService,
             @Lazy AccountService self) {
         this.accountRepository = accountRepository;
         this.contactRepository = contactRepository;
         this.dealRepository = dealRepository;
+        this.leadRepository = leadRepository;
         this.userRepository = userRepository;
         this.idempotencyService = idempotencyService;
         this.self = self;
@@ -112,6 +116,9 @@ public class AccountService {
         assertCanAccess(account, principal);
         if (dealRepository.existsByAccountId(id)) {
             throw new ConflictException("Cannot delete account while deals still reference it");
+        }
+        if (leadRepository.existsByConvertedAccountId(id)) {
+            throw new ConflictException("Cannot delete account while converted leads still reference it");
         }
         accountRepository.delete(account);
     }

@@ -125,5 +125,12 @@ class OpenApiIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/v1/leads/00000000-0000-0000-0000-000000000001/convert")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "accountName": "Blocked" }
+                                """))
+                .andExpect(status().isUnauthorized());
     }
 }

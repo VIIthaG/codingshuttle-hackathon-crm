@@ -4,7 +4,7 @@ import type { LeadSource, LeadStatus } from '../types/lead'
 const ALLOWED: Record<LeadStatus, LeadStatus[]> = {
   NEW: ['CONTACTED', 'LOST'],
   CONTACTED: ['QUALIFIED', 'LOST'],
-  QUALIFIED: ['CONVERTED', 'LOST'],
+  QUALIFIED: ['LOST'],
   CONVERTED: [],
   LOST: [],
 }

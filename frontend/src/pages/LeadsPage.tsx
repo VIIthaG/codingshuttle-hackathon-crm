@@ -9,6 +9,7 @@ import {
 } from '../api/leads'
 import { useAuth } from '../auth/useAuth'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ConvertLeadModal } from '../components/leads/ConvertLeadModal'
 import { LeadDetails } from '../components/leads/LeadDetails'
 import { LeadForm } from '../components/leads/LeadForm'
 import { LeadPipeline } from '../components/leads/LeadPipeline'
@@ -37,6 +38,8 @@ export function LeadsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null)
   const [deletePending, setDeletePending] = useState(false)
+
+  const [convertTarget, setConvertTarget] = useState<Lead | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -236,6 +239,7 @@ export function LeadsPage() {
             leads={leads}
             onOpenLead={openLead}
             onDeleteLead={(lead) => setDeleteTarget(lead)}
+            onConvertLead={(lead) => setConvertTarget(lead)}
           />
         )
       ) : null}
@@ -254,6 +258,18 @@ export function LeadsPage() {
         }}
         onDelete={(lead) => setDeleteTarget(lead)}
         onChangeStatus={handleStatusChange}
+        onConvert={(lead) => setConvertTarget(lead)}
+      />
+
+      <ConvertLeadModal
+        open={convertTarget != null}
+        lead={convertTarget}
+        onClose={() => setConvertTarget(null)}
+        onConverted={(converted) => {
+          setLeads((prev) => prev.map((l) => (l.id === converted.id ? converted : l)))
+          setSelected(converted)
+          setDetailsOpen(true)
+        }}
       />
 
       <LeadForm
