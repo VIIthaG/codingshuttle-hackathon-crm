@@ -12,6 +12,8 @@ import com.flowcrm.enums.Role;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.LeadRepository;
+import com.flowcrm.meeting.MeetingRepository;
+import com.flowcrm.call.CallRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
@@ -36,6 +38,8 @@ public class ContactService {
     private final UserRepository userRepository;
     private final LeadRepository leadRepository;
     private final TaskRepository taskRepository;
+    private final MeetingRepository meetingRepository;
+    private final CallRepository callRepository;
     private final IdempotencyService idempotencyService;
     private final ContactService self;
 
@@ -45,6 +49,8 @@ public class ContactService {
             UserRepository userRepository,
             LeadRepository leadRepository,
             TaskRepository taskRepository,
+            MeetingRepository meetingRepository,
+            CallRepository callRepository,
             IdempotencyService idempotencyService,
             @Lazy ContactService self) {
         this.contactRepository = contactRepository;
@@ -52,6 +58,8 @@ public class ContactService {
         this.userRepository = userRepository;
         this.leadRepository = leadRepository;
         this.taskRepository = taskRepository;
+        this.meetingRepository = meetingRepository;
+        this.callRepository = callRepository;
         this.idempotencyService = idempotencyService;
         this.self = self;
     }
@@ -138,6 +146,12 @@ public class ContactService {
         }
         if (taskRepository.existsByContact_Id(id)) {
             throw new ConflictException("Cannot delete contact while tasks still reference it");
+        }
+        if (meetingRepository.existsByContact_Id(id)) {
+            throw new ConflictException("Cannot delete contact while meetings still reference it");
+        }
+        if (callRepository.existsByContact_Id(id)) {
+            throw new ConflictException("Cannot delete contact while calls still reference it");
         }
         contactRepository.delete(contact);
     }

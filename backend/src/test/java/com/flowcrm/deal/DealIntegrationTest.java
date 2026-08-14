@@ -16,6 +16,8 @@ import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.reminder.ProcessedMessageRepository;
+import com.flowcrm.call.CallRepository;
+import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +51,12 @@ class DealIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private MeetingRepository meetingRepository;
+
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
     private DealRepository dealRepository;
 
     @Autowired
@@ -70,6 +78,8 @@ class DealIntegrationTest {
     void cleanDatabase() {
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
+        callRepository.deleteAll();
+        meetingRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         dealRepository.deleteAll();

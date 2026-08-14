@@ -19,6 +19,8 @@ import com.flowcrm.enums.Role;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.LeadRepository;
+import com.flowcrm.meeting.MeetingRepository;
+import com.flowcrm.call.CallRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
@@ -45,6 +47,8 @@ public class DealService {
     private final DealRepository dealRepository;
     private final LeadRepository leadRepository;
     private final TaskRepository taskRepository;
+    private final MeetingRepository meetingRepository;
+    private final CallRepository callRepository;
     private final AccountService accountService;
     private final ContactService contactService;
     private final UserRepository userRepository;
@@ -56,6 +60,8 @@ public class DealService {
             DealRepository dealRepository,
             LeadRepository leadRepository,
             TaskRepository taskRepository,
+            MeetingRepository meetingRepository,
+            CallRepository callRepository,
             AccountService accountService,
             ContactService contactService,
             UserRepository userRepository,
@@ -65,6 +71,8 @@ public class DealService {
         this.dealRepository = dealRepository;
         this.leadRepository = leadRepository;
         this.taskRepository = taskRepository;
+        this.meetingRepository = meetingRepository;
+        this.callRepository = callRepository;
         this.accountService = accountService;
         this.contactService = contactService;
         this.userRepository = userRepository;
@@ -189,6 +197,12 @@ public class DealService {
         }
         if (taskRepository.existsByDeal_Id(id)) {
             throw new ConflictException("Cannot delete deal while tasks still reference it");
+        }
+        if (meetingRepository.existsByDeal_Id(id)) {
+            throw new ConflictException("Cannot delete deal while meetings still reference it");
+        }
+        if (callRepository.existsByDeal_Id(id)) {
+            throw new ConflictException("Cannot delete deal while calls still reference it");
         }
         dealRepository.delete(deal);
         dashboardService.invalidateAllSummaries();

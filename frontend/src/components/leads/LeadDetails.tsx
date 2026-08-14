@@ -15,6 +15,8 @@ type LeadDetailsProps = {
   onChangeStatus: (lead: Lead, status: LeadStatus) => void
   onConvert: (lead: Lead) => void
   onAddTask: (lead: Lead) => void
+  onAddMeeting: (lead: Lead) => void
+  onAddCall: (lead: Lead) => void
   activityRefreshKey?: number
 }
 
@@ -29,6 +31,8 @@ export function LeadDetails({
   onChangeStatus,
   onConvert,
   onAddTask,
+  onAddMeeting,
+  onAddCall,
   activityRefreshKey = 0,
 }: LeadDetailsProps) {
   if (!open || !lead) return null
@@ -181,14 +185,30 @@ export function LeadDetails({
           <ActivityTimeline entityType="LEAD" entityId={lead.id} refreshKey={activityRefreshKey} />
         </div>
 
-        <footer className="flex gap-2 border-t border-border px-5 py-4">
+        <footer className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
           <button
             type="button"
             onClick={() => onAddTask(lead)}
             disabled={statusPending}
             className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
           >
-            + Add task
+            + Task
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddMeeting(lead)}
+            disabled={statusPending}
+            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            + Meeting
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddCall(lead)}
+            disabled={statusPending}
+            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            + Call
           </button>
           <button
             type="button"

@@ -10,6 +10,10 @@ const titles: Record<string, string> = {
   '/deals': 'Deals',
   '/leads': 'Leads',
   '/tasks': 'Tasks',
+  '/meetings': 'Meetings',
+  '/calls': 'Calls',
+  '/calendar': 'Calendar',
+  '/workqueue': 'Workqueue',
 }
 
 export function AppShell() {

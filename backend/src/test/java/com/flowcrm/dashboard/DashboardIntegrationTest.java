@@ -23,6 +23,8 @@ import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.reminder.ProcessedMessageRepository;
 import com.flowcrm.security.UserPrincipal;
+import com.flowcrm.call.CallRepository;
+import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
@@ -65,6 +67,12 @@ class DashboardIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private MeetingRepository meetingRepository;
+
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
     private OutboxEventRepository outboxEventRepository;
 
     @Autowired
@@ -95,6 +103,8 @@ class DashboardIntegrationTest {
     void clean() {
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
+        callRepository.deleteAll();
+        meetingRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         dealRepository.deleteAll();

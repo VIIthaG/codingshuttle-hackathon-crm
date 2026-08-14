@@ -12,9 +12,9 @@ type ActivityTimelineProps = {
 }
 
 function itemGlyph(type: string): string {
-  if (type === 'TASK_COMPLETED') return '✓'
-  if (type === 'TASK_CREATED') return '○'
-  if (type === 'TASK_CANCELLED') return '×'
+  if (type === 'TASK_COMPLETED' || type === 'MEETING_COMPLETED' || type === 'CALL_COMPLETED') return '✓'
+  if (type === 'TASK_CREATED' || type === 'MEETING_CREATED' || type === 'CALL_CREATED') return '○'
+  if (type === 'TASK_CANCELLED' || type === 'MEETING_CANCELLED' || type === 'CALL_CANCELLED') return '×'
   return '●'
 }
 
@@ -68,7 +68,7 @@ export function ActivityTimeline({ entityType, entityId, refreshKey = 0 }: Activ
   return (
     <section>
       <h3 className="text-sm font-semibold text-ink">Activity</h3>
-      <p className="mt-1 text-xs text-muted">Lifecycle and related tasks — not a full audit log.</p>
+      <p className="mt-1 text-xs text-muted">Lifecycle, tasks, meetings, and calls — not a full audit log.</p>
       {loading ? <p className="mt-2 text-sm text-muted">Loading activity…</p> : null}
       {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
       {!loading && !error && groups.length === 0 ? (

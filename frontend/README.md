@@ -57,7 +57,7 @@ On 401 from `/api/v1/auth/me` during bootstrap, the SPA clears the stored sessio
 |------|--------|
 | `/` | Redirect to `/dashboard` or `/login` |
 | `/login`, `/register` | Guests only |
-| `/dashboard`, `/accounts`, `/contacts`, `/deals`, `/leads`, `/tasks` | Authenticated (shell) |
+| `/dashboard`, `/workqueue`, `/calendar`, `/accounts`, `/contacts`, `/deals`, `/leads`, `/tasks`, `/meetings`, `/calls` | Authenticated (shell) |
 
 Capabilities:
 
@@ -65,8 +65,10 @@ Capabilities:
 - **Accounts** — company list/search, create/edit/delete, owner assignment (ADMIN)
 - **Contacts** — people list/search, optional account link, create/edit/delete
 - **Deals** — kanban + table, create/edit/delete, validated stage transitions
-- **Leads** — pipeline + list, create/edit/delete, validated status transitions, QUALIFIED convert (account + contact + optional deal), activity + Add task
-- **Accounts / Contacts / Deals** — details include the same reusable activity timeline and contextual Add task
-- **Tasks** — related to exactly one Lead/Account/Contact/Deal; filters include relation type; create/edit/complete/cancel/delete; optional `reminderAt`
+- **Leads** — pipeline + list, create/edit/delete, validated status transitions, QUALIFIED convert, activity + Task/Meeting/Call
+- **Accounts / Contacts / Deals** — details include the reusable activity timeline and contextual Task/Meeting/Call
+- **Tasks / Meetings / Calls** — each related to exactly one CRM record
+- **Calendar** — week agenda of OPEN tasks, SCHEDULED meetings, PLANNED calls
+- **Workqueue** — overdue / today / upcoming next actions with complete/cancel
 
 Reminders are scheduled by sending `reminderAt` to the backend; the SPA does not deliver email/SMS or run local reminder timers.

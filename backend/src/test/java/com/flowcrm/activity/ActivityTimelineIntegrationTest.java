@@ -14,6 +14,8 @@ import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.reminder.ProcessedMessageRepository;
+import com.flowcrm.call.CallRepository;
+import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.UserRepository;
 import java.time.Instant;
@@ -49,6 +51,12 @@ class ActivityTimelineIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private MeetingRepository meetingRepository;
+
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
     private OutboxEventRepository outboxEventRepository;
 
     @Autowired
@@ -70,6 +78,8 @@ class ActivityTimelineIntegrationTest {
     void cleanDatabase() {
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
+        callRepository.deleteAll();
+        meetingRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         dealRepository.deleteAll();
@@ -124,6 +134,77 @@ class ActivityTimelineIntegrationTest {
                 .andExpect(jsonPath("$.items[?(@.type == 'TASK_CREATED')]").isNotEmpty())
                 .andExpect(jsonPath("$.items[?(@.type == 'TASK_COMPLETED')]").isNotEmpty())
                 .andExpect(jsonPath("$.items[?(@.type == 'LEAD_CONVERTED')]").isNotEmpty());
+    }
+
+    @Test
+    void timeline_includesMeetingAndCallLifecycle() throws Exception {
+        String token = register("act.mtg@example.com", "Act Mtg");
+        String leadId = createLead(token, "Activity Lead");
+        Instant start = Instant.now().plus(1, ChronoUnit.DAYS);
+        Instant end = start.plus(1, ChronoUnit.HOURS);
+        String meetingId = objectMapper
+                .readTree(mockMvc.perform(post("/api/v1/meetings")
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "leadId": "%s",
+                                          "title": "Discovery call",
+                                          "startAt": "%s",
+                                          "endAt": "%s"
+                                        }
+                                        """.formatted(leadId, start, end)))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString())
+                .get("id")
+                .asText();
+        String callId = objectMapper
+                .readTree(mockMvc.perform(post("/api/v1/calls")
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "leadId": "%s",
+                                          "title": "Check-in",
+                                          "scheduledAt": "%s",
+                                          "direction": "OUTBOUND"
+                                        }
+                                        """.formatted(leadId, start)))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString())
+                .get("id")
+                .asText();
+
+        mockMvc.perform(patch("/api/v1/meetings/" + meetingId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "status": "COMPLETED" }
+                                """))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/calls/" + callId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "status": "COMPLETED", "outcome": "Connected" }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/activities/timeline")
+                        .param("entityType", "LEAD")
+                        .param("entityId", leadId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.type == 'MEETING_CREATED')]").isNotEmpty())
+                .andExpect(jsonPath("$.items[?(@.type == 'MEETING_COMPLETED')]").isNotEmpty())
+                .andExpect(jsonPath("$.items[?(@.type == 'CALL_CREATED')]").isNotEmpty())
+                .andExpect(jsonPath("$.items[?(@.type == 'CALL_COMPLETED')]").isNotEmpty())
+                .andExpect(jsonPath("$.items[?(@.type == 'CALL_COMPLETED' && @.metadata.outcome == 'Connected')]")
+                        .isNotEmpty());
     }
 
     @Test

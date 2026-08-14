@@ -11,6 +11,8 @@ public final class IdempotencyOperations {
     public static final String CONTACTS_CREATE = "CONTACTS_CREATE";
     public static final String DEALS_CREATE = "DEALS_CREATE";
     public static final String LEADS_CONVERT = "LEADS_CONVERT";
+    public static final String MEETINGS_CREATE = "MEETINGS_CREATE";
+    public static final String CALLS_CREATE = "CALLS_CREATE";
 
     private IdempotencyOperations() {
     }

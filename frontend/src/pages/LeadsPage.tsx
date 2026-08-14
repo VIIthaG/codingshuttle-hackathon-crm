@@ -11,9 +11,8 @@ import { useAuth } from '../auth/useAuth'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ConvertLeadModal } from '../components/leads/ConvertLeadModal'
 import { LeadDetails } from '../components/leads/LeadDetails'
-import { TaskForm, type TaskRelatedPreset } from '../components/tasks/TaskForm'
-import { createTask } from '../api/tasks'
-import type { TaskCreateRequest } from '../types/task'
+import { RecordActivityModals, type ActivityKind } from '../components/crm/RecordActivityModals'
+import { type TaskRelatedPreset } from '../components/tasks/TaskForm'
 import { LeadForm } from '../components/leads/LeadForm'
 import { LeadPipeline } from '../components/leads/LeadPipeline'
 import { LeadTable } from '../components/leads/LeadTable'
@@ -44,8 +43,7 @@ export function LeadsPage() {
 
   const [convertTarget, setConvertTarget] = useState<Lead | null>(null)
   const [taskPreset, setTaskPreset] = useState<TaskRelatedPreset | null>(null)
-  const [taskFormOpen, setTaskFormOpen] = useState(false)
-  const [taskFormPending, setTaskFormPending] = useState(false)
+  const [activityKind, setActivityKind] = useState<ActivityKind | null>(null)
   const [activityKey, setActivityKey] = useState(0)
 
   const refresh = useCallback(async () => {
@@ -144,17 +142,6 @@ export function LeadsPage() {
       setDeleteTarget(null)
     } finally {
       setDeletePending(false)
-    }
-  }
-
-  async function handleTaskCreate(body: TaskCreateRequest, idempotencyKey: string) {
-    setTaskFormPending(true)
-    try {
-      await createTask(body, idempotencyKey)
-      setTaskFormOpen(false)
-      setActivityKey((k) => k + 1)
-    } finally {
-      setTaskFormPending(false)
     }
   }
 
@@ -279,7 +266,15 @@ export function LeadsPage() {
         onConvert={(lead) => setConvertTarget(lead)}
         onAddTask={(lead) => {
           setTaskPreset({ type: 'LEAD', id: lead.id })
-          setTaskFormOpen(true)
+          setActivityKind('task')
+        }}
+        onAddMeeting={(lead) => {
+          setTaskPreset({ type: 'LEAD', id: lead.id })
+          setActivityKind('meeting')
+        }}
+        onAddCall={(lead) => {
+          setTaskPreset({ type: 'LEAD', id: lead.id })
+          setActivityKind('call')
         }}
         activityRefreshKey={activityKey}
       />
@@ -295,14 +290,15 @@ export function LeadsPage() {
         }}
       />
 
-      <TaskForm
-        open={taskFormOpen}
-        mode="create"
-        initialRelated={taskPreset}
-        pending={taskFormPending}
-        onClose={() => setTaskFormOpen(false)}
-        onCreate={handleTaskCreate}
-        onUpdate={async () => undefined}
+      <RecordActivityModals
+        kind={activityKind}
+        preset={taskPreset}
+        pending={false}
+        onClose={() => setActivityKind(null)}
+        onCreated={async () => {
+          setActivityKind(null)
+          setActivityKey((k) => k + 1)
+        }}
       />
 
       <LeadForm

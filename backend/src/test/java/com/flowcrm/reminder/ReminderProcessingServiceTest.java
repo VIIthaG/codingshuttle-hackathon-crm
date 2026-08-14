@@ -22,6 +22,8 @@ import com.flowcrm.messaging.ReminderProperties;
 import com.flowcrm.outbox.FollowUpScheduledPayload;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.task.Task;
+import com.flowcrm.call.CallRepository;
+import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
@@ -61,6 +63,12 @@ class ReminderProcessingServiceTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private MeetingRepository meetingRepository;
+
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
     private OutboxEventRepository outboxEventRepository;
 
     @Autowired
@@ -80,6 +88,8 @@ class ReminderProcessingServiceTest {
         reminderProperties.setFailDelivery(false);
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
+        callRepository.deleteAll();
+        meetingRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         dealRepository.deleteAll();

@@ -30,6 +30,8 @@ import com.flowcrm.lead.dto.LeadCreateRequest;
 import com.flowcrm.lead.dto.LeadResponse;
 import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
 import com.flowcrm.lead.dto.LeadUpdateRequest;
+import com.flowcrm.meeting.MeetingRepository;
+import com.flowcrm.call.CallRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.User;
@@ -52,6 +54,8 @@ public class LeadService {
     private final DealService dealService;
     private final DealRepository dealRepository;
     private final TaskRepository taskRepository;
+    private final MeetingRepository meetingRepository;
+    private final CallRepository callRepository;
     private final DashboardService dashboardService;
     private final IdempotencyService idempotencyService;
     private final LeadService self;
@@ -64,6 +68,8 @@ public class LeadService {
             DealService dealService,
             DealRepository dealRepository,
             TaskRepository taskRepository,
+            MeetingRepository meetingRepository,
+            CallRepository callRepository,
             DashboardService dashboardService,
             IdempotencyService idempotencyService,
             @Lazy LeadService self) {
@@ -74,6 +80,8 @@ public class LeadService {
         this.dealService = dealService;
         this.dealRepository = dealRepository;
         this.taskRepository = taskRepository;
+        this.meetingRepository = meetingRepository;
+        this.callRepository = callRepository;
         this.dashboardService = dashboardService;
         this.idempotencyService = idempotencyService;
         this.self = self;
@@ -170,6 +178,12 @@ public class LeadService {
         assertCanAccess(lead, principal);
         if (taskRepository.existsByLead_Id(id)) {
             throw new ConflictException("Cannot delete lead while tasks still reference it");
+        }
+        if (meetingRepository.existsByLead_Id(id)) {
+            throw new ConflictException("Cannot delete lead while meetings still reference it");
+        }
+        if (callRepository.existsByLead_Id(id)) {
+            throw new ConflictException("Cannot delete lead while calls still reference it");
         }
         leadRepository.delete(lead);
         dashboardService.invalidateAllSummaries();

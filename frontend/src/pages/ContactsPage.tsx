@@ -8,9 +8,8 @@ import { useAuth } from '../auth/useAuth'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ContactDetails } from '../components/contacts/ContactDetails'
 import { ContactForm } from '../components/contacts/ContactForm'
-import { TaskForm, type TaskRelatedPreset } from '../components/tasks/TaskForm'
-import { createTask } from '../api/tasks'
-import type { TaskCreateRequest } from '../types/task'
+import { RecordActivityModals, type ActivityKind } from '../components/crm/RecordActivityModals'
+import { type TaskRelatedPreset } from '../components/tasks/TaskForm'
 import type { Account } from '../types/account'
 import type { Contact, ContactCreateRequest, ContactUpdateRequest } from '../types/contact'
 import type { User } from '../types/auth'
@@ -41,8 +40,7 @@ export function ContactsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null)
   const [deletePending, setDeletePending] = useState(false)
   const [taskPreset, setTaskPreset] = useState<TaskRelatedPreset | null>(null)
-  const [taskFormOpen, setTaskFormOpen] = useState(false)
-  const [taskFormPending, setTaskFormPending] = useState(false)
+  const [activityKind, setActivityKind] = useState<ActivityKind | null>(null)
   const [activityKey, setActivityKey] = useState(0)
 
   const refresh = useCallback(async () => {
@@ -366,28 +364,28 @@ export function ContactsPage() {
         onDelete={setDeleteTarget}
         onAddTask={(contact) => {
           setTaskPreset({ type: 'CONTACT', id: contact.id })
-          setTaskFormOpen(true)
+          setActivityKind('task')
+        }}
+        onAddMeeting={(contact) => {
+          setTaskPreset({ type: 'CONTACT', id: contact.id })
+          setActivityKind('meeting')
+        }}
+        onAddCall={(contact) => {
+          setTaskPreset({ type: 'CONTACT', id: contact.id })
+          setActivityKind('call')
         }}
         activityRefreshKey={activityKey}
       />
 
-      <TaskForm
-        open={taskFormOpen}
-        mode="create"
-        initialRelated={taskPreset}
-        pending={taskFormPending}
-        onClose={() => setTaskFormOpen(false)}
-        onCreate={async (body: TaskCreateRequest, key: string) => {
-          setTaskFormPending(true)
-          try {
-            await createTask(body, key)
-            setTaskFormOpen(false)
-            setActivityKey((k) => k + 1)
-          } finally {
-            setTaskFormPending(false)
-          }
+      <RecordActivityModals
+        kind={activityKind}
+        preset={taskPreset}
+        pending={false}
+        onClose={() => setActivityKind(null)}
+        onCreated={async () => {
+          setActivityKind(null)
+          setActivityKey((k) => k + 1)
         }}
-        onUpdate={async () => undefined}
       />
 
       <ContactForm

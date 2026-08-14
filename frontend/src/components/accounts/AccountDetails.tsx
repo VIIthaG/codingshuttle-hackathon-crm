@@ -13,6 +13,8 @@ type AccountDetailsProps = {
   onDelete: (account: Account) => void
   onOpenContact?: (contact: Contact) => void
   onAddTask?: (account: Account) => void
+  onAddMeeting?: (account: Account) => void
+  onAddCall?: (account: Account) => void
   activityRefreshKey?: number
 }
 
@@ -26,6 +28,8 @@ export function AccountDetails({
   onDelete,
   onOpenContact,
   onAddTask,
+  onAddMeeting,
+  onAddCall,
   activityRefreshKey = 0,
 }: AccountDetailsProps) {
   if (!open || !account) return null
@@ -91,14 +95,20 @@ export function AccountDetails({
           <ActivityTimeline entityType="ACCOUNT" entityId={account.id} refreshKey={activityRefreshKey} />
         </div>
 
-        <footer className="flex gap-2 border-t border-border px-5 py-4">
+        <footer className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
           {onAddTask ? (
-            <button
-              type="button"
-              onClick={() => onAddTask(account)}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              + Add task
+            <button type="button" onClick={() => onAddTask(account)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              + Task
+            </button>
+          ) : null}
+          {onAddMeeting ? (
+            <button type="button" onClick={() => onAddMeeting(account)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              + Meeting
+            </button>
+          ) : null}
+          {onAddCall ? (
+            <button type="button" onClick={() => onAddCall(account)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              + Call
             </button>
           ) : null}
           <button

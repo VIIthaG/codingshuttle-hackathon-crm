@@ -9,6 +9,8 @@ import com.flowcrm.common.exception.ResourceNotFoundException;
 import com.flowcrm.contact.ContactRepository;
 import com.flowcrm.deal.DealRepository;
 import com.flowcrm.lead.LeadRepository;
+import com.flowcrm.meeting.MeetingRepository;
+import com.flowcrm.call.CallRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.enums.Role;
 import com.flowcrm.idempotency.IdempotencyOperations;
@@ -36,6 +38,8 @@ public class AccountService {
     private final DealRepository dealRepository;
     private final LeadRepository leadRepository;
     private final TaskRepository taskRepository;
+    private final MeetingRepository meetingRepository;
+    private final CallRepository callRepository;
     private final UserRepository userRepository;
     private final IdempotencyService idempotencyService;
     private final AccountService self;
@@ -46,6 +50,8 @@ public class AccountService {
             DealRepository dealRepository,
             LeadRepository leadRepository,
             TaskRepository taskRepository,
+            MeetingRepository meetingRepository,
+            CallRepository callRepository,
             UserRepository userRepository,
             IdempotencyService idempotencyService,
             @Lazy AccountService self) {
@@ -54,6 +60,8 @@ public class AccountService {
         this.dealRepository = dealRepository;
         this.leadRepository = leadRepository;
         this.taskRepository = taskRepository;
+        this.meetingRepository = meetingRepository;
+        this.callRepository = callRepository;
         this.userRepository = userRepository;
         this.idempotencyService = idempotencyService;
         this.self = self;
@@ -126,6 +134,12 @@ public class AccountService {
         }
         if (taskRepository.existsByAccount_Id(id)) {
             throw new ConflictException("Cannot delete account while tasks still reference it");
+        }
+        if (meetingRepository.existsByAccount_Id(id)) {
+            throw new ConflictException("Cannot delete account while meetings still reference it");
+        }
+        if (callRepository.existsByAccount_Id(id)) {
+            throw new ConflictException("Cannot delete account while calls still reference it");
         }
         accountRepository.delete(account);
     }

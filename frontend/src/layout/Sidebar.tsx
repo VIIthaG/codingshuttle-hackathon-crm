@@ -1,13 +1,17 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, ListTodo, Building2, UserRound, Handshake, X } from 'lucide-react'
+import { LayoutDashboard, Users, ListTodo, Building2, UserRound, Handshake, X, Inbox, CalendarDays, Phone, Video } from 'lucide-react'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/workqueue', label: 'Workqueue', icon: Inbox },
+  { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/accounts', label: 'Accounts', icon: Building2 },
   { to: '/contacts', label: 'Contacts', icon: UserRound },
   { to: '/deals', label: 'Deals', icon: Handshake },
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
+  { to: '/meetings', label: 'Meetings', icon: Video },
+  { to: '/calls', label: 'Calls', icon: Phone },
 ]
 
 type SidebarProps = {

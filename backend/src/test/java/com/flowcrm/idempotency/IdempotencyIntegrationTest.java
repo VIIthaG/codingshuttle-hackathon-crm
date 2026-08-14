@@ -14,6 +14,8 @@ import com.flowcrm.outbox.OutboxEvent;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.outbox.OutboxEventType;
 import com.flowcrm.reminder.ProcessedMessageRepository;
+import com.flowcrm.call.CallRepository;
+import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.UserRepository;
 import java.time.Instant;
@@ -57,6 +59,12 @@ class IdempotencyIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private MeetingRepository meetingRepository;
+
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
     private OutboxEventRepository outboxEventRepository;
 
     @Autowired
@@ -78,6 +86,8 @@ class IdempotencyIntegrationTest {
     void cleanDatabase() {
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
+        callRepository.deleteAll();
+        meetingRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         dealRepository.deleteAll();

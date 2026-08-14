@@ -15,6 +15,8 @@ type DealDetailsProps = {
   onDelete: (deal: Deal) => void
   onChangeStage: (deal: Deal, stage: DealStage, lostReason?: string | null) => void
   onAddTask?: (deal: Deal) => void
+  onAddMeeting?: (deal: Deal) => void
+  onAddCall?: (deal: Deal) => void
   activityRefreshKey?: number
 }
 
@@ -28,6 +30,8 @@ export function DealDetails({
   onDelete,
   onChangeStage,
   onAddTask,
+  onAddMeeting,
+  onAddCall,
   activityRefreshKey = 0,
 }: DealDetailsProps) {
   const [lostReason, setLostReason] = useState('')
@@ -124,15 +128,20 @@ export function DealDetails({
           <ActivityTimeline entityType="DEAL" entityId={deal.id} refreshKey={activityRefreshKey} />
         </div>
 
-        <footer className="flex gap-2 border-t border-border px-5 py-4">
+        <footer className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
           {onAddTask ? (
-            <button
-              type="button"
-              onClick={() => onAddTask(deal)}
-              disabled={stagePending}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-            >
-              + Add task
+            <button type="button" onClick={() => onAddTask(deal)} disabled={stagePending} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+              + Task
+            </button>
+          ) : null}
+          {onAddMeeting ? (
+            <button type="button" onClick={() => onAddMeeting(deal)} disabled={stagePending} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+              + Meeting
+            </button>
+          ) : null}
+          {onAddCall ? (
+            <button type="button" onClick={() => onAddCall(deal)} disabled={stagePending} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+              + Call
             </button>
           ) : null}
           <button

@@ -13,6 +13,8 @@ import com.flowcrm.idempotency.IdempotencyRecordRepository;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.outbox.OutboxEventRepository;
 import com.flowcrm.reminder.ProcessedMessageRepository;
+import com.flowcrm.call.CallRepository;
+import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +45,12 @@ class OpenApiIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
+    private MeetingRepository meetingRepository;
+
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
     private OutboxEventRepository outboxEventRepository;
 
     @Autowired
@@ -64,6 +72,8 @@ class OpenApiIntegrationTest {
     void cleanDatabase() {
         processedMessageRepository.deleteAll();
         outboxEventRepository.deleteAll();
+        callRepository.deleteAll();
+        meetingRepository.deleteAll();
         taskRepository.deleteAll();
         leadRepository.deleteAll();
         dealRepository.deleteAll();
@@ -94,6 +104,10 @@ class OpenApiIntegrationTest {
         assertThat(body).contains("Users");
         assertThat(body).contains("Leads");
         assertThat(body).contains("Tasks");
+        assertThat(body).contains("Meetings");
+        assertThat(body).contains("Calls");
+        assertThat(body).contains("Calendar");
+        assertThat(body).contains("Workqueue");
         assertThat(body).contains("Activities");
         assertThat(body).contains("Dashboard");
         assertThat(body).contains("Health");
@@ -114,6 +128,10 @@ class OpenApiIntegrationTest {
         mockMvc.perform(get("/api/v1/deals")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/users")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/tasks")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/meetings")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/calls")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/calendar")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/workqueue")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/activities/timeline")
                         .param("entityType", "LEAD")
                         .param("entityId", "00000000-0000-0000-0000-000000000001"))

@@ -48,13 +48,13 @@ PostgreSQL stores:
 | `processed_messages` | Consumer receipts (message id = outbox event id) |
 | `idempotency_records` | Durable HTTP create idempotency |
 
-**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V12 version that schema.
+**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V13 version that schema.
 
 ### Why not edit historical Flyway scripts
 
-Applied migrations are checksummed. Rewriting `V1`–`V11` breaks existing databases and CI. Schema evolution must be additive (`V12__…` and later).
+Applied migrations are checksummed. Rewriting `V1`–`V12` breaks existing databases and CI. Schema evolution must be additive (`V13__…` and later).
 
-Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check), while converted leads still reference the account/contact/deal, and while tasks still reference the record. Deleting a contact unlinks `deals.primary_contact_id`.
+Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check), while converted leads still reference the account/contact/deal, and while tasks, meetings, or calls still reference the record. Deleting a contact unlinks `deals.primary_contact_id`.
 
 ---
 
@@ -118,6 +118,8 @@ Applied only to:
 - `POST /api/v1/contacts` → operation `CONTACTS_CREATE`
 - `POST /api/v1/deals` → operation `DEALS_CREATE`
 - `POST /api/v1/leads/{id}/convert` → operation `LEADS_CONVERT` (fingerprint includes lead id + body so a key cannot replay another lead)
+- `POST /api/v1/meetings` → operation `MEETINGS_CREATE`
+- `POST /api/v1/calls` → operation `CALLS_CREATE`
 
 **Scope:** authenticated `user_id` + operation + `Idempotency-Key`.
 
@@ -137,9 +139,13 @@ This is **request idempotency**, not “exactly-once messaging.” Task create f
 
 ## Activity timeline (foundation)
 
-`GET /api/v1/activities/timeline?entityType=&entityId=` aggregates data the database already stores: record created, record updated when `updatedAt` is meaningfully after create, lead conversion when present, and related tasks (created plus current completed/cancelled status). Due/reminder times appear as metadata, not invented historical events.
+`GET /api/v1/activities/timeline?entityType=&entityId=` aggregates data the database already stores: record created, record updated when `updatedAt` is meaningfully after create, lead conversion when present, related tasks, meetings, and calls (created plus current completed/cancelled status). Due/reminder/start times appear as metadata, not invented historical events.
 
 It is **not** an immutable audit log and does **not** reconstruct unsaved status/stage transitions. Access is checked with the same ADMIN / SALES_REP record scoping as the parent entity.
+
+`GET /api/v1/calendar?from=&to=` aggregates OPEN tasks (dueAt), SCHEDULED meetings (startAt), and PLANNED calls (scheduledAt) for the caller. Completed/cancelled items are excluded. Default window is the current UTC month.
+
+`GET /api/v1/workqueue` is a deterministic next-actions view (overdue/today/upcoming). Meetings and calls do **not** use the RabbitMQ reminder path.
 
 ---
 

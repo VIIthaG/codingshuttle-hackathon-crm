@@ -22,7 +22,9 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 | Lead assignment | Defaults to the current user; only `ADMIN` can assign others |
 | Lead pipeline | Validated PATCH transitions: `NEW → CONTACTED → QUALIFIED`, with `LOST` from active stages; `CONVERTED` only via convert API |
 | Follow-up tasks | Tasks linked to exactly one Lead, Account, Contact, or Deal; `dueAt` / optional `reminderAt`; SPA list/filters/complete/cancel |
-| Activity timeline | Per-record activity foundation (created/updated, lead conversion, related tasks) — not a full audit log |
+| Activity timeline | Per-record activity (created/updated, conversion, tasks, meetings, calls) — not a full audit log |
+| Meetings / Calls | Scheduled meetings and planned calls linked to exactly one CRM record |
+| Calendar / Workqueue | Aggregated scheduled work and a deterministic next-actions view |
 | Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work (delivery is log-simulated) |
 | Dashboard summary | Per-user aggregates (leads, deals/pipeline value, open/overdue tasks, upcoming follow-ups) in API + SPA |
 
@@ -92,6 +94,8 @@ flowchart TB
   PG --- D[deals]
   PG --- L[leads]
   PG --- T[tasks XOR lead/account/contact/deal]
+  PG --- M[meetings]
+  PG --- CL[calls]
   PG --- O[outbox_events]
   PG --- P[processed_messages]
   PG --- I[idempotency_records]
@@ -138,6 +142,8 @@ Optional header on:
 - `POST /api/v1/contacts`
 - `POST /api/v1/deals`
 - `POST /api/v1/leads/{id}/convert`
+- `POST /api/v1/meetings`
+- `POST /api/v1/calls`
 
 | Concept | Behavior |
 |---------|----------|
@@ -209,6 +215,7 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 | `V10__create_deals.sql` | Deals / opportunity pipeline |
 | `V11__add_lead_conversion.sql` | Lead conversion metadata (`converted_at` + account/contact/deal FKs, `ON DELETE` RESTRICT) |
 | `V12__generalize_task_relationships.sql` | Tasks: optional `lead_id` plus `account_id`/`contact_id`/`deal_id`; exactly-one CHECK; RESTRICT FKs |
+| `V13__create_meetings_and_calls.sql` | Meetings and calls with exactly-one CRM relation, statuses, RESTRICT FKs |
 
 **Do not edit applied migrations.** Flyway checksums historical files; change schema only with a new versioned migration.
 
@@ -367,14 +374,14 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 | Deal pipeline | `DealStage` + `DealStageTransitions` + `PATCH /api/v1/deals/{id}/stage` |
 | Stage workflow | Validated transitions; terminal `LOST` / `CONVERTED` |
 | Automated follow-up reminders | Task `reminderAt` → outbox → RabbitMQ → consumer (log delivery) |
-| Idempotency | Durable `Idempotency-Key` on `POST /leads`, `/tasks`, `/accounts`, `/contacts`, `/deals`, `/leads/{id}/convert` + consumer `processed_messages` |
+| Idempotency | Durable `Idempotency-Key` on `POST /leads`, `/tasks`, `/accounts`, `/contacts`, `/deals`, `/meetings`, `/calls`, `/leads/{id}/convert` + consumer `processed_messages` |
 | Transactional outbox | `outbox_events` written in same TX as task changes |
 | Retry / DLQ | Retry queue + DLQ with attempt header and max attempts |
 | Caching | Redis `dashboard-summary` with TTL + invalidation |
 | Rate limiting | Redis login limiter (429 + Retry-After) |
 | Distributed locking | Redis lock around outbox publisher |
 | Swagger | springdoc UI + JWT `bearerAuth` |
-| PostgreSQL | Primary durable store via Flyway V1–V12 |
+| PostgreSQL | Primary durable store via Flyway V1–V13 |
 
 ---
 

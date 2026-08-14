@@ -13,6 +13,10 @@ import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { TasksPage } from './pages/TasksPage'
+import { MeetingsPage } from './pages/MeetingsPage'
+import { CallsPage } from './pages/CallsPage'
+import { CalendarPage } from './pages/CalendarPage'
+import { WorkqueuePage } from './pages/WorkqueuePage'
 
 function RootRedirect() {
   const { isAuthenticated, isBootstrapping } = useAuth()
@@ -45,6 +49,10 @@ export default function App() {
             <Route path="/deals" element={<DealsPage />} />
             <Route path="/leads" element={<LeadsPage />} />
             <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/meetings" element={<MeetingsPage />} />
+            <Route path="/calls" element={<CallsPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/workqueue" element={<WorkqueuePage />} />
           </Route>
         </Route>
 

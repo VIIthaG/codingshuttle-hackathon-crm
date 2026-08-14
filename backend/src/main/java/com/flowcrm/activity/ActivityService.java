@@ -7,12 +7,18 @@ import com.flowcrm.activity.dto.ActivityTimelineResponse;
 import com.flowcrm.common.exception.BadRequestException;
 import com.flowcrm.contact.Contact;
 import com.flowcrm.contact.ContactService;
+import com.flowcrm.call.Call;
+import com.flowcrm.call.CallRepository;
 import com.flowcrm.deal.Deal;
 import com.flowcrm.deal.DealService;
+import com.flowcrm.enums.CallStatus;
+import com.flowcrm.enums.MeetingStatus;
 import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.TaskStatus;
 import com.flowcrm.lead.Lead;
 import com.flowcrm.lead.LeadService;
+import com.flowcrm.meeting.Meeting;
+import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.task.Task;
 import com.flowcrm.task.TaskRepository;
@@ -37,18 +43,24 @@ public class ActivityService {
     private final ContactService contactService;
     private final DealService dealService;
     private final TaskRepository taskRepository;
+    private final MeetingRepository meetingRepository;
+    private final CallRepository callRepository;
 
     public ActivityService(
             LeadService leadService,
             AccountService accountService,
             ContactService contactService,
             DealService dealService,
-            TaskRepository taskRepository) {
+            TaskRepository taskRepository,
+            MeetingRepository meetingRepository,
+            CallRepository callRepository) {
         this.leadService = leadService;
         this.accountService = accountService;
         this.contactService = contactService;
         this.dealService = dealService;
         this.taskRepository = taskRepository;
+        this.meetingRepository = meetingRepository;
+        this.callRepository = callRepository;
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +123,8 @@ public class ActivityService {
                     null));
         }
         addTaskItems(items, taskRepository.findByLead_IdOrderByCreatedAtDesc(id));
+        addMeetingItems(items, meetingRepository.findByLead_IdOrderByCreatedAtDesc(id));
+        addCallItems(items, callRepository.findByLead_IdOrderByCreatedAtDesc(id));
         return new ActivityTimelineResponse(RelatedRecordType.LEAD, id, lead.getFullName(), newestFirst(items));
     }
 
@@ -145,6 +159,8 @@ public class ActivityService {
                     null));
         }
         addTaskItems(items, taskRepository.findByAccount_IdOrderByCreatedAtDesc(id));
+        addMeetingItems(items, meetingRepository.findByAccount_IdOrderByCreatedAtDesc(id));
+        addCallItems(items, callRepository.findByAccount_IdOrderByCreatedAtDesc(id));
         return new ActivityTimelineResponse(RelatedRecordType.ACCOUNT, id, account.getName(), newestFirst(items));
     }
 
@@ -180,6 +196,8 @@ public class ActivityService {
                     null));
         }
         addTaskItems(items, taskRepository.findByContact_IdOrderByCreatedAtDesc(id));
+        addMeetingItems(items, meetingRepository.findByContact_IdOrderByCreatedAtDesc(id));
+        addCallItems(items, callRepository.findByContact_IdOrderByCreatedAtDesc(id));
         return new ActivityTimelineResponse(RelatedRecordType.CONTACT, id, name, newestFirst(items));
     }
 
@@ -214,6 +232,8 @@ public class ActivityService {
                     null));
         }
         addTaskItems(items, taskRepository.findByDeal_IdOrderByCreatedAtDesc(id));
+        addMeetingItems(items, meetingRepository.findByDeal_IdOrderByCreatedAtDesc(id));
+        addCallItems(items, callRepository.findByDeal_IdOrderByCreatedAtDesc(id));
         return new ActivityTimelineResponse(RelatedRecordType.DEAL, id, deal.getName(), newestFirst(items));
     }
 
@@ -261,6 +281,103 @@ public class ActivityService {
                         task.relatedType(),
                         task.relatedId(),
                         task.relatedName(),
+                        meta));
+            }
+        }
+    }
+
+    private void addMeetingItems(List<ActivityItemResponse> items, List<Meeting> meetings) {
+        for (Meeting meeting : meetings) {
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("startAt", meeting.getStartAt().toString());
+            meta.put("endAt", meeting.getEndAt().toString());
+            items.add(item(
+                    "meeting:" + meeting.getId() + ":created",
+                    "MEETING_CREATED",
+                    "Meeting scheduled",
+                    meeting.getTitle(),
+                    meeting.getCreatedAt(),
+                    meeting.getAssignedTo().getFullName(),
+                    MeetingStatus.SCHEDULED.name(),
+                    meeting.relatedType(),
+                    meeting.relatedId(),
+                    meeting.relatedName(),
+                    meta));
+            if (meeting.getStatus() == MeetingStatus.COMPLETED) {
+                items.add(item(
+                        "meeting:" + meeting.getId() + ":completed",
+                        "MEETING_COMPLETED",
+                        "Meeting completed",
+                        meeting.getTitle(),
+                        meeting.getUpdatedAt(),
+                        meeting.getAssignedTo().getFullName(),
+                        MeetingStatus.COMPLETED.name(),
+                        meeting.relatedType(),
+                        meeting.relatedId(),
+                        meeting.relatedName(),
+                        meta));
+            } else if (meeting.getStatus() == MeetingStatus.CANCELLED) {
+                items.add(item(
+                        "meeting:" + meeting.getId() + ":cancelled",
+                        "MEETING_CANCELLED",
+                        "Meeting cancelled",
+                        meeting.getTitle(),
+                        meeting.getUpdatedAt(),
+                        meeting.getAssignedTo().getFullName(),
+                        MeetingStatus.CANCELLED.name(),
+                        meeting.relatedType(),
+                        meeting.relatedId(),
+                        meeting.relatedName(),
+                        meta));
+            }
+        }
+    }
+
+    private void addCallItems(List<ActivityItemResponse> items, List<Call> calls) {
+        for (Call call : calls) {
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("direction", call.getDirection().name());
+            meta.put("scheduledAt", call.getScheduledAt().toString());
+            if (call.getOutcome() != null) {
+                meta.put("outcome", call.getOutcome());
+            }
+            items.add(item(
+                    "call:" + call.getId() + ":created",
+                    "CALL_CREATED",
+                    "Call planned",
+                    call.getTitle(),
+                    call.getCreatedAt(),
+                    call.getAssignedTo().getFullName(),
+                    CallStatus.PLANNED.name(),
+                    call.relatedType(),
+                    call.relatedId(),
+                    call.relatedName(),
+                    meta));
+            if (call.getStatus() == CallStatus.COMPLETED) {
+                items.add(item(
+                        "call:" + call.getId() + ":completed",
+                        "CALL_COMPLETED",
+                        "Call completed",
+                        call.getTitle(),
+                        call.getUpdatedAt(),
+                        call.getAssignedTo().getFullName(),
+                        CallStatus.COMPLETED.name(),
+                        call.relatedType(),
+                        call.relatedId(),
+                        call.relatedName(),
+                        meta));
+            } else if (call.getStatus() == CallStatus.CANCELLED) {
+                items.add(item(
+                        "call:" + call.getId() + ":cancelled",
+                        "CALL_CANCELLED",
+                        "Call cancelled",
+                        call.getTitle(),
+                        call.getUpdatedAt(),
+                        call.getAssignedTo().getFullName(),
+                        CallStatus.CANCELLED.name(),
+                        call.relatedType(),
+                        call.relatedId(),
+                        call.relatedName(),
                         meta));
             }
         }
