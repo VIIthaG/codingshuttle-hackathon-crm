@@ -47,14 +47,21 @@ export function MeetingsPage() {
     if (!openId) return
     let cancelled = false
     void getMeeting(openId)
-      .then((meeting) => {
-        if (!cancelled) setSelected(meeting)
+      .then(async (meeting) => {
+        if (cancelled) return
+        setSelected(meeting)
+        setRows((prev) => {
+          const exists = prev.some((row) => row.id === meeting.id)
+          if (exists) return prev.map((row) => (row.id === meeting.id ? meeting : row))
+          return [meeting, ...prev]
+        })
+        await refresh()
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [openId])
+  }, [openId, refresh])
 
   return (
     <div className="space-y-4">

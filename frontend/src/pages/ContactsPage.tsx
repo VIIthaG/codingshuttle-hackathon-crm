@@ -73,16 +73,22 @@ export function ContactsPage() {
     if (!openId) return
     let cancelled = false
     void getContact(openId)
-      .then((contact) => {
+      .then(async (contact) => {
         if (cancelled) return
         setSelected(contact)
         setDetailsOpen(true)
+        setContacts((prev) => {
+          const exists = prev.some((row) => row.id === contact.id)
+          if (exists) return prev.map((row) => (row.id === contact.id ? contact : row))
+          return [contact, ...prev]
+        })
+        await refresh()
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [openId])
+  }, [openId, refresh])
 
   useEffect(() => {
     void listAllAccounts()

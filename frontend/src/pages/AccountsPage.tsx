@@ -68,16 +68,22 @@ export function AccountsPage() {
     if (!openId) return
     let cancelled = false
     void getAccount(openId)
-      .then((account) => {
+      .then(async (account) => {
         if (cancelled) return
         setSelected(account)
         setDetailsOpen(true)
+        setAccounts((prev) => {
+          const exists = prev.some((row) => row.id === account.id)
+          if (exists) return prev.map((row) => (row.id === account.id ? account : row))
+          return [account, ...prev]
+        })
+        await refresh()
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [openId])
+  }, [openId, refresh])
 
   useEffect(() => {
     if (!isAdmin) return

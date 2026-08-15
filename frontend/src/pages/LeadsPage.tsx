@@ -75,17 +75,26 @@ export function LeadsPage() {
     if (!openId) return
     let cancelled = false
     void getLead(openId)
-      .then((lead) => {
+      .then(async (lead) => {
         if (cancelled) return
         setSelected(lead)
         setStatusError(null)
+        setDetailsOpen(true)
+        setLeads((prev) => {
+          const exists = prev.some((row) => row.id === lead.id)
+          if (exists) return prev.map((row) => (row.id === lead.id ? lead : row))
+          return [lead, ...prev]
+        })
+        await refresh()
+        if (cancelled) return
+        setSelected(lead)
         setDetailsOpen(true)
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [openId])
+  }, [openId, refresh])
 
   function openLead(lead: Lead) {
     setSelected(lead)

@@ -82,17 +82,26 @@ export function TasksPage() {
     if (!openId) return
     let cancelled = false
     void getTask(openId)
-      .then((task) => {
+      .then(async (task) => {
         if (cancelled) return
         setSelected(task)
         setActionError(null)
+        setDetailsOpen(true)
+        setTasks((prev) => {
+          const exists = prev.some((row) => row.id === task.id)
+          if (exists) return prev.map((row) => (row.id === task.id ? task : row))
+          return [task, ...prev]
+        })
+        await refresh()
+        if (cancelled) return
+        setSelected(task)
         setDetailsOpen(true)
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [openId])
+  }, [openId, refresh])
 
   function openTask(task: Task) {
     setSelected(task)

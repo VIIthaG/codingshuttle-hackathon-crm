@@ -100,17 +100,23 @@ export function DealsPage() {
     if (!openId) return
     let cancelled = false
     void getDeal(openId)
-      .then((deal) => {
+      .then(async (deal) => {
         if (cancelled) return
         setSelected(deal)
         setDetailsOpen(true)
         setStageError(null)
+        setDeals((prev) => {
+          const exists = prev.some((row) => row.id === deal.id)
+          if (exists) return prev.map((row) => (row.id === deal.id ? deal : row))
+          return [deal, ...prev]
+        })
+        await refresh()
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [openId])
+  }, [openId, refresh])
 
   useEffect(() => {
     void listAllAccounts()
