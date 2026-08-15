@@ -13,8 +13,10 @@ import com.flowcrm.enums.CallDirection;
 import com.flowcrm.enums.CallStatus;
 import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.Role;
+import com.flowcrm.enums.SearchResultType;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
+import com.flowcrm.notification.NotificationService;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
@@ -38,6 +40,7 @@ public class CallService {
     private final UserRepository userRepository;
     private final RelatedRecordBinder relatedRecordBinder;
     private final IdempotencyService idempotencyService;
+    private final NotificationService notificationService;
     private final CallService self;
 
     public CallService(
@@ -45,11 +48,13 @@ public class CallService {
             UserRepository userRepository,
             RelatedRecordBinder relatedRecordBinder,
             IdempotencyService idempotencyService,
+            NotificationService notificationService,
             @Lazy CallService self) {
         this.callRepository = callRepository;
         this.userRepository = userRepository;
         this.relatedRecordBinder = relatedRecordBinder;
         this.idempotencyService = idempotencyService;
+        this.notificationService = notificationService;
         this.self = self;
     }
 
@@ -68,7 +73,10 @@ public class CallService {
         call.setPhoneNumber(trimToNull(request.phoneNumber()));
         call.setOutcome(trimToNull(request.outcome()));
         call.setStatus(CallStatus.PLANNED);
-        return toResponse(callRepository.save(call));
+        CallResponse response = toResponse(callRepository.save(call));
+        notificationService.notifyAssignment(
+                principal.getId(), assignee, null, SearchResultType.CALL, response.id(), response.title());
+        return response;
     }
 
     public CallResponse create(CallCreateRequest request, UserPrincipal principal, String idempotencyKey) {
@@ -151,6 +159,7 @@ public class CallService {
     public CallResponse update(UUID id, CallUpdateRequest request, UserPrincipal principal) {
         Call call = requireCall(id);
         assertCanAccess(call, principal);
+        UUID previousAssigneeId = call.getAssignedTo().getId();
         User assignee = resolveAssignee(request.assignedToId(), principal);
         relatedRecordBinder.bind(
                 call, request.leadId(), request.accountId(), request.contactId(), request.dealId(), principal);
@@ -162,7 +171,15 @@ public class CallService {
         call.setDirection(request.direction());
         call.setPhoneNumber(trimToNull(request.phoneNumber()));
         call.setOutcome(trimToNull(request.outcome()));
-        return toResponse(callRepository.save(call));
+        CallResponse response = toResponse(callRepository.save(call));
+        notificationService.notifyAssignment(
+                principal.getId(),
+                assignee,
+                previousAssigneeId,
+                SearchResultType.CALL,
+                response.id(),
+                response.title());
+        return response;
     }
 
     @Transactional

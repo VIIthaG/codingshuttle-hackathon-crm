@@ -12,11 +12,13 @@ import com.flowcrm.deal.Deal;
 import com.flowcrm.deal.DealService;
 import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.Role;
+import com.flowcrm.enums.SearchResultType;
 import com.flowcrm.enums.TaskStatus;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.Lead;
 import com.flowcrm.lead.LeadService;
+import com.flowcrm.notification.NotificationService;
 import com.flowcrm.outbox.OutboxEventRecorder;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.task.dto.TaskCreateRequest;
@@ -50,6 +52,7 @@ public class TaskService {
     private final OutboxEventRecorder outboxEventRecorder;
     private final DashboardService dashboardService;
     private final IdempotencyService idempotencyService;
+    private final NotificationService notificationService;
     private final TaskService self;
 
     public TaskService(
@@ -62,6 +65,7 @@ public class TaskService {
             OutboxEventRecorder outboxEventRecorder,
             DashboardService dashboardService,
             IdempotencyService idempotencyService,
+            NotificationService notificationService,
             @Lazy TaskService self) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
@@ -72,6 +76,7 @@ public class TaskService {
         this.outboxEventRecorder = outboxEventRecorder;
         this.dashboardService = dashboardService;
         this.idempotencyService = idempotencyService;
+        this.notificationService = notificationService;
         this.self = self;
     }
 
@@ -93,7 +98,10 @@ public class TaskService {
             outboxEventRecorder.recordFollowUpScheduled(saved);
         }
         dashboardService.invalidateAllSummaries();
-        return toResponse(saved);
+        TaskResponse created = toResponse(saved);
+        notificationService.notifyAssignment(
+                principal.getId(), assignee, null, SearchResultType.TASK, created.id(), created.title());
+        return created;
     }
 
     /**
@@ -141,6 +149,7 @@ public class TaskService {
 
         Instant previousReminderAt = task.getReminderAt();
         TaskStatus previousStatus = task.getStatus();
+        UUID previousAssigneeId = task.getAssignedTo().getId();
 
         User assignee = resolveAssignee(request.assignedToId(), principal);
 
@@ -155,7 +164,15 @@ public class TaskService {
         Task saved = taskRepository.save(task);
         syncFollowUpOutbox(saved, previousReminderAt, previousStatus);
         dashboardService.invalidateAllSummaries();
-        return toResponse(saved);
+        TaskResponse updated = toResponse(saved);
+        notificationService.notifyAssignment(
+                principal.getId(),
+                assignee,
+                previousAssigneeId,
+                SearchResultType.TASK,
+                updated.id(),
+                updated.title());
+        return updated;
     }
 
     @Transactional

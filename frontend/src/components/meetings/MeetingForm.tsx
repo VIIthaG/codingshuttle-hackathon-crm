@@ -6,6 +6,7 @@ import { formatApiError } from '../../utils/errors'
 import { newIdempotencyKey } from '../../utils/idempotency'
 import { defaultDueLocal, fromDatetimeLocalValue, toDatetimeLocalValue } from '../../utils/taskDates'
 import { RelatedRecordFields } from '../crm/RelatedRecordFields'
+import { AssigneeSelect } from '../crm/AssigneeSelect'
 import { applyRelatedIds } from '../../utils/relatedRecords'
 import type { TaskRelatedPreset } from '../tasks/TaskForm'
 
@@ -38,6 +39,7 @@ export function MeetingForm({
   const [endLocal, setEndLocal] = useState('')
   const [location, setLocation] = useState('')
   const [meetingUrl, setMeetingUrl] = useState('')
+  const [assignedToId, setAssignedToId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const keyRef = useRef<string | null>(null)
@@ -55,6 +57,7 @@ export function MeetingForm({
       setEndLocal(toDatetimeLocalValue(meeting.endAt))
       setLocation(meeting.location ?? '')
       setMeetingUrl(meeting.meetingUrl ?? '')
+      setAssignedToId(meeting.assignedToId)
     } else {
       setRelatedType(initialRelated?.type ?? 'LEAD')
       setRelatedId(initialRelated?.id ?? '')
@@ -64,6 +67,7 @@ export function MeetingForm({
       setEndLocal('')
       setLocation('')
       setMeetingUrl('')
+      setAssignedToId('')
       keyRef.current = newIdempotencyKey()
     }
   }, [open, mode, meeting, initialRelated])
@@ -95,15 +99,17 @@ export function MeetingForm({
             endAt: endIso,
             location: location.trim() || null,
             meetingUrl: meetingUrl.trim() || null,
+            assignedToId: assignedToId || null,
           },
           relatedType,
           relatedId,
         ) as MeetingCreateRequest
+        if (!assignedToId) body.assignedToId = undefined
         await onCreate(body, keyRef.current)
       } else if (meeting) {
         const body = applyRelatedIds(
           {
-            assignedToId: meeting.assignedToId,
+            assignedToId: assignedToId || meeting.assignedToId,
             title: title.trim(),
             description: description.trim() || null,
             startAt: startIso,
@@ -199,6 +205,13 @@ export function MeetingForm({
               className="mt-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm"
             />
           </label>
+          <AssigneeSelect
+            open={open}
+            value={assignedToId}
+            onChange={setAssignedToId}
+            disabled={pending}
+            currentAssigneeName={mode === 'edit' ? meeting?.assignedToName : null}
+          />
           {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-lg border border-border px-3 py-2 text-sm">

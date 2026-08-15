@@ -108,6 +108,8 @@ class OpenApiIntegrationTest {
         assertThat(body).contains("Calls");
         assertThat(body).contains("Calendar");
         assertThat(body).contains("Workqueue");
+        assertThat(body).contains("Search");
+        assertThat(body).contains("Notifications");
         assertThat(body).contains("Activities");
         assertThat(body).contains("Dashboard");
         assertThat(body).contains("Health");
@@ -132,6 +134,9 @@ class OpenApiIntegrationTest {
         mockMvc.perform(get("/api/v1/calls")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/calendar")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/workqueue")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/search").param("q", "ac")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/notifications")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/notifications/unread-count")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/activities/timeline")
                         .param("entityType", "LEAD")
                         .param("entityId", "00000000-0000-0000-0000-000000000001"))

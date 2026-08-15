@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Plus, RefreshCw } from 'lucide-react'
-import { changeCallStatus, createCall, deleteCall, listAllCalls, updateCall } from '../api/calls'
+import { useSearchParams } from 'react-router-dom'
+import { changeCallStatus, createCall, deleteCall, getCall, listAllCalls, updateCall } from '../api/calls'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { CallDetails } from '../components/calls/CallDetails'
 import { CallForm } from '../components/calls/CallForm'
@@ -10,6 +11,8 @@ import { formatApiError } from '../utils/errors'
 import { formatDateTime } from '../utils/taskDates'
 
 export function CallsPage() {
+  const [searchParams] = useSearchParams()
+  const openId = searchParams.get('open')
   const [status, setStatus] = useState<CallStatus | ''>('PLANNED')
   const [relatedType, setRelatedType] = useState<RelatedRecordType | ''>('')
   const [rows, setRows] = useState<Call[]>([])
@@ -34,6 +37,26 @@ export function CallsPage() {
   }, [status, relatedType])
 
   useEffect(() => { void refresh() }, [refresh])
+
+  useEffect(() => {
+    if (!openId) return
+    let cancelled = false
+    void getCall(openId)
+      .then(async (call) => {
+        if (cancelled) return
+        setSelected(call)
+        setRows((prev) => {
+          const exists = prev.some((row) => row.id === call.id)
+          if (exists) return prev.map((row) => (row.id === call.id ? call : row))
+          return [call, ...prev]
+        })
+        await refresh()
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [openId, refresh])
 
   return (
     <div className="space-y-4">

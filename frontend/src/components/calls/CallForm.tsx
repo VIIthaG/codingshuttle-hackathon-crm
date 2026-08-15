@@ -6,6 +6,7 @@ import { formatApiError } from '../../utils/errors'
 import { newIdempotencyKey } from '../../utils/idempotency'
 import { defaultDueLocal, fromDatetimeLocalValue, toDatetimeLocalValue } from '../../utils/taskDates'
 import { RelatedRecordFields } from '../crm/RelatedRecordFields'
+import { AssigneeSelect } from '../crm/AssigneeSelect'
 import { applyRelatedIds } from '../../utils/relatedRecords'
 import type { TaskRelatedPreset } from '../tasks/TaskForm'
 
@@ -38,6 +39,7 @@ export function CallForm({
   const [duration, setDuration] = useState('')
   const [direction, setDirection] = useState<CallDirection>('OUTBOUND')
   const [phone, setPhone] = useState('')
+  const [assignedToId, setAssignedToId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const keyRef = useRef<string | null>(null)
@@ -55,6 +57,7 @@ export function CallForm({
       setDuration(call.durationMinutes != null ? String(call.durationMinutes) : '')
       setDirection(call.direction)
       setPhone(call.phoneNumber ?? '')
+      setAssignedToId(call.assignedToId)
     } else {
       setRelatedType(initialRelated?.type ?? 'LEAD')
       setRelatedId(initialRelated?.id ?? '')
@@ -64,6 +67,7 @@ export function CallForm({
       setDuration('')
       setDirection('OUTBOUND')
       setPhone('')
+      setAssignedToId('')
       keyRef.current = newIdempotencyKey()
     }
   }, [open, mode, call, initialRelated])
@@ -90,15 +94,17 @@ export function CallForm({
             durationMinutes,
             direction,
             phoneNumber: phone.trim() || null,
+            assignedToId: assignedToId || null,
           },
           relatedType,
           relatedId,
         ) as CallCreateRequest
+        if (!assignedToId) body.assignedToId = undefined
         await onCreate(body, keyRef.current)
       } else if (call) {
         const body = applyRelatedIds(
           {
-            assignedToId: call.assignedToId,
+            assignedToId: assignedToId || call.assignedToId,
             title: title.trim(),
             description: description.trim() || null,
             scheduledAt: fromDatetimeLocalValue(scheduledLocal),
@@ -163,6 +169,13 @@ export function CallForm({
             Notes
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={pending} rows={3} className="mt-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm" />
           </label>
+          <AssigneeSelect
+            open={open}
+            value={assignedToId}
+            onChange={setAssignedToId}
+            disabled={pending}
+            currentAssigneeName={mode === 'edit' ? call?.assignedToName : null}
+          />
           {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-lg border border-border px-3 py-2 text-sm">Cancel</button>

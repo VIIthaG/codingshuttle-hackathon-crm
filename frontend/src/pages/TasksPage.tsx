@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, RefreshCw } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import {
   completeTask,
   createTask,
   deleteTask,
+  getTask,
   listAllTasks,
   updateTask,
   type ListTasksParams,
@@ -21,6 +23,8 @@ type StatusFilter = 'ALL' | TaskStatus | 'OVERDUE'
 
 export function TasksPage() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const openId = searchParams.get('open')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('OPEN')
   const [relatedTypeFilter, setRelatedTypeFilter] = useState<RelatedRecordType | ''>('')
 
@@ -73,6 +77,22 @@ export function TasksPage() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!openId) return
+    let cancelled = false
+    void getTask(openId)
+      .then((task) => {
+        if (cancelled) return
+        setSelected(task)
+        setActionError(null)
+        setDetailsOpen(true)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [openId])
 
   function openTask(task: Task) {
     setSelected(task)

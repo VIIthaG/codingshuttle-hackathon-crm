@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Plus, RefreshCw } from 'lucide-react'
-import { changeMeetingStatus, createMeeting, deleteMeeting, listAllMeetings, updateMeeting } from '../api/meetings'
+import { useSearchParams } from 'react-router-dom'
+import { changeMeetingStatus, createMeeting, deleteMeeting, getMeeting, listAllMeetings, updateMeeting } from '../api/meetings'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { MeetingDetails } from '../components/meetings/MeetingDetails'
 import { MeetingForm } from '../components/meetings/MeetingForm'
@@ -10,6 +11,8 @@ import { formatApiError } from '../utils/errors'
 import { formatDateTime } from '../utils/taskDates'
 
 export function MeetingsPage() {
+  const [searchParams] = useSearchParams()
+  const openId = searchParams.get('open')
   const [status, setStatus] = useState<MeetingStatus | ''>('SCHEDULED')
   const [relatedType, setRelatedType] = useState<RelatedRecordType | ''>('')
   const [rows, setRows] = useState<Meeting[]>([])
@@ -39,6 +42,19 @@ export function MeetingsPage() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!openId) return
+    let cancelled = false
+    void getMeeting(openId)
+      .then((meeting) => {
+        if (!cancelled) setSelected(meeting)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [openId])
 
   return (
     <div className="space-y-4">

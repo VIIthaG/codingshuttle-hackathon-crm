@@ -25,6 +25,9 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 | Activity timeline | Per-record activity (created/updated, conversion, tasks, meetings, calls) — not a full audit log |
 | Meetings / Calls | Scheduled meetings and planned calls linked to exactly one CRM record |
 | Calendar / Workqueue | Aggregated scheduled work and a deterministic next-actions view |
+| Global search | Role-scoped search across leads, accounts, contacts, deals, tasks, meetings, and calls |
+| Quick create | Header **+ Create** reuses existing create forms/APIs (no extra backend route) |
+| In-app notifications | Persistent assignment notifications in PostgreSQL; each user sees only their inbox |
 | Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work (delivery is log-simulated) |
 | Dashboard summary | Per-user aggregates (leads, deals/pipeline value, open/overdue tasks, upcoming follow-ups) in API + SPA |
 
@@ -96,6 +99,7 @@ flowchart TB
   PG --- T[tasks XOR lead/account/contact/deal]
   PG --- M[meetings]
   PG --- CL[calls]
+  PG --- N[notifications]
   PG --- O[outbox_events]
   PG --- P[processed_messages]
   PG --- I[idempotency_records]
@@ -216,6 +220,7 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 | `V11__add_lead_conversion.sql` | Lead conversion metadata (`converted_at` + account/contact/deal FKs, `ON DELETE` RESTRICT) |
 | `V12__generalize_task_relationships.sql` | Tasks: optional `lead_id` plus `account_id`/`contact_id`/`deal_id`; exactly-one CHECK; RESTRICT FKs |
 | `V13__create_meetings_and_calls.sql` | Meetings and calls with exactly-one CRM relation, statuses, RESTRICT FKs |
+| `V14__create_notifications.sql` | Per-user in-app assignment notifications; CASCADE on user delete; no CRM FKs |
 
 **Do not edit applied migrations.** Flyway checksums historical files; change schema only with a new versioned migration.
 
@@ -381,7 +386,7 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 | Rate limiting | Redis login limiter (429 + Retry-After) |
 | Distributed locking | Redis lock around outbox publisher |
 | Swagger | springdoc UI + JWT `bearerAuth` |
-| PostgreSQL | Primary durable store via Flyway V1–V13 |
+| PostgreSQL | Primary durable store via Flyway V1–V14 |
 
 ---
 

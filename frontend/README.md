@@ -70,5 +70,6 @@ Capabilities:
 - **Tasks / Meetings / Calls** — each related to exactly one CRM record
 - **Calendar** — week agenda of OPEN tasks, SCHEDULED meetings, PLANNED calls
 - **Workqueue** — overdue / today / upcoming next actions with complete/cancel
+- **Header** — global search (Ctrl/Cmd+K), Quick Create, notification bell
 
-Reminders are scheduled by sending `reminderAt` to the backend; the SPA does not deliver email/SMS or run local reminder timers.
+Reminders are scheduled by sending `reminderAt` to the backend; the SPA does not deliver email/SMS or run local reminder timers. Assignment notifications are polled (~45s) and stored on the server.

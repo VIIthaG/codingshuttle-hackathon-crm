@@ -9,11 +9,13 @@ import com.flowcrm.contact.dto.ContactCreateRequest;
 import com.flowcrm.contact.dto.ContactResponse;
 import com.flowcrm.contact.dto.ContactUpdateRequest;
 import com.flowcrm.enums.Role;
+import com.flowcrm.enums.SearchResultType;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.call.CallRepository;
+import com.flowcrm.notification.NotificationService;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
@@ -41,6 +43,7 @@ public class ContactService {
     private final MeetingRepository meetingRepository;
     private final CallRepository callRepository;
     private final IdempotencyService idempotencyService;
+    private final NotificationService notificationService;
     private final ContactService self;
 
     public ContactService(
@@ -52,6 +55,7 @@ public class ContactService {
             MeetingRepository meetingRepository,
             CallRepository callRepository,
             IdempotencyService idempotencyService,
+            NotificationService notificationService,
             @Lazy ContactService self) {
         this.contactRepository = contactRepository;
         this.accountService = accountService;
@@ -61,6 +65,7 @@ public class ContactService {
         this.meetingRepository = meetingRepository;
         this.callRepository = callRepository;
         this.idempotencyService = idempotencyService;
+        this.notificationService = notificationService;
         this.self = self;
     }
 
@@ -79,7 +84,15 @@ public class ContactService {
         contact.setAccount(account);
         contact.setOwner(owner);
 
-        return toResponse(contactRepository.save(contact));
+        ContactResponse response = toResponse(contactRepository.save(contact));
+        notificationService.notifyAssignment(
+                principal.getId(),
+                owner,
+                null,
+                SearchResultType.CONTACT,
+                response.id(),
+                (response.firstName() + " " + response.lastName()).trim());
+        return response;
     }
 
     public ContactResponse create(ContactCreateRequest request, UserPrincipal principal, String idempotencyKey) {
@@ -112,6 +125,7 @@ public class ContactService {
         Contact contact = requireContact(id);
         assertCanAccess(contact, principal);
 
+        UUID previousOwnerId = contact.getOwner().getId();
         User owner = resolveOwnerForUpdate(request.ownerId(), principal, contact);
         Account account = resolveAccount(request.accountId(), principal);
 
@@ -124,7 +138,15 @@ public class ContactService {
         contact.setAccount(account);
         contact.setOwner(owner);
 
-        return toResponse(contactRepository.save(contact));
+        ContactResponse response = toResponse(contactRepository.save(contact));
+        notificationService.notifyAssignment(
+                principal.getId(),
+                owner,
+                previousOwnerId,
+                SearchResultType.CONTACT,
+                response.id(),
+                (response.firstName() + " " + response.lastName()).trim());
+        return response;
     }
 
     /**

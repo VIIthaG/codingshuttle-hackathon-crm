@@ -1,5 +1,9 @@
 import { LogOut, Menu } from 'lucide-react'
+import { useState } from 'react'
 import { useAuth } from '../auth/useAuth'
+import { GlobalSearch } from './GlobalSearch'
+import { NotificationBell } from './NotificationBell'
+import { QuickCreateMenu } from './QuickCreateMenu'
 
 type HeaderProps = {
   title: string
@@ -8,10 +12,16 @@ type HeaderProps = {
 
 export function Header({ title, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth()
+  const [toast, setToast] = useState<string | null>(null)
+
+  function showToast(message: string) {
+    setToast(message)
+    window.setTimeout(() => setToast(null), 2500)
+  }
 
   return (
-    <header className="flex h-14 items-center justify-between gap-3 border-b border-border bg-surface px-4 sm:h-16 sm:px-6">
-      <div className="flex min-w-0 items-center gap-2">
+    <header className="flex h-14 items-center gap-2 border-b border-border bg-surface px-3 sm:h-16 sm:gap-3 sm:px-6">
+      <div className="flex min-w-0 shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={onMenuClick}
@@ -21,19 +31,21 @@ export function Header({ title, onMenuClick }: HeaderProps) {
         >
           <Menu className="h-5 w-5" aria-hidden />
         </button>
-        <h1 className="truncate text-base font-semibold text-ink sm:text-lg">{title}</h1>
+        <h1 className="hidden truncate text-base font-semibold text-ink sm:block sm:text-lg">{title}</h1>
       </div>
+      <GlobalSearch />
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        <div className="hidden text-right md:block">
+        <QuickCreateMenu onCreated={showToast} />
+        <NotificationBell />
+        <div className="hidden text-right lg:block">
           <div className="text-sm font-medium text-ink">{user?.fullName}</div>
           <div className="max-w-[14rem] truncate text-xs text-muted">{user?.email}</div>
         </div>
         <span
-          className="rounded-full border border-border bg-canvas px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:px-2.5 sm:text-xs"
+          className="hidden rounded-full border border-border bg-canvas px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:inline sm:px-2.5 sm:text-xs"
           title={user?.role === 'ADMIN' ? 'Admin' : 'Sales Rep'}
         >
-          <span className="sm:hidden">{user?.role === 'ADMIN' ? 'Admin' : 'Rep'}</span>
-          <span className="hidden sm:inline">{user?.role === 'ADMIN' ? 'Admin' : 'Sales Rep'}</span>
+          {user?.role === 'ADMIN' ? 'Admin' : 'Sales Rep'}
         </span>
         <button
           type="button"
@@ -45,6 +57,9 @@ export function Header({ title, onMenuClick }: HeaderProps) {
           <span className="hidden sm:inline">Logout</span>
         </button>
       </div>
+      {toast ? (
+        <div className="fixed bottom-4 right-4 z-50 rounded-lg bg-ink px-3 py-2 text-sm text-white shadow-lg">{toast}</div>
+      ) : null}
     </header>
   )
 }

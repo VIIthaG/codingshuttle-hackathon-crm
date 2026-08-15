@@ -47,12 +47,13 @@ PostgreSQL stores:
 | `outbox_events` | Intended async side effects awaiting publish |
 | `processed_messages` | Consumer receipts (message id = outbox event id) |
 | `idempotency_records` | Durable HTTP create idempotency |
+| `notifications` | Per-user in-app assignment inbox (`V14`). Informational; no FKs to CRM records. Deleted with the user (`ON DELETE CASCADE`). |
 
-**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V13 version that schema.
+**Why:** CRM correctness depends on durable state. Caches and brokers are helpers; if Redis or RabbitMQ is down, domain data remains in Postgres. Flyway V1–V14 version that schema.
 
 ### Why not edit historical Flyway scripts
 
-Applied migrations are checksummed. Rewriting `V1`–`V12` breaks existing databases and CI. Schema evolution must be additive (`V13__…` and later).
+Applied migrations are checksummed. Rewriting `V1`–`V13` breaks existing databases and CI. Schema evolution must be additive (`V14__…` and later).
 
 Account deletion is **rejected** (HTTP 409) while deals still reference the account (`ON DELETE` restrict / application check), while converted leads still reference the account/contact/deal, and while tasks, meetings, or calls still reference the record. Deleting a contact unlinks `deals.primary_contact_id`.
 
@@ -146,6 +147,10 @@ It is **not** an immutable audit log and does **not** reconstruct unsaved status
 `GET /api/v1/calendar?from=&to=` aggregates OPEN tasks (dueAt), SCHEDULED meetings (startAt), and PLANNED calls (scheduledAt) for the caller. Completed/cancelled items are excluded. Default window is the current UTC month.
 
 `GET /api/v1/workqueue` is a deterministic next-actions view (overdue/today/upcoming). Meetings and calls do **not** use the RabbitMQ reminder path.
+
+`GET /api/v1/search?q=` is role-scoped global search (min 2 characters, bounded results, no user search). Security filters are applied in the query, not after fetch.
+
+In-app notifications (`GET /api/v1/notifications`) are written in the **same PostgreSQL transaction** as assignment mutations. They do **not** use the outbox or RabbitMQ. Task reminder delivery remains the only RabbitMQ/outbox path.
 
 ---
 

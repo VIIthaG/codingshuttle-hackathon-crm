@@ -8,12 +8,14 @@ import com.flowcrm.crm.RelatedRecordViews;
 import com.flowcrm.enums.MeetingStatus;
 import com.flowcrm.enums.RelatedRecordType;
 import com.flowcrm.enums.Role;
+import com.flowcrm.enums.SearchResultType;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.meeting.dto.MeetingCreateRequest;
 import com.flowcrm.meeting.dto.MeetingResponse;
 import com.flowcrm.meeting.dto.MeetingStatusUpdateRequest;
 import com.flowcrm.meeting.dto.MeetingUpdateRequest;
+import com.flowcrm.notification.NotificationService;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
@@ -37,6 +39,7 @@ public class MeetingService {
     private final UserRepository userRepository;
     private final RelatedRecordBinder relatedRecordBinder;
     private final IdempotencyService idempotencyService;
+    private final NotificationService notificationService;
     private final MeetingService self;
 
     public MeetingService(
@@ -44,11 +47,13 @@ public class MeetingService {
             UserRepository userRepository,
             RelatedRecordBinder relatedRecordBinder,
             IdempotencyService idempotencyService,
+            NotificationService notificationService,
             @Lazy MeetingService self) {
         this.meetingRepository = meetingRepository;
         this.userRepository = userRepository;
         this.relatedRecordBinder = relatedRecordBinder;
         this.idempotencyService = idempotencyService;
+        this.notificationService = notificationService;
         this.self = self;
     }
 
@@ -66,7 +71,10 @@ public class MeetingService {
         meeting.setLocation(trimToNull(request.location()));
         meeting.setMeetingUrl(trimToNull(request.meetingUrl()));
         meeting.setStatus(MeetingStatus.SCHEDULED);
-        return toResponse(meetingRepository.save(meeting));
+        MeetingResponse response = toResponse(meetingRepository.save(meeting));
+        notificationService.notifyAssignment(
+                principal.getId(), assignee, null, SearchResultType.MEETING, response.id(), response.title());
+        return response;
     }
 
     public MeetingResponse create(MeetingCreateRequest request, UserPrincipal principal, String idempotencyKey) {
@@ -145,6 +153,7 @@ public class MeetingService {
     public MeetingResponse update(UUID id, MeetingUpdateRequest request, UserPrincipal principal) {
         Meeting meeting = requireMeeting(id);
         assertCanAccess(meeting, principal);
+        UUID previousAssigneeId = meeting.getAssignedTo().getId();
         User assignee = resolveAssignee(request.assignedToId(), principal);
         relatedRecordBinder.bind(
                 meeting, request.leadId(), request.accountId(), request.contactId(), request.dealId(), principal);
@@ -155,7 +164,15 @@ public class MeetingService {
         meeting.setEndAt(request.endAt());
         meeting.setLocation(trimToNull(request.location()));
         meeting.setMeetingUrl(trimToNull(request.meetingUrl()));
-        return toResponse(meetingRepository.save(meeting));
+        MeetingResponse response = toResponse(meetingRepository.save(meeting));
+        notificationService.notifyAssignment(
+                principal.getId(),
+                assignee,
+                previousAssigneeId,
+                SearchResultType.MEETING,
+                response.id(),
+                response.title());
+        return response;
     }
 
     @Transactional

@@ -17,6 +17,7 @@ import {
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
 } from '../../utils/taskDates'
+import { AssigneeSelect } from '../crm/AssigneeSelect'
 
 export type TaskFormMode = 'create' | 'edit'
 
@@ -39,6 +40,7 @@ type TaskFormProps = {
 type FormState = {
   relatedType: RelatedRecordType
   relatedId: string
+  assignedToId: string
   title: string
   description: string
   dueAtLocal: string
@@ -50,6 +52,7 @@ function emptyForm(preset?: TaskRelatedPreset | null): FormState {
   return {
     relatedType: preset?.type ?? 'LEAD',
     relatedId: preset?.id ?? '',
+    assignedToId: '',
     title: '',
     description: '',
     dueAtLocal: defaultDueLocal(),
@@ -62,6 +65,7 @@ function taskToForm(task: Task): FormState {
   return {
     relatedType: task.relatedType,
     relatedId: task.relatedId,
+    assignedToId: task.assignedToId,
     title: task.title,
     description: task.description ?? '',
     dueAtLocal: toDatetimeLocalValue(task.dueAt),
@@ -221,12 +225,13 @@ export function TaskForm({
           dueAt: fromDatetimeLocalValue(form.dueAtLocal),
           reminderAt: resolveReminderIso(),
         }
+        if (form.assignedToId) body.assignedToId = form.assignedToId
         applyRelatedId(body, form.relatedType, form.relatedId)
         await onCreate(body, idempotencyKeyRef.current)
         idempotencyKeyRef.current = newIdempotencyKey()
       } else if (task) {
         const body: TaskUpdateRequest = {
-          assignedToId: task.assignedToId,
+          assignedToId: form.assignedToId || task.assignedToId,
           title: form.title.trim(),
           description: form.description.trim() === '' ? null : form.description.trim(),
           dueAt: fromDatetimeLocalValue(form.dueAtLocal),
@@ -391,10 +396,17 @@ export function TaskForm({
 
           {mode === 'edit' && task ? (
             <div className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-muted">
-              Assigned to <span className="font-medium text-ink">{task.assignedToName}</span>
-              <span className="mt-0.5 block text-xs">Status: {task.status}</span>
+              <span className="block text-xs">Status: {task.status}</span>
             </div>
           ) : null}
+
+          <AssigneeSelect
+            open={open}
+            value={form.assignedToId}
+            onChange={(id) => setForm((f) => ({ ...f, assignedToId: id }))}
+            disabled={pending}
+            currentAssigneeName={mode === 'edit' ? task?.assignedToName : null}
+          />
 
           {error ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

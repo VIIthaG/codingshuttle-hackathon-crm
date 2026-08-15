@@ -16,11 +16,13 @@ import com.flowcrm.deal.dto.DealStageUpdateRequest;
 import com.flowcrm.deal.dto.DealUpdateRequest;
 import com.flowcrm.enums.DealStage;
 import com.flowcrm.enums.Role;
+import com.flowcrm.enums.SearchResultType;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
 import com.flowcrm.lead.LeadRepository;
 import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.call.CallRepository;
+import com.flowcrm.notification.NotificationService;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
@@ -54,6 +56,7 @@ public class DealService {
     private final UserRepository userRepository;
     private final DashboardService dashboardService;
     private final IdempotencyService idempotencyService;
+    private final NotificationService notificationService;
     private final DealService self;
 
     public DealService(
@@ -67,6 +70,7 @@ public class DealService {
             UserRepository userRepository,
             DashboardService dashboardService,
             IdempotencyService idempotencyService,
+            NotificationService notificationService,
             @Lazy DealService self) {
         this.dealRepository = dealRepository;
         this.leadRepository = leadRepository;
@@ -78,6 +82,7 @@ public class DealService {
         this.userRepository = userRepository;
         this.dashboardService = dashboardService;
         this.idempotencyService = idempotencyService;
+        this.notificationService = notificationService;
         this.self = self;
     }
 
@@ -104,6 +109,8 @@ public class DealService {
 
         DealResponse response = toResponse(dealRepository.save(deal));
         dashboardService.invalidateAllSummaries();
+        notificationService.notifyAssignment(
+                principal.getId(), owner, null, SearchResultType.DEAL, response.id(), response.name());
         return response;
     }
 
@@ -145,6 +152,7 @@ public class DealService {
         Deal deal = requireDeal(id);
         assertCanAccess(deal, principal);
 
+        UUID previousOwnerId = deal.getOwner().getId();
         User owner = resolveOwnerForUpdate(request.ownerId(), principal, deal);
         Account account = accountService.requireAccessibleAccount(request.accountId(), principal);
         Contact contact = resolveContact(request.primaryContactId(), principal, account);
@@ -168,6 +176,13 @@ public class DealService {
 
         DealResponse response = toResponse(dealRepository.save(deal));
         dashboardService.invalidateAllSummaries();
+        notificationService.notifyAssignment(
+                principal.getId(),
+                owner,
+                previousOwnerId,
+                SearchResultType.DEAL,
+                response.id(),
+                response.name());
         return response;
     }
 

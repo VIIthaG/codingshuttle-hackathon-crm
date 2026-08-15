@@ -13,8 +13,10 @@ import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.call.CallRepository;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.enums.Role;
+import com.flowcrm.enums.SearchResultType;
 import com.flowcrm.idempotency.IdempotencyOperations;
 import com.flowcrm.idempotency.IdempotencyService;
+import com.flowcrm.notification.NotificationService;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.user.User;
 import com.flowcrm.user.UserRepository;
@@ -42,6 +44,7 @@ public class AccountService {
     private final CallRepository callRepository;
     private final UserRepository userRepository;
     private final IdempotencyService idempotencyService;
+    private final NotificationService notificationService;
     private final AccountService self;
 
     public AccountService(
@@ -54,6 +57,7 @@ public class AccountService {
             CallRepository callRepository,
             UserRepository userRepository,
             IdempotencyService idempotencyService,
+            NotificationService notificationService,
             @Lazy AccountService self) {
         this.accountRepository = accountRepository;
         this.contactRepository = contactRepository;
@@ -64,6 +68,7 @@ public class AccountService {
         this.callRepository = callRepository;
         this.userRepository = userRepository;
         this.idempotencyService = idempotencyService;
+        this.notificationService = notificationService;
         this.self = self;
     }
 
@@ -79,7 +84,10 @@ public class AccountService {
         account.setDescription(trimToNull(request.description()));
         account.setOwner(owner);
 
-        return toResponse(accountRepository.save(account));
+        AccountResponse response = toResponse(accountRepository.save(account));
+        notificationService.notifyAssignment(
+                principal.getId(), owner, null, SearchResultType.ACCOUNT, response.id(), response.name());
+        return response;
     }
 
     public AccountResponse create(AccountCreateRequest request, UserPrincipal principal, String idempotencyKey) {
@@ -111,6 +119,7 @@ public class AccountService {
         Account account = requireAccount(id);
         assertCanAccess(account, principal);
 
+        UUID previousOwnerId = account.getOwner().getId();
         User owner = resolveOwnerForUpdate(request.ownerId(), principal, account);
         account.setName(request.name().trim());
         account.setWebsite(trimToNull(request.website()));
@@ -119,7 +128,15 @@ public class AccountService {
         account.setDescription(trimToNull(request.description()));
         account.setOwner(owner);
 
-        return toResponse(accountRepository.save(account));
+        AccountResponse response = toResponse(accountRepository.save(account));
+        notificationService.notifyAssignment(
+                principal.getId(),
+                owner,
+                previousOwnerId,
+                SearchResultType.ACCOUNT,
+                response.id(),
+                response.name());
+        return response;
     }
 
     @Transactional

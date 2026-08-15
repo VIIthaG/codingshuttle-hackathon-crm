@@ -32,6 +32,8 @@ import com.flowcrm.lead.dto.LeadStatusUpdateRequest;
 import com.flowcrm.lead.dto.LeadUpdateRequest;
 import com.flowcrm.meeting.MeetingRepository;
 import com.flowcrm.call.CallRepository;
+import com.flowcrm.notification.NotificationService;
+import com.flowcrm.enums.SearchResultType;
 import com.flowcrm.security.UserPrincipal;
 import com.flowcrm.task.TaskRepository;
 import com.flowcrm.user.User;
@@ -58,6 +60,7 @@ public class LeadService {
     private final CallRepository callRepository;
     private final DashboardService dashboardService;
     private final IdempotencyService idempotencyService;
+    private final NotificationService notificationService;
     private final LeadService self;
 
     public LeadService(
@@ -72,6 +75,7 @@ public class LeadService {
             CallRepository callRepository,
             DashboardService dashboardService,
             IdempotencyService idempotencyService,
+            NotificationService notificationService,
             @Lazy LeadService self) {
         this.leadRepository = leadRepository;
         this.userRepository = userRepository;
@@ -84,6 +88,7 @@ public class LeadService {
         this.callRepository = callRepository;
         this.dashboardService = dashboardService;
         this.idempotencyService = idempotencyService;
+        this.notificationService = notificationService;
         this.self = self;
     }
 
@@ -102,6 +107,13 @@ public class LeadService {
 
         LeadResponse response = toResponse(leadRepository.save(lead));
         dashboardService.invalidateAllSummaries();
+        notificationService.notifyAssignment(
+                principal.getId(),
+                assignee,
+                null,
+                SearchResultType.LEAD,
+                response.id(),
+                response.fullName());
         return response;
     }
 
@@ -147,6 +159,7 @@ public class LeadService {
         Lead lead = requireLead(id);
         assertCanAccess(lead, principal);
 
+        UUID previousAssigneeId = lead.getAssignedTo().getId();
         User assignee = resolveAssigneeForUpdate(request.assignedToId(), principal, lead);
 
         lead.setFullName(request.fullName().trim());
@@ -159,6 +172,13 @@ public class LeadService {
 
         LeadResponse response = toResponse(leadRepository.save(lead));
         dashboardService.invalidateAllSummaries();
+        notificationService.notifyAssignment(
+                principal.getId(),
+                assignee,
+                previousAssigneeId,
+                SearchResultType.LEAD,
+                response.id(),
+                response.fullName());
         return response;
     }
 

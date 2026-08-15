@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { LayoutGrid, List, Plus, RefreshCw } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import {
   changeLeadStatus,
   createLead,
   deleteLead,
+  getLead,
   listAllLeads,
   updateLead,
 } from '../api/leads'
@@ -23,6 +25,8 @@ type ViewMode = 'pipeline' | 'list'
 
 export function LeadsPage() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const openId = searchParams.get('open')
   const [view, setView] = useState<ViewMode>('pipeline')
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,6 +70,22 @@ export function LeadsPage() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!openId) return
+    let cancelled = false
+    void getLead(openId)
+      .then((lead) => {
+        if (cancelled) return
+        setSelected(lead)
+        setStatusError(null)
+        setDetailsOpen(true)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [openId])
 
   function openLead(lead: Lead) {
     setSelected(lead)
