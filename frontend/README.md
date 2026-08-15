@@ -12,6 +12,7 @@ Versions from `package.json`:
 - React Router **7.18**
 - Tailwind CSS **4.3**
 - lucide-react (icons)
+- Recharts **3.10** (dashboard + analytics charts)
 - oxlint (lint)
 
 ## Requirements
@@ -57,11 +58,12 @@ On 401 from `/api/v1/auth/me` during bootstrap, the SPA clears the stored sessio
 |------|--------|
 | `/` | Redirect to `/dashboard` or `/login` |
 | `/login`, `/register` | Guests only |
-| `/dashboard`, `/workqueue`, `/calendar`, `/accounts`, `/contacts`, `/deals`, `/leads`, `/tasks`, `/meetings`, `/calls` | Authenticated (shell) |
+| `/dashboard`, `/analytics`, `/workqueue`, `/calendar`, `/accounts`, `/contacts`, `/deals`, `/leads`, `/tasks`, `/meetings`, `/calls` | Authenticated (shell) |
 
 Capabilities:
 
-- **Dashboard** — live role-aware summary including deal pipeline value
+- **Dashboard** — live role-aware summary, compact lead/deal charts, upcoming work from the workqueue
+- **Analytics** — date-range metrics and charts (`?range=7d|30d|90d|all`); ADMIN team workload table and optional assignee filter. No fabricated historical stage audit.
 - **Accounts** — company list/search, create/edit/delete, owner assignment (ADMIN)
 - **Contacts** — people list/search, optional account link, create/edit/delete
 - **Deals** — kanban + table, create/edit/delete, validated stage transitions

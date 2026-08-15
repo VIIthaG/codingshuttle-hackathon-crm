@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, ListTodo, Building2, UserRound, Handshake, X, Inbox, CalendarDays, Phone, Video } from 'lucide-react'
+import { BarChart3, LayoutDashboard, Users, ListTodo, Building2, UserRound, Handshake, X, Inbox, CalendarDays, Phone, Video } from 'lucide-react'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/workqueue', label: 'Workqueue', icon: Inbox },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/accounts', label: 'Accounts', icon: Building2 },

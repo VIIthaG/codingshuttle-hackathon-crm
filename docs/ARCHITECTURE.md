@@ -11,7 +11,7 @@ Related diagram source: [architecture.mmd](architecture.mmd)
 FlowCRM is a **modular monolith**:
 
 - One Spring Boot process (`backend/`)
-- Package boundaries by domain (`auth`, `account`, `contact`, `lead`, `deal`, `task`, `activity`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
+- Package boundaries by domain (`auth`, `account`, `contact`, `lead`, `deal`, `task`, `activity`, `analytics`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
 - Shared PostgreSQL as the durable system of record
 - Redis for cache / rate-limit / distributed lock
 - RabbitMQ for asynchronous reminder processing
@@ -150,6 +150,8 @@ It is **not** an immutable audit log and does **not** reconstruct unsaved status
 
 `GET /api/v1/search?q=` is role-scoped global search (min 2 characters, bounded results, no user search). Security filters are applied in the query, not after fetch.
 
+`GET /api/v1/analytics/summary` is role-scoped aggregation (JPQL counts/sums, not loading every CRM row into memory for totals). Date windows are UTC: `from <= created_at < toExclusive`. Presets: `7d`, `30d` (default), `90d`, `all`. Lead conversion rate is `converted / (converted + lost)` on the **current** status of the created-at cohort (0 if the denominator is 0). Conversion trend uses `converted_at`. Deal pipeline/weighted values are the **current** snapshot; FlowCRM does **not** store stage-change history, so charts never claim historical funnel transitions. Weighted pipeline = `sum(open amount × probability / 100)`. `SALES_REP` sees only own assigned/owned records; `assignedTo` for another user is 403. ADMIN default is the whole team; optional `assignedTo` narrows results. The ADMIN `team` array is an operational workload/pipeline overview, not a performance score. Analytics responses are **not** Redis-cached (dashboard summary remains the cached hot path).
+
 In-app notifications (`GET /api/v1/notifications`) are written in the **same PostgreSQL transaction** as assignment mutations. They do **not** use the outbox or RabbitMQ. Task reminder delivery remains the only RabbitMQ/outbox path.
 
 ---
@@ -183,8 +185,8 @@ This reduces concurrent double-publish races across instances. It does **not** r
 
 | Role | Behavior |
 |------|----------|
-| `ADMIN` | Sees all leads/tasks/accounts/contacts/deals; may assign to other users; may convert accessible QUALIFIED leads |
-| `SALES_REP` | Sees owned/assigned records only; may convert only own QUALIFIED leads and reuse only accessible accounts/contacts |
+| `ADMIN` | Sees all leads/tasks/accounts/contacts/deals; may assign to other users; may convert accessible QUALIFIED leads; analytics default is the whole team |
+| `SALES_REP` | Sees owned/assigned records only; analytics are self-scoped with no aggregate leakage; may convert only own QUALIFIED leads and reuse only accessible accounts/contacts |
 
 First registered user → `ADMIN`; subsequent → `SALES_REP`.
 

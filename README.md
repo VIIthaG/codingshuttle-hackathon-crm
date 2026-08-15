@@ -30,6 +30,7 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 | In-app notifications | Persistent assignment notifications in PostgreSQL; each user sees only their inbox |
 | Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work (delivery is log-simulated) |
 | Dashboard summary | Per-user aggregates (leads, deals/pipeline value, open/overdue tasks, upcoming follow-ups) in API + SPA |
+| Analytics | Role-scoped lead/deal/activity metrics, UTC date presets, ADMIN team workload table (`GET /api/v1/analytics/summary`); uncached |
 
 **First-user behavior:** the first registered account becomes `ADMIN`; later registrations become `SALES_REP`.
 
@@ -169,6 +170,7 @@ Because task create + outbox write are one transactional unit for the claim owne
 - Cache name: `dashboard-summary`, keyed by authenticated user id
 - Default TTL: **60 seconds** (`app.cache.dashboard-ttl-seconds`)
 - Lead/task/deal/conversion mutations call cache eviction (`allEntries`) so ADMIN and assignee views stay coherent
+- **Analytics** (`GET /api/v1/analytics/summary`) is uncached so date-range and ADMIN filters stay exact; dashboard remains the Redis hot path
 
 ### Login rate limiting
 - Per client IP key: `ratelimit:login:<ip>`
