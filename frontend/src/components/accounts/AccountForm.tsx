@@ -128,7 +128,7 @@ export function AccountForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overlay-backdrop p-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -150,7 +150,7 @@ export function AccountForm({
             type="button"
             onClick={onClose}
             disabled={pending}
-            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100 disabled:opacity-60"
+            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas disabled:opacity-60"
           >
             Close
           </button>
@@ -162,7 +162,7 @@ export function AccountForm({
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
               autoFocus
             />
           </Field>
@@ -171,7 +171,7 @@ export function AccountForm({
               value={form.website}
               onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
           <Field label="Phone" error={fieldErrors.phone}>
@@ -179,7 +179,7 @@ export function AccountForm({
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
           <Field label="Industry" error={fieldErrors.industry}>
@@ -187,7 +187,7 @@ export function AccountForm({
               value={form.industry}
               onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
           <Field label="Description" error={fieldErrors.description}>
@@ -196,7 +196,7 @@ export function AccountForm({
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               disabled={pending}
               rows={3}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
           {isAdmin && users.length > 0 ? (
@@ -205,7 +205,7 @@ export function AccountForm({
                 value={form.ownerId}
                 onChange={(e) => setForm((f) => ({ ...f, ownerId: e.target.value }))}
                 disabled={pending}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                className="ui-input"
               >
                 <option value="">Current user (default)</option>
                 {users.map((u) => (
@@ -222,7 +222,7 @@ export function AccountForm({
           ) : null}
 
           {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+            <div className="alert alert-error">{error}</div>
           ) : null}
 
           <div className="flex justify-end gap-2 pt-2">
@@ -230,14 +230,14 @@ export function AccountForm({
               type="button"
               onClick={onClose}
               disabled={pending}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              className="btn btn-secondary disabled:opacity-60"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              className="btn btn-primary disabled:opacity-60"
             >
               {pending ? 'Saving…' : mode === 'create' ? 'Create account' : 'Save changes'}
             </button>
@@ -266,7 +266,7 @@ function Field({
         {required ? <span className="text-red-500"> *</span> : null}
       </span>
       {children}
-      {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="mt-1 block text-xs text-[color:var(--app-danger-text)]">{error}</span> : null}
     </label>
   )
 }

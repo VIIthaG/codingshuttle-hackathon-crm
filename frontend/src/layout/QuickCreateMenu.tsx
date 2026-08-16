@@ -33,7 +33,7 @@ const OPTIONS: { kind: Kind; label: string }[] = [
   { kind: 'CALL', label: 'Call' },
 ]
 
-export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) => void }) {
+export function QuickCreateMenu() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
@@ -51,10 +51,9 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
     }
   }, [kind, isAdmin])
 
-  function finish(type: Kind, id: string, title: string) {
+  function finish(type: Kind, id: string) {
     setKind(null)
     setMenuOpen(false)
-    onCreated(`${title} created`)
     navigate(searchPath(type, id))
   }
 
@@ -62,20 +61,21 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
     <div className="relative">
       <button
         type="button"
-        className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-2 text-sm font-semibold text-white hover:bg-brand-700 sm:px-3"
+        className="btn btn-primary h-9 px-2.5 sm:px-3"
         aria-label="Create"
+        title="Create"
         onClick={() => setMenuOpen((v) => !v)}
       >
         <Plus className="h-4 w-4" />
         <span className="hidden sm:inline">Create</span>
       </button>
       {menuOpen && kind == null ? (
-        <div className="absolute right-0 z-40 mt-2 w-40 overflow-hidden rounded-xl border border-border bg-white py-1 shadow-lg">
+        <div className="dropdown-panel absolute right-0 z-40 mt-2 w-40 py-1">
           {OPTIONS.map((opt) => (
             <button
               key={opt.kind}
               type="button"
-              className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
+              className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-canvas"
               onClick={() => {
                 setKind(opt.kind)
                 setMenuOpen(false)
@@ -96,7 +96,7 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
           setPending(true)
           try {
             const created = await createLead(body, key)
-            finish('LEAD', created.id, created.fullName)
+            finish('LEAD', created.id)
           } finally {
             setPending(false)
           }
@@ -114,7 +114,7 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
           setPending(true)
           try {
             const created = await createAccount(body, key)
-            finish('ACCOUNT', created.id, created.name)
+            finish('ACCOUNT', created.id)
           } finally {
             setPending(false)
           }
@@ -133,7 +133,7 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
           setPending(true)
           try {
             const created = await createContact(body, key)
-            finish('CONTACT', created.id, `${created.firstName} ${created.lastName}`)
+            finish('CONTACT', created.id)
           } finally {
             setPending(false)
           }
@@ -152,7 +152,7 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
           setPending(true)
           try {
             const created = await createDeal(body, key)
-            finish('DEAL', created.id, created.name)
+            finish('DEAL', created.id)
           } finally {
             setPending(false)
           }
@@ -168,7 +168,7 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
           setPending(true)
           try {
             const created = await createTask(body, key)
-            finish('TASK', created.id, created.title)
+            finish('TASK', created.id)
           } finally {
             setPending(false)
           }
@@ -184,7 +184,7 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
           setPending(true)
           try {
             const created = await createMeeting(body, key)
-            finish('MEETING', created.id, created.title)
+            finish('MEETING', created.id)
           } finally {
             setPending(false)
           }
@@ -200,7 +200,7 @@ export function QuickCreateMenu({ onCreated }: { onCreated: (message: string) =>
           setPending(true)
           try {
             const created = await createCall(body, key)
-            finish('CALL', created.id, created.title)
+            finish('CALL', created.id)
           } finally {
             setPending(false)
           }

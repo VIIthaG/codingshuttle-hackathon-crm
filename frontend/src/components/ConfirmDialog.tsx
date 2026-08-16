@@ -40,7 +40,7 @@ export function ConfirmDialog({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overlay-backdrop p-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -60,7 +60,7 @@ export function ConfirmDialog({
             type="button"
             disabled={pending}
             onClick={onCancel}
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-60"
+            className="btn btn-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-60"
           >
             {cancelLabel}
           </button>
@@ -68,10 +68,7 @@ export function ConfirmDialog({
             type="button"
             disabled={pending}
             onClick={onConfirm}
-            className={[
-              'rounded-lg px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-60',
-              danger ? 'bg-red-600 hover:bg-red-700' : 'bg-brand-600 hover:bg-brand-700',
-            ].join(' ')}
+            className={danger ? 'btn btn-danger' : 'btn btn-primary'}
           >
             {pending ? 'Working…' : confirmLabel}
           </button>

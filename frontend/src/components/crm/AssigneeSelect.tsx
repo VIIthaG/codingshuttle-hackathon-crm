@@ -43,7 +43,7 @@ export function AssigneeSelect({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+          className="mt-1.5 ui-input"
         >
           <option value="">Current user (default)</option>
           {users.map((u) => (

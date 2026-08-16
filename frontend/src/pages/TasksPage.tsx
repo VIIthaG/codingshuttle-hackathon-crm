@@ -241,7 +241,7 @@ export function TasksPage() {
             type="button"
             onClick={() => void refresh()}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 btn btn-secondary disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -249,7 +249,7 @@ export function TasksPage() {
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="inline-flex items-center gap-1.5 btn btn-primary"
           >
             <Plus className="h-4 w-4" />
             Add task
@@ -258,7 +258,7 @@ export function TasksPage() {
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex flex-wrap gap-1 rounded-lg border border-border bg-white p-0.5 shadow-sm">
+        <div className="inline-flex flex-wrap gap-1 rounded-lg border border-border bg-surface p-0.5 shadow-sm">
           {filters.map((f) => (
             <button
               key={f.id}
@@ -278,7 +278,7 @@ export function TasksPage() {
           <select
             value={relatedTypeFilter}
             onChange={(e) => setRelatedTypeFilter(e.target.value as RelatedRecordType | '')}
-            className="min-w-[10rem] rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand-500"
+            className="min-w-[10rem] rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand-500"
           >
             <option value="">All types</option>
             {RELATED_RECORD_TYPES.map((type) => (
@@ -291,7 +291,7 @@ export function TasksPage() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="alert alert-error">
           {error}
           <button type="button" onClick={() => void refresh()} className="ml-3 font-medium underline">
             Retry

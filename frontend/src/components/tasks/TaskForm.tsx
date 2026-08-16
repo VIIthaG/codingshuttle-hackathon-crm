@@ -253,7 +253,7 @@ export function TaskForm({
     mode === 'edit' && task?.reminderAt != null && !form.clearReminder
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overlay-backdrop p-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -271,7 +271,7 @@ export function TaskForm({
             type="button"
             onClick={onClose}
             disabled={pending}
-            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100 disabled:opacity-60"
+            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas disabled:opacity-60"
           >
             Close
           </button>
@@ -293,7 +293,7 @@ export function TaskForm({
                   }))
                 }
                 disabled={pending || optionsLoading}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                className="ui-input"
               >
                 {RELATED_RECORD_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -305,7 +305,7 @@ export function TaskForm({
                 value={form.relatedId}
                 onChange={(e) => setForm((f) => ({ ...f, relatedId: e.target.value }))}
                 disabled={pending || optionsLoading}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                className="ui-input"
               >
                 <option value="">{optionsLoading ? 'Loading…' : 'Select record'}</option>
                 {relatedOptions.map((opt) => (
@@ -316,7 +316,7 @@ export function TaskForm({
               </select>
             </div>
             {fieldErrors.relatedId ? (
-              <span className="mt-1 block text-xs text-red-600">{fieldErrors.relatedId}</span>
+              <span className="mt-1 block text-xs text-[color:var(--app-danger-text)]">{fieldErrors.relatedId}</span>
             ) : null}
           </div>
 
@@ -325,7 +325,7 @@ export function TaskForm({
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
               autoFocus
             />
           </Field>
@@ -336,7 +336,7 @@ export function TaskForm({
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               disabled={pending}
               rows={3}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
 
@@ -346,7 +346,7 @@ export function TaskForm({
               value={form.dueAtLocal}
               onChange={(e) => setForm((f) => ({ ...f, dueAtLocal: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
 
@@ -376,7 +376,7 @@ export function TaskForm({
                   setForm((f) => ({ ...f, reminderAtLocal: e.target.value, clearReminder: false }))
                 }
                 disabled={pending}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                className="ui-input"
               />
             )}
             <p className="mt-1 text-xs text-muted">
@@ -387,7 +387,7 @@ export function TaskForm({
                 type="button"
                 disabled={pending}
                 onClick={() => setForm((f) => ({ ...f, clearReminder: true, reminderAtLocal: '' }))}
-                className="mt-2 text-xs font-medium text-slate-600 hover:text-slate-800 disabled:opacity-60"
+                className="mt-2 text-xs font-medium text-muted hover:text-slate-800 disabled:opacity-60"
               >
                 Clear reminder
               </button>
@@ -409,7 +409,7 @@ export function TaskForm({
           />
 
           {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="alert alert-error">
               {error}
             </div>
           ) : null}
@@ -419,14 +419,14 @@ export function TaskForm({
               type="button"
               onClick={onClose}
               disabled={pending}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              className="btn btn-secondary disabled:opacity-60"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              className="btn btn-primary disabled:opacity-60"
             >
               {pending ? 'Saving…' : mode === 'create' ? 'Create task' : 'Save changes'}
             </button>
@@ -455,7 +455,7 @@ function Field({
         {required ? <span className="text-red-500"> *</span> : null}
       </span>
       {children}
-      {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="mt-1 block text-xs text-[color:var(--app-danger-text)]">{error}</span> : null}
     </label>
   )
 }

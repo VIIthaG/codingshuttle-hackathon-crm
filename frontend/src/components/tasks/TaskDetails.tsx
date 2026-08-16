@@ -33,7 +33,7 @@ export function TaskDetails({
   const isOpen = task.status === 'OPEN'
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/30">
+    <div className="fixed inset-0 z-40 flex justify-end overlay-backdrop">
       <button type="button" aria-label="Close task details" className="flex-1 cursor-default" onClick={onClose} />
       <aside
         role="dialog"
@@ -51,7 +51,7 @@ export function TaskDetails({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100"
+            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas"
           >
             Close
           </button>
@@ -62,31 +62,20 @@ export function TaskDetails({
             <TaskStatusBadge status={task.status} />
             {label ? (
               <span
-                className={[
-                  'rounded-full border px-2.5 py-0.5 text-xs font-semibold',
-                  state === 'overdue'
-                    ? 'border-red-200 bg-red-50 text-red-700'
-                    : state === 'due_today'
-                      ? 'border-amber-200 bg-amber-50 text-amber-800'
-                      : 'border-sky-200 bg-sky-50 text-sky-700',
-                ].join(' ')}
+                className={`badge ${state === 'overdue' ? 'badge-danger' : state === 'due_today' ? 'badge-warning' : 'badge-info'}`}
               >
                 {label}
               </span>
             ) : null}
             {task.reminderAt ? (
-              <span className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
-                Reminder scheduled
-              </span>
+              <span className="badge badge-brand">Reminder scheduled</span>
             ) : (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-                No reminder
-              </span>
+              <span className="badge badge-info">No reminder</span>
             )}
           </div>
 
           {task.description ? (
-            <p className="whitespace-pre-wrap text-sm text-slate-700">{task.description}</p>
+            <p className="whitespace-pre-wrap text-sm text-ink">{task.description}</p>
           ) : (
             <p className="text-sm text-muted">No description</p>
           )}
@@ -110,7 +99,7 @@ export function TaskDetails({
                   type="button"
                   disabled={actionPending}
                   onClick={() => onComplete(task)}
-                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                  className="btn btn-primary"
                 >
                   {actionPending ? 'Working…' : 'Complete'}
                 </button>
@@ -118,7 +107,7 @@ export function TaskDetails({
                   type="button"
                   disabled={actionPending}
                   onClick={() => onCancel(task)}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas disabled:opacity-60"
                 >
                   Cancel task
                 </button>
@@ -131,7 +120,7 @@ export function TaskDetails({
           )}
 
           {actionError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="alert alert-error">
               {actionError}
             </div>
           ) : null}
@@ -142,7 +131,7 @@ export function TaskDetails({
             type="button"
             onClick={() => onEdit(task)}
             disabled={actionPending}
-            className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            className="flex-1 btn btn-primary disabled:opacity-60"
           >
             Edit
           </button>
@@ -150,7 +139,7 @@ export function TaskDetails({
             type="button"
             onClick={() => onDelete(task)}
             disabled={actionPending}
-            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60"
+            className="rounded-lg border border-red-200 bg-surface px-3 py-2 text-sm font-medium text-[color:var(--app-danger-text)] hover:bg-red-50 disabled:opacity-60"
           >
             Delete
           </button>

@@ -176,7 +176,7 @@ export function DealForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overlay-backdrop p-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -198,7 +198,7 @@ export function DealForm({
             type="button"
             onClick={onClose}
             disabled={pending}
-            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100 disabled:opacity-60"
+            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas disabled:opacity-60"
           >
             Close
           </button>
@@ -210,7 +210,7 @@ export function DealForm({
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
               autoFocus
             />
           </Field>
@@ -219,7 +219,7 @@ export function DealForm({
               value={form.accountId}
               onChange={(e) => setForm((f) => ({ ...f, accountId: e.target.value, primaryContactId: '' }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             >
               <option value="">Select account</option>
               {accounts.map((a) => (
@@ -234,7 +234,7 @@ export function DealForm({
               value={form.primaryContactId}
               onChange={(e) => setForm((f) => ({ ...f, primaryContactId: e.target.value }))}
               disabled={pending || !form.accountId}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             >
               <option value="">None</option>
               {contacts.map((c) => (
@@ -253,7 +253,7 @@ export function DealForm({
                 value={form.amount}
                 onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                 disabled={pending}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                className="ui-input"
               />
             </Field>
             <Field label="Currency" error={fieldErrors.currency}>
@@ -261,7 +261,7 @@ export function DealForm({
                 value={form.currency}
                 onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
                 disabled={pending}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                className="ui-input"
               >
                 {CURRENCIES.map((c) => (
                   <option key={c} value={c}>
@@ -277,7 +277,7 @@ export function DealForm({
               value={form.expectedCloseDate}
               onChange={(e) => setForm((f) => ({ ...f, expectedCloseDate: e.target.value }))}
               disabled={pending}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
           <Field label="Description" error={fieldErrors.description}>
@@ -286,7 +286,7 @@ export function DealForm({
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               disabled={pending}
               rows={3}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+              className="ui-input"
             />
           </Field>
           {isAdmin && users.length > 0 ? (
@@ -295,7 +295,7 @@ export function DealForm({
                 value={form.ownerId}
                 onChange={(e) => setForm((f) => ({ ...f, ownerId: e.target.value }))}
                 disabled={pending}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                className="ui-input"
               >
                 <option value="">Current user (default)</option>
                 {users.map((u) => (
@@ -312,7 +312,7 @@ export function DealForm({
           ) : null}
 
           {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+            <div className="alert alert-error">{error}</div>
           ) : null}
 
           <div className="flex justify-end gap-2 pt-2">
@@ -320,14 +320,14 @@ export function DealForm({
               type="button"
               onClick={onClose}
               disabled={pending}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              className="btn btn-secondary disabled:opacity-60"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              className="btn btn-primary disabled:opacity-60"
             >
               {pending ? 'Saving…' : mode === 'create' ? 'Create deal' : 'Save changes'}
             </button>
@@ -356,7 +356,7 @@ function Field({
         {required ? <span className="text-red-500"> *</span> : null}
       </span>
       {children}
-      {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="mt-1 block text-xs text-[color:var(--app-danger-text)]">{error}</span> : null}
     </label>
   )
 }

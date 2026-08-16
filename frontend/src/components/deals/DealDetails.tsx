@@ -42,7 +42,7 @@ export function DealDetails({
   const terminal = isTerminalDealStage(deal.stage)
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/30">
+    <div className="fixed inset-0 z-40 flex justify-end overlay-backdrop">
       <button type="button" aria-label="Close deal details" className="flex-1 cursor-default" onClick={onClose} />
       <aside
         role="dialog"
@@ -57,7 +57,7 @@ export function DealDetails({
             </h2>
             <p className="mt-0.5 text-sm text-muted">{deal.accountName}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas">
             Close
           </button>
         </header>
@@ -93,7 +93,7 @@ export function DealDetails({
                       value={lostReason}
                       onChange={(e) => setLostReason(e.target.value)}
                       disabled={stagePending}
-                      className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60"
+                      className="ui-input"
                     />
                   </label>
                 ) : null}
@@ -109,7 +109,7 @@ export function DealDetails({
                       className={[
                         'rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-60',
                         stage === 'CLOSED_LOST'
-                          ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                          ? 'border border-border bg-surface text-ink hover:bg-canvas'
                           : 'bg-brand-600 text-white hover:bg-brand-700',
                       ].join(' ')}
                     >
@@ -120,7 +120,7 @@ export function DealDetails({
               </>
             )}
             {stageError ? (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="mt-3 alert alert-error">
                 {stageError}
               </div>
             ) : null}
@@ -131,17 +131,17 @@ export function DealDetails({
 
         <footer className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
           {onAddTask ? (
-            <button type="button" onClick={() => onAddTask(deal)} disabled={stagePending} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+            <button type="button" onClick={() => onAddTask(deal)} disabled={stagePending} className="btn btn-secondary disabled:opacity-60">
               + Task
             </button>
           ) : null}
           {onAddMeeting ? (
-            <button type="button" onClick={() => onAddMeeting(deal)} disabled={stagePending} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+            <button type="button" onClick={() => onAddMeeting(deal)} disabled={stagePending} className="btn btn-secondary disabled:opacity-60">
               + Meeting
             </button>
           ) : null}
           {onAddCall ? (
-            <button type="button" onClick={() => onAddCall(deal)} disabled={stagePending} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+            <button type="button" onClick={() => onAddCall(deal)} disabled={stagePending} className="btn btn-secondary disabled:opacity-60">
               + Call
             </button>
           ) : null}
@@ -150,7 +150,7 @@ export function DealDetails({
             type="button"
             onClick={() => onEdit(deal)}
             disabled={stagePending}
-            className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            className="flex-1 btn btn-primary disabled:opacity-60"
           >
             Edit
           </button>
@@ -158,7 +158,7 @@ export function DealDetails({
             type="button"
             onClick={() => onDelete(deal)}
             disabled={stagePending}
-            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60"
+            className="rounded-lg border border-red-200 bg-surface px-3 py-2 text-sm font-medium text-[color:var(--app-danger-text)] hover:bg-red-50 disabled:opacity-60"
           >
             Delete
           </button>

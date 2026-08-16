@@ -27,6 +27,7 @@ import { formatApiError } from '../utils/errors'
 import { LEAD_STATUS_ORDER } from '../utils/leadTransitions'
 import { formatMoney } from '../utils/money'
 import { asNumber, formatPercent } from '../utils/percent'
+import { useChartTheme } from '../components/ui/useChartTheme'
 
 const PRESETS: { id: AnalyticsRangePreset; label: string }[] = [
   { id: '7d', label: 'Last 7 days' },
@@ -59,6 +60,7 @@ export function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const chart = useChartTheme()
 
   useEffect(() => {
     if (!isAdmin) return
@@ -123,10 +125,10 @@ export function AnalyticsPage() {
   if (loading && !data) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
+        <div className="skeleton h-8 w-48" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-slate-200" />
+            <div key={i} className="skeleton h-28" />
           ))}
         </div>
       </div>
@@ -135,7 +137,7 @@ export function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div className="alert alert-error">
         {error}
         <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="ml-3 font-medium underline">
           Retry
@@ -171,7 +173,7 @@ export function AnalyticsPage() {
                 'rounded-lg border px-3 py-1.5 text-sm',
                 range === preset.id
                   ? 'border-brand-600 bg-brand-50 font-semibold text-brand-700'
-                  : 'border-border text-slate-600 hover:bg-slate-50',
+                  : 'border-border text-muted hover:bg-canvas',
               ].join(' ')}
             >
               {preset.label}
@@ -181,7 +183,7 @@ export function AnalyticsPage() {
             <select
               value={assignedTo}
               onChange={(e) => setAssigned(e.target.value)}
-              className="rounded-lg border border-border px-3 py-1.5 text-sm"
+              className="ui-input w-auto min-w-[12rem]"
             >
               <option value="">All team members</option>
               {users.map((u) => (
@@ -232,11 +234,11 @@ export function AnalyticsPage() {
         <ChartCard title="Leads over time" hint="Created in range" empty={leadCreatedSum === 0 ? 'No lead data in this period' : null}>
           <ResponsiveContainer>
             <AreaChart data={data.trends.leads}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis dataKey="period" tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Area type="monotone" dataKey="count" name="Leads" stroke="#2563eb" fill="#d9ebff" />
+              <Area type="monotone" dataKey="count" name="Leads" stroke={chart.brand} fill={chart.brandSoft} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -247,33 +249,33 @@ export function AnalyticsPage() {
         >
           <ResponsiveContainer>
             <BarChart data={leadFunnel}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" name="Leads" fill="#2563eb" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Leads" fill={chart.brand} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Deal pipeline by stage" hint="Current snapshot" empty={data.deals.total === 0 ? 'No deal data in this period' : null}>
           <ResponsiveContainer>
             <BarChart data={dealCounts}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} height={60} textAnchor="end" />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" name="Deals" fill="#1d4ed8" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Deals" fill={chart.brand} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Deal value by stage" hint="USD amounts, no conversion" empty={dealValueSum === 0 ? 'No deal data in this period' : null}>
           <ResponsiveContainer>
             <BarChart data={dealCounts}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} height={60} textAnchor="end" />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip formatter={(value) => formatMoney(typeof value === 'number' ? value : Number(value))} />
-              <Bar dataKey="value" name="Value" fill="#059669" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" name="Value" fill={chart.success} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -286,11 +288,11 @@ export function AnalyticsPage() {
                 { name: 'Calls', count: data.activities.calls.created },
               ]}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" name="Created" fill="#d97706" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Created" fill={chart.warning} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -301,21 +303,21 @@ export function AnalyticsPage() {
         >
           <ResponsiveContainer>
             <LineChart data={data.trends.activities}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis dataKey="period" tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="tasks" name="Tasks" stroke="#2563eb" dot={false} />
-              <Line type="monotone" dataKey="meetings" name="Meetings" stroke="#059669" dot={false} />
-              <Line type="monotone" dataKey="calls" name="Calls" stroke="#d97706" dot={false} />
+              <Line type="monotone" dataKey="tasks" name="Tasks" stroke={chart.brand} dot={false} />
+              <Line type="monotone" dataKey="meetings" name="Meetings" stroke={chart.success} dot={false} />
+              <Line type="monotone" dataKey="calls" name="Calls" stroke={chart.warning} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
       {isAdmin ? (
-        <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
+        <section className="panel p-5">
           <div className="mb-4 flex items-center gap-2">
             <Users className="h-4 w-4 text-brand-600" />
             <div>
@@ -327,7 +329,7 @@ export function AnalyticsPage() {
             <p className="text-sm text-muted">No team members to show.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
+              <table className="data-table">
                 <thead className="text-xs uppercase text-muted">
                   <tr>
                     <th className="px-2 py-2">Name</th>

@@ -21,14 +21,14 @@ export function DealPipeline({ deals, stagePending, onOpenDeal, onAdvance }: Dea
           >
             <header className="flex items-center justify-between border-b border-border px-3 py-3">
               <h3 className="text-sm font-semibold text-ink">{formatDealStage(stage)}</h3>
-              <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-border">
+              <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-border">
                 {column.length}
               </span>
             </header>
             <div className="flex flex-1 flex-col gap-2.5 p-2.5">
               {column.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-3 py-8 text-center text-xs text-muted">
-                  No deals
+                  No deals in this stage
                 </div>
               ) : (
                 column.map((deal) => (

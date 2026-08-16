@@ -1,17 +1,82 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --app-ink: #0f172a;
+  --app-muted: #64748b;
+  --app-border: #e2e8f0;
+  --app-surface: #ffffff;
+  --app-elevated: #f1f5f9;
+  --app-canvas: #f8fafc;
+  --app-overlay: rgb(15 23 42 / 0.45);
+  --app-brand-50: #eef6ff;
+  --app-brand-100: #d9ebff;
+  --app-danger-bg: #fef2f2;
+  --app-danger-border: #fecaca;
+  --app-danger-text: #b91c1c;
+  --app-success-bg: #ecfdf5;
+  --app-success-border: #a7f3d0;
+  --app-success-text: #047857;
+  --app-warning-bg: #fffbeb;
+  --app-warning-border: #fde68a;
+  --app-warning-text: #b45309;
+  --app-info-bg: #f1f5f9;
+  --app-info-border: #e2e8f0;
+  --app-info-text: #334155;
+  --app-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  --app-shadow-lg: 0 16px 40px rgb(15 23 42 / 0.12);
+  --chart-grid: #e2e8f0;
+  --chart-tick: #64748b;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #e2e8f0;
+}
+
+.dark {
+  --app-ink: #f1f5f9;
+  --app-muted: #94a3b8;
+  --app-border: #334155;
+  --app-surface: #1e293b;
+  --app-elevated: #273449;
+  --app-canvas: #0f172a;
+  --app-overlay: rgb(2 6 23 / 0.65);
+  --app-brand-50: #172554;
+  --app-brand-100: #1e3a8a;
+  --app-danger-bg: rgb(127 29 29 / 0.28);
+  --app-danger-border: rgb(248 113 113 / 0.35);
+  --app-danger-text: #fca5a5;
+  --app-success-bg: rgb(6 78 59 / 0.35);
+  --app-success-border: rgb(52 211 153 / 0.28);
+  --app-success-text: #6ee7b7;
+  --app-warning-bg: rgb(120 53 15 / 0.32);
+  --app-warning-border: rgb(251 191 36 / 0.3);
+  --app-warning-text: #fcd34d;
+  --app-info-bg: rgb(51 65 85 / 0.55);
+  --app-info-border: #475569;
+  --app-info-text: #cbd5e1;
+  --app-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
+  --app-shadow-lg: 0 18px 44px rgb(0 0 0 / 0.4);
+  --chart-grid: #334155;
+  --chart-tick: #94a3b8;
+  --chart-tooltip-bg: #1e293b;
+  --chart-tooltip-border: #334155;
+  color-scheme: dark;
+}
+
 @theme {
   --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
-  --color-brand-50: #eef6ff;
-  --color-brand-100: #d9ebff;
+  --color-brand-50: var(--app-brand-50);
+  --color-brand-100: var(--app-brand-100);
   --color-brand-500: #2563eb;
   --color-brand-600: #1d4ed8;
   --color-brand-700: #1e40af;
-  --color-ink: #0f172a;
-  --color-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-surface: #ffffff;
-  --color-canvas: #f8fafc;
+  --color-ink: var(--app-ink);
+  --color-muted: var(--app-muted);
+  --color-border: var(--app-border);
+  --color-surface: var(--app-surface);
+  --color-elevated: var(--app-elevated);
+  --color-canvas: var(--app-canvas);
+  --color-overlay: var(--app-overlay);
 }
 
 html,
@@ -23,12 +88,11 @@ body,
 body {
   margin: 0;
   font-family: var(--font-sans);
-  color: var(--color-ink);
-  background: var(--color-canvas);
+  color: var(--app-ink);
+  background: var(--app-canvas);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Keyboard focus clarity without changing mouse click chrome. */
 :focus-visible {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
@@ -44,4 +108,298 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-primary {
+  background: var(--color-brand-600);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-brand-700);
+}
+
+.btn-secondary {
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-ink);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--app-canvas);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--app-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--app-canvas);
+  color: var(--app-ink);
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-sm {
+  min-height: 1.75rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+@layer components {
+  .icon-btn {
+    display: inline-flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-ink);
+    transition: background-color 150ms ease;
+  }
+
+  .icon-btn:hover {
+    background: var(--app-canvas);
+  }
+}
+
+.ui-input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-ink);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.ui-input:focus {
+  border-color: var(--color-brand-500);
+  box-shadow: 0 0 0 3px var(--app-brand-100);
+}
+
+.ui-input:disabled {
+  opacity: 0.6;
+}
+
+.ui-input::placeholder {
+  color: var(--app-muted);
+}
+
+.panel {
+  border-radius: 0.75rem;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+}
+
+.overlay-backdrop {
+  background: var(--app-overlay);
+}
+
+.dropdown-panel {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-lg);
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.alert-error {
+  background: var(--app-danger-bg);
+  border-color: var(--app-danger-border);
+  color: var(--app-danger-text);
+}
+
+.alert-success {
+  background: var(--app-success-bg);
+  border-color: var(--app-success-border);
+  color: var(--app-success-text);
+}
+
+.alert-warning {
+  background: var(--app-warning-bg);
+  border-color: var(--app-warning-border);
+  color: var(--app-warning-text);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+.badge-success {
+  background: var(--app-success-bg);
+  border-color: var(--app-success-border);
+  color: var(--app-success-text);
+}
+
+.badge-danger {
+  background: var(--app-danger-bg);
+  border-color: var(--app-danger-border);
+  color: var(--app-danger-text);
+}
+
+.badge-warning {
+  background: var(--app-warning-bg);
+  border-color: var(--app-warning-border);
+  color: var(--app-warning-text);
+}
+
+.badge-info {
+  background: var(--app-info-bg);
+  border-color: var(--app-info-border);
+  color: var(--app-info-text);
+}
+
+.badge-brand {
+  background: var(--app-brand-50);
+  border-color: var(--app-brand-100);
+  color: var(--color-brand-700);
+}
+
+.dark .badge-brand {
+  color: #93c5fd;
+}
+
+.skeleton {
+  animation: pulse 1.4s ease-in-out infinite;
+  border-radius: 0.75rem;
+  background: var(--app-elevated);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.data-table {
+  width: 100%;
+  min-width: 40rem;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.data-table thead {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.65rem 0.75rem;
+}
+
+.data-table tbody tr {
+  border-top: 1px solid var(--app-border);
+  transition: background-color 120ms ease;
+}
+
+.data-table tbody tr:hover {
+  background: var(--app-canvas);
+}
+
+.chip {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--app-ink);
+  transition: background-color 150ms ease;
+}
+
+.chip:hover {
+  background: var(--app-canvas);
+}
+
+.dark .text-brand-600 {
+  color: #60a5fa;
+}
+
+.dark .text-brand-700 {
+  color: #93c5fd;
+}
+
+.dark .hover\:text-brand-700:hover {
+  color: #bfdbfe;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

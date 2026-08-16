@@ -15,7 +15,7 @@ export function DealCard({ deal, onOpen, onAdvance, stagePending = false }: Deal
   const canLose = allowedDealTransitions(deal.stage).includes('CLOSED_LOST')
 
   return (
-    <div className="rounded-xl border border-border bg-white p-3.5 shadow-sm">
+    <div className="rounded-xl border border-border bg-surface p-3.5 shadow-sm">
       <button type="button" onClick={() => onOpen(deal)} className="w-full text-left">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -24,7 +24,7 @@ export function DealCard({ deal, onOpen, onAdvance, stagePending = false }: Deal
           </div>
           <DealStageBadge stage={deal.stage} />
         </div>
-        <div className="mt-3 space-y-1 text-xs text-slate-600">
+        <div className="mt-3 space-y-1 text-xs text-muted">
           <div className="font-medium text-ink">{formatMoney(deal.amount, deal.currency)}</div>
           <div>{deal.probability}% probability</div>
           <div>{deal.expectedCloseDate ? `Close ${deal.expectedCloseDate}` : 'No close date'}</div>
@@ -39,7 +39,7 @@ export function DealCard({ deal, onOpen, onAdvance, stagePending = false }: Deal
               type="button"
               disabled={stagePending}
               onClick={() => onAdvance(deal, stage)}
-              className="rounded-md bg-brand-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+              className="btn btn-primary btn-sm"
             >
               → {formatDealStage(stage)}
             </button>
@@ -49,7 +49,7 @@ export function DealCard({ deal, onOpen, onAdvance, stagePending = false }: Deal
               type="button"
               disabled={stagePending}
               onClick={() => onAdvance(deal, 'CLOSED_LOST')}
-              className="rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              className="btn btn-danger btn-sm"
             >
               Lost
             </button>

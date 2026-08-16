@@ -78,14 +78,14 @@ export function CallsPage() {
           <button type="button" onClick={() => { setFormMode('create'); setFormOpen(true) }} className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white"><Plus className="mr-1 inline h-4 w-4" />Add call</button>
         </div>
       </div>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-[color:var(--app-danger-text)]">{error}</p> : null}
       {loading ? <p className="text-sm text-muted">Loading…</p> : (
         <div className="overflow-x-auto rounded-xl border border-border bg-surface">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-border text-xs uppercase text-muted"><tr><th className="px-4 py-3">Title</th><th className="px-4 py-3">Related</th><th className="px-4 py-3">When</th><th className="px-4 py-3">Direction</th><th className="px-4 py-3">Status</th></tr></thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="cursor-pointer border-b border-border hover:bg-slate-50" onClick={() => setSelected(row)}>
+                <tr key={row.id} className="cursor-pointer border-b border-border hover:bg-canvas" onClick={() => setSelected(row)}>
                   <td className="px-4 py-3 font-medium">{row.title}</td>
                   <td className="px-4 py-3">{relatedTypeLabel(row.relatedType)} · {row.relatedName}</td>
                   <td className="px-4 py-3">{formatDateTime(row.scheduledAt)}</td>

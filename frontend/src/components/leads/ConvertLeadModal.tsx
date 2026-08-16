@@ -170,7 +170,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
   const busy = pending || submitting
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overlay-backdrop p-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -204,7 +204,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                 <button
                   type="button"
                   onClick={() => navigate(`/accounts?open=${result.convertedAccountId}`)}
-                  className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+                  className="btn btn-primary"
                 >
                   View Account
                 </button>
@@ -213,7 +213,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                 <button
                   type="button"
                   onClick={() => navigate(`/contacts?open=${result.convertedContactId}`)}
-                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="btn btn-secondary"
                 >
                   View Contact
                 </button>
@@ -222,7 +222,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                 <button
                   type="button"
                   onClick={() => navigate(`/deals?open=${result.convertedDealId}`)}
-                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="btn btn-secondary"
                 >
                   View Deal
                 </button>
@@ -230,7 +230,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-slate-100"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-canvas"
               >
                 Close
               </button>
@@ -245,7 +245,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                 </h2>
                 <p className="mt-1 text-sm text-muted">Creates account and contact in one transaction.</p>
               </div>
-              <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100">
+              <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas">
                 Close
               </button>
             </div>
@@ -292,7 +292,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           }
                         }}
                         disabled={busy}
-                        className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                        className="ui-input"
                       />
                     </Field>
                     <Field label="Website">
@@ -300,7 +300,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                         value={accountWebsite}
                         onChange={(e) => setAccountWebsite(e.target.value)}
                         disabled={busy}
-                        className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                        className="ui-input"
                       />
                     </Field>
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -309,7 +309,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={accountPhone}
                           onChange={(e) => setAccountPhone(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                          className="ui-input"
                         />
                       </Field>
                       <Field label="Industry">
@@ -317,7 +317,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={accountIndustry}
                           onChange={(e) => setAccountIndustry(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                          className="ui-input"
                         />
                       </Field>
                     </div>
@@ -332,7 +332,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                       if (acct && createDeal) setDealName(`${acct.name} Opportunity`)
                     }}
                     disabled={busy}
-                    className="mt-3 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                    className="mt-3 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                   >
                     <option value="">Select account</option>
                     {accounts.map((a) => (
@@ -374,7 +374,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={contactFirstName}
                           onChange={(e) => setContactFirstName(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                          className="ui-input"
                         />
                       </Field>
                       <Field label="Last name">
@@ -382,7 +382,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={contactLastName}
                           onChange={(e) => setContactLastName(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                          className="ui-input"
                         />
                       </Field>
                     </div>
@@ -391,7 +391,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                         value={contactEmail}
                         onChange={(e) => setContactEmail(e.target.value)}
                         disabled={busy}
-                        className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                        className="ui-input"
                       />
                     </Field>
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -400,7 +400,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={contactPhone}
                           onChange={(e) => setContactPhone(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                          className="ui-input"
                         />
                       </Field>
                       <Field label="Job title">
@@ -408,7 +408,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={contactJobTitle}
                           onChange={(e) => setContactJobTitle(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                          className="ui-input"
                         />
                       </Field>
                     </div>
@@ -418,7 +418,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                     value={existingContactId}
                     onChange={(e) => setExistingContactId(e.target.value)}
                     disabled={busy || !existingAccountId}
-                    className="mt-3 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                    className="mt-3 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                   >
                     <option value="">Select contact</option>
                     {contacts.map((c) => (
@@ -447,7 +447,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                         value={dealName}
                         onChange={(e) => setDealName(e.target.value)}
                         disabled={busy}
-                        className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                        className="ui-input"
                       />
                     </Field>
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -459,7 +459,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                          className="ui-input"
                         />
                       </Field>
                       <Field label="Currency">
@@ -467,7 +467,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                           value={currency}
                           onChange={(e) => setCurrency(e.target.value)}
                           disabled={busy}
-                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                         >
                           {['USD', 'EUR', 'GBP', 'INR', 'CAD'].map((c) => (
                             <option key={c} value={c}>
@@ -483,7 +483,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                         value={expectedCloseDate}
                         onChange={(e) => setExpectedCloseDate(e.target.value)}
                         disabled={busy}
-                        className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                        className="ui-input"
                       />
                     </Field>
                     <Field label="Description">
@@ -492,7 +492,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                         onChange={(e) => setDescription(e.target.value)}
                         disabled={busy}
                         rows={2}
-                        className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                        className="ui-input"
                       />
                     </Field>
                   </div>
@@ -500,7 +500,7 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
               </section>
 
               {error ? (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+                <div className="alert alert-error">{error}</div>
               ) : null}
 
               <div className="flex justify-end gap-2">
@@ -508,14 +508,14 @@ export function ConvertLeadModal({ open, lead, pending = false, onClose, onConve
                   type="button"
                   onClick={onClose}
                   disabled={busy}
-                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="btn btn-secondary disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={busy}
-                  className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+                  className="btn btn-primary disabled:opacity-60"
                 >
                   {busy ? 'Converting…' : 'Convert lead'}
                 </button>

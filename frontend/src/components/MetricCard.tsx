@@ -17,7 +17,7 @@ export function MetricCard({ label, value, hint, icon }: MetricCardProps) {
           {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
         </div>
         {icon ? (
-          <div className="rounded-lg bg-brand-50 p-2 text-brand-600">{icon}</div>
+          <div className="rounded-lg bg-brand-50 p-2 text-brand-600 dark:text-blue-300">{icon}</div>
         ) : null}
       </div>
     </div>

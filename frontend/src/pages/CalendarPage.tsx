@@ -22,9 +22,9 @@ function addDays(date: Date, days: number): Date {
 }
 
 function typeStyle(type: CalendarItem['itemType']): string {
-  if (type === 'MEETING') return 'border-indigo-200 bg-indigo-50 text-indigo-800'
-  if (type === 'CALL') return 'border-amber-200 bg-amber-50 text-amber-800'
-  return 'border-sky-200 bg-sky-50 text-sky-800'
+  if (type === 'MEETING') return 'border-border bg-brand-50 text-ink'
+  if (type === 'CALL') return 'border-border bg-[color:var(--app-warning-bg)] text-ink'
+  return 'border-border bg-canvas text-ink'
 }
 
 export function CalendarPage() {
@@ -80,19 +80,19 @@ export function CalendarPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setAnchor(addDays(anchor, -7))} className="rounded-lg border border-border p-2"><ChevronLeft className="h-4 w-4" /></button>
-          <button type="button" onClick={() => setAnchor(startOfWeek(new Date()))} className="rounded-lg border border-border px-3 py-2 text-sm">This week</button>
-          <button type="button" onClick={() => setAnchor(addDays(anchor, 7))} className="rounded-lg border border-border p-2"><ChevronRight className="h-4 w-4" /></button>
+          <button type="button" onClick={() => setAnchor(addDays(anchor, -7))} className="icon-btn" aria-label="Previous week"><ChevronLeft className="h-4 w-4" /></button>
+          <button type="button" onClick={() => setAnchor(startOfWeek(new Date()))} className="btn btn-secondary">This week</button>
+          <button type="button" onClick={() => setAnchor(addDays(anchor, 7))} className="icon-btn" aria-label="Next week"><ChevronRight className="h-4 w-4" /></button>
         </div>
         <p className="text-sm text-muted">
           {from.toLocaleDateString()} – {addDays(to, -1).toLocaleDateString()} · OPEN tasks, SCHEDULED meetings, PLANNED calls
         </p>
       </div>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-[color:var(--app-danger-text)]">{error}</p> : null}
       {loading ? <p className="text-sm text-muted">Loading…</p> : (
         <div className="space-y-4">
           {groups.map(([day, dayItems]) => (
-            <section key={day} className="rounded-xl border border-border bg-surface p-4">
+            <section key={day} className="panel p-4">
               <h2 className="text-sm font-semibold text-ink">{new Date(day).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</h2>
               {dayItems.length === 0 ? <p className="mt-2 text-sm text-muted">Nothing scheduled.</p> : (
                 <ul className="mt-3 space-y-2">

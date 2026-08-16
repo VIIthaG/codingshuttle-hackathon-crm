@@ -129,7 +129,7 @@ export function MeetingForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overlay-backdrop p-4">
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-lg">
         <h2 className="text-lg font-semibold text-ink">{mode === 'create' ? 'Add meeting' : 'Edit meeting'}</h2>
         <form className="mt-5 space-y-4" onSubmit={onSubmit} noValidate>
@@ -152,7 +152,7 @@ export function MeetingForm({
               disabled={pending}
               className="mt-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm"
             />
-            {fieldErrors.title ? <span className="text-xs text-red-600">{fieldErrors.title}</span> : null}
+            {fieldErrors.title ? <span className="text-xs text-[color:var(--app-danger-text)]">{fieldErrors.title}</span> : null}
           </label>
           <label className="block text-sm font-medium text-ink">
             Description
@@ -184,7 +184,7 @@ export function MeetingForm({
                 disabled={pending}
                 className="mt-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm"
               />
-              {fieldErrors.endAt ? <span className="text-xs text-red-600">{fieldErrors.endAt}</span> : null}
+              {fieldErrors.endAt ? <span className="text-xs text-[color:var(--app-danger-text)]">{fieldErrors.endAt}</span> : null}
             </label>
           </div>
           <label className="block text-sm font-medium text-ink">
@@ -212,7 +212,7 @@ export function MeetingForm({
             disabled={pending}
             currentAssigneeName={mode === 'edit' ? meeting?.assignedToName : null}
           />
-          {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+          {error ? <div className="alert alert-error">{error}</div> : null}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-lg border border-border px-3 py-2 text-sm">
               Cancel

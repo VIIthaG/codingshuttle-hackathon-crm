@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { ApiError } from '../types/api'
 import { formatApiError } from '../utils/errors'
+import { Alert } from '../components/ui/Feedback'
+import { AuthThemeSwitch } from '../components/ui/AuthThemeSwitch'
 
 export function RegisterPage() {
   const { register } = useAuth()
@@ -51,7 +53,8 @@ export function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-6 py-12">
       <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-8 shadow-sm">
-        <div className="mb-2 text-sm font-semibold text-brand-600">FlowCRM</div>
+        <AuthThemeSwitch />
+        <div className="mb-2 mt-4 text-sm font-semibold text-brand-600">FlowCRM</div>
         <h1 className="text-2xl font-semibold text-ink">Create account</h1>
         <p className="mt-1 text-sm text-muted">
           Register with email, password, and full name.
@@ -59,61 +62,57 @@ export function RegisterPage() {
 
         <form className="mt-8 space-y-4" onSubmit={onSubmit} noValidate>
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-slate-700">Full name</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink">Full name</span>
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={loading}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2 disabled:opacity-60"
+              className="ui-input"
               placeholder="Alex Morgan"
             />
             {fieldErrors.fullName ? (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.fullName}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-danger-text)]">{fieldErrors.fullName}</p>
             ) : null}
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-slate-700">Email</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink">Email</span>
             <input
               type="email"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2 disabled:opacity-60"
+              className="ui-input"
               placeholder="you@company.com"
             />
             {fieldErrors.email ? (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-danger-text)]">{fieldErrors.email}</p>
             ) : null}
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-slate-700">Password</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink">Password</span>
             <input
               type="password"
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2 disabled:opacity-60"
+              className="ui-input"
               placeholder="At least 8 characters"
             />
             {fieldErrors.password ? (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-danger-text)]">{fieldErrors.password}</p>
             ) : null}
           </label>
 
-          {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
+          {error ? <Alert>{error}</Alert> : null}
 
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center btn btn-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Creating account…' : 'Create account'}
           </button>

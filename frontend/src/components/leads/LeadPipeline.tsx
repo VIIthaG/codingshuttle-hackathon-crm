@@ -27,7 +27,7 @@ export function LeadPipeline({ leads, onOpenLead }: LeadPipelineProps) {
           >
             <header className="flex items-center justify-between border-b border-border px-3 py-3">
               <h3 className="text-sm font-semibold text-ink">{status}</h3>
-              <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-border">
+              <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-border">
                 {columnLeads.length}
               </span>
             </header>

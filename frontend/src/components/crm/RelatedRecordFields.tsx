@@ -68,7 +68,7 @@ export function RelatedRecordFields({
           value={relatedType}
           onChange={(e) => onTypeChange(e.target.value as RelatedRecordType)}
           disabled={disabled || loading}
-          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         >
           {RELATED_RECORD_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -80,7 +80,7 @@ export function RelatedRecordFields({
           value={relatedId}
           onChange={(e) => onIdChange(e.target.value)}
           disabled={disabled || loading}
-          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         >
           <option value="">{loading ? 'Loading…' : 'Select record'}</option>
           {options.map((opt) => (
@@ -90,7 +90,7 @@ export function RelatedRecordFields({
           ))}
         </select>
       </div>
-      {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="mt-1 block text-xs text-[color:var(--app-danger-text)]">{error}</span> : null}
     </div>
   )
 }

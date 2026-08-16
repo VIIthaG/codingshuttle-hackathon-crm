@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import {
@@ -27,6 +27,7 @@ export function NotificationBell() {
   const [count, setCount] = useState(0)
   const [items, setItems] = useState<NotificationItem[]>([])
   const [error, setError] = useState<string | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -44,6 +45,22 @@ export function NotificationBell() {
       window.clearInterval(id)
     }
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    function onClick(event: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false)
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -79,11 +96,12 @@ export function NotificationBell() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={rootRef}>
       <button
         type="button"
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white text-slate-700 hover:bg-slate-50"
+        className="icon-btn relative"
         aria-label="Notifications"
+        title="Notifications"
         onClick={() => setOpen((v) => !v)}
       >
         <Bell className="h-4 w-4" />
@@ -94,7 +112,7 @@ export function NotificationBell() {
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 z-40 mt-2 w-[min(100vw-2rem,20rem)] overflow-hidden rounded-xl border border-border bg-white shadow-lg">
+        <div className="dropdown-panel absolute right-0 z-40 mt-2 w-[min(100vw-2rem,20rem)]">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <span className="text-sm font-semibold text-ink">Notifications</span>
             <button
@@ -110,14 +128,14 @@ export function NotificationBell() {
               Mark all read
             </button>
           </div>
-          {error ? <p className="px-3 py-3 text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="px-3 py-3 text-sm text-[color:var(--app-danger-text)]">{error}</p> : null}
           {items.length === 0 && !error ? <p className="px-3 py-4 text-sm text-muted">You are all caught up.</p> : null}
           <ul className="max-h-80 overflow-y-auto">
             {items.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
-                  className={`flex w-full flex-col items-start px-3 py-2.5 text-left hover:bg-slate-50 ${item.readAt ? 'opacity-60' : ''}`}
+                  className={`flex w-full flex-col items-start px-3 py-2.5 text-left hover:bg-canvas ${item.readAt ? 'opacity-60' : ''}`}
                   onClick={() => void openItem(item)}
                 >
                   {!item.readAt ? (

@@ -50,7 +50,7 @@ export function TaskTable({
               const label = dueStateLabel(state)
               const busy = actionPendingId === task.id
               return (
-                <tr key={task.id} className="hover:bg-slate-50/80">
+                <tr key={task.id} className="hover:bg-canvas/80">
                   <td className="px-4 py-3">
                     <div className="font-medium text-ink">{task.title}</div>
                     {task.description ? (
@@ -59,23 +59,23 @@ export function TaskTable({
                       </div>
                     ) : null}
                   </td>
-                  <td className="max-w-[12rem] truncate px-4 py-3 text-slate-600">
+                  <td className="max-w-[12rem] truncate px-4 py-3 text-muted">
                     {formatRelatedRecord(task)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                  <td className="whitespace-nowrap px-4 py-3 text-muted">
                     <div>{formatDateTime(task.dueAt)}</div>
                     {label ? (
                       <div
                         className={[
                           'mt-0.5 text-xs font-semibold',
-                          state === 'overdue' ? 'text-red-600' : 'text-amber-700',
+                          state === 'overdue' ? 'text-[color:var(--app-danger-text)]' : 'text-amber-700',
                         ].join(' ')}
                       >
                         {label}
                       </div>
                     ) : null}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                  <td className="whitespace-nowrap px-4 py-3 text-muted">
                     {task.reminderAt ? (
                       <div>
                         <div>{formatDateTime(task.reminderAt)}</div>
@@ -88,7 +88,7 @@ export function TaskTable({
                   <td className="px-4 py-3">
                     <TaskStatusBadge status={task.status} />
                   </td>
-                  <td className="max-w-[8rem] truncate px-4 py-3 text-slate-600">
+                  <td className="max-w-[8rem] truncate px-4 py-3 text-muted">
                     {task.assignedToName}
                   </td>
                   <td className="px-4 py-3">
@@ -115,7 +115,7 @@ export function TaskTable({
                             type="button"
                             disabled={busy}
                             onClick={() => onCancelTask(task)}
-                            className="text-sm font-medium text-slate-600 hover:text-slate-800 disabled:opacity-60"
+                            className="text-sm font-medium text-muted hover:text-slate-800 disabled:opacity-60"
                           >
                             Cancel
                           </button>
@@ -125,7 +125,7 @@ export function TaskTable({
                         type="button"
                         disabled={busy}
                         onClick={() => onDeleteTask(task)}
-                        className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-60"
+                        className="text-sm font-medium text-[color:var(--app-danger-text)] hover:text-[color:var(--app-danger-text)] disabled:opacity-60"
                       >
                         Delete
                       </button>
@@ -159,7 +159,7 @@ export function TaskTable({
                       type="button"
                       disabled={busy}
                       onClick={() => onCancelTask(task)}
-                      className="text-sm font-medium text-slate-600 disabled:opacity-60"
+                      className="text-sm font-medium text-muted disabled:opacity-60"
                     >
                       Cancel
                     </button>
@@ -169,7 +169,7 @@ export function TaskTable({
                   type="button"
                   disabled={busy}
                   onClick={() => onDeleteTask(task)}
-                  className="text-sm font-medium text-red-600 disabled:opacity-60"
+                  className="text-sm font-medium text-[color:var(--app-danger-text)] disabled:opacity-60"
                 >
                   Delete
                 </button>

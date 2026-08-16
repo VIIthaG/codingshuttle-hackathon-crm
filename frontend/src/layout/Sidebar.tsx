@@ -26,7 +26,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Mobile overlay */}
       <div
         className={[
-          'fixed inset-0 z-40 bg-slate-900/40 transition-opacity md:hidden',
+          'overlay-backdrop fixed inset-0 z-40 transition-opacity duration-200 md:hidden',
           open ? 'opacity-100' : 'pointer-events-none opacity-0',
         ].join(' ')}
         onClick={onClose}
@@ -36,7 +36,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <aside
         id="app-sidebar"
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-64 max-w-[85vw] flex-col border-r border-border bg-surface transition-transform md:static md:z-0 md:w-60 md:max-w-none md:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-64 max-w-[85vw] flex-col border-r border-border bg-surface transition-transform duration-200 md:static md:z-0 md:w-60 md:max-w-none md:translate-x-0',
           open ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
@@ -48,7 +48,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 md:hidden"
+            className="icon-btn md:hidden"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -62,10 +62,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               onClick={onClose}
               className={({ isActive }) =>
                 [
-                  'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+                  'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-brand-50 text-brand-700'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-ink',
+                    : 'text-muted hover:bg-canvas hover:text-ink',
                 ].join(' ')
               }
             >

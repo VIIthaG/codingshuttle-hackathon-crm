@@ -36,17 +36,17 @@ export function DealTable({ deals, onOpenDeal, onDeleteDeal }: DealTableProps) {
           </thead>
           <tbody className="divide-y divide-border">
             {deals.map((deal) => (
-              <tr key={deal.id} className="hover:bg-slate-50/80">
+              <tr key={deal.id} className="hover:bg-canvas/80">
                 <td className="px-4 py-3 font-medium text-ink">{deal.name}</td>
-                <td className="px-4 py-3 text-slate-600">{deal.accountName}</td>
-                <td className="px-4 py-3 text-slate-600">{deal.primaryContactName || '—'}</td>
+                <td className="px-4 py-3 text-muted">{deal.accountName}</td>
+                <td className="px-4 py-3 text-muted">{deal.primaryContactName || '—'}</td>
                 <td className="px-4 py-3">
                   <DealStageBadge stage={deal.stage} />
                 </td>
-                <td className="px-4 py-3 text-slate-600">{formatMoney(deal.amount, deal.currency)}</td>
-                <td className="px-4 py-3 text-slate-600">{deal.probability}%</td>
-                <td className="px-4 py-3 text-slate-600">{deal.expectedCloseDate || '—'}</td>
-                <td className="px-4 py-3 text-slate-600">{deal.ownerName}</td>
+                <td className="px-4 py-3 text-muted">{formatMoney(deal.amount, deal.currency)}</td>
+                <td className="px-4 py-3 text-muted">{deal.probability}%</td>
+                <td className="px-4 py-3 text-muted">{deal.expectedCloseDate || '—'}</td>
+                <td className="px-4 py-3 text-muted">{deal.ownerName}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <button
@@ -59,7 +59,7 @@ export function DealTable({ deals, onOpenDeal, onDeleteDeal }: DealTableProps) {
                     <button
                       type="button"
                       onClick={() => onDeleteDeal(deal)}
-                      className="text-sm font-medium text-red-600 hover:text-red-700"
+                      className="text-sm font-medium text-[color:var(--app-danger-text)] hover:text-[color:var(--app-danger-text)]"
                     >
                       Delete
                     </button>
@@ -81,7 +81,7 @@ export function DealTable({ deals, onOpenDeal, onDeleteDeal }: DealTableProps) {
               </div>
               <DealStageBadge stage={deal.stage} />
             </div>
-            <dl className="mt-3 space-y-1 text-sm text-slate-600">
+            <dl className="mt-3 space-y-1 text-sm text-muted">
               <div>{deal.primaryContactName || 'No contact'}</div>
               <div>
                 {formatMoney(deal.amount, deal.currency)} · {deal.probability}%
@@ -93,7 +93,7 @@ export function DealTable({ deals, onOpenDeal, onDeleteDeal }: DealTableProps) {
               <button type="button" onClick={() => onOpenDeal(deal)} className="text-sm font-medium text-brand-600">
                 Open
               </button>
-              <button type="button" onClick={() => onDeleteDeal(deal)} className="text-sm font-medium text-red-600">
+              <button type="button" onClick={() => onDeleteDeal(deal)} className="text-sm font-medium text-[color:var(--app-danger-text)]">
                 Delete
               </button>
             </div>

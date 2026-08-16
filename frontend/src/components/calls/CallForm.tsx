@@ -125,7 +125,7 @@ export function CallForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overlay-backdrop p-4">
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-lg">
         <h2 className="text-lg font-semibold text-ink">{mode === 'create' ? 'Add call' : 'Edit call'}</h2>
         <form className="mt-5 space-y-4" onSubmit={onSubmit} noValidate>
@@ -176,7 +176,7 @@ export function CallForm({
             disabled={pending}
             currentAssigneeName={mode === 'edit' ? call?.assignedToName : null}
           />
-          {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+          {error ? <div className="alert alert-error">{error}</div> : null}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-lg border border-border px-3 py-2 text-sm">Cancel</button>
             <button type="submit" disabled={pending} className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white">

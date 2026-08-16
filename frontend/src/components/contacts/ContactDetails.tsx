@@ -29,7 +29,7 @@ export function ContactDetails({
   if (!open || !contact) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/30">
+    <div className="fixed inset-0 z-40 flex justify-end overlay-backdrop">
       <button type="button" aria-label="Close contact details" className="flex-1 cursor-default" onClick={onClose} />
       <aside
         role="dialog"
@@ -44,7 +44,7 @@ export function ContactDetails({
             </h2>
             <p className="mt-0.5 text-sm text-muted">{contact.jobTitle || contact.accountName || 'Contact'}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas">
             Close
           </button>
         </header>
@@ -58,7 +58,7 @@ export function ContactDetails({
             <Row label="Updated" value={formatDateTime(contact.updatedAt)} />
           </dl>
           {contact.notes ? (
-            <p className="whitespace-pre-wrap text-sm text-slate-700">{contact.notes}</p>
+            <p className="whitespace-pre-wrap text-sm text-ink">{contact.notes}</p>
           ) : null}
 
           <ActivityTimeline entityType="CONTACT" entityId={contact.id} refreshKey={activityRefreshKey} />
@@ -66,17 +66,17 @@ export function ContactDetails({
 
         <footer className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
           {onAddTask ? (
-            <button type="button" onClick={() => onAddTask(contact)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => onAddTask(contact)} className="btn btn-secondary">
               + Task
             </button>
           ) : null}
           {onAddMeeting ? (
-            <button type="button" onClick={() => onAddMeeting(contact)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => onAddMeeting(contact)} className="btn btn-secondary">
               + Meeting
             </button>
           ) : null}
           {onAddCall ? (
-            <button type="button" onClick={() => onAddCall(contact)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => onAddCall(contact)} className="btn btn-secondary">
               + Call
             </button>
           ) : null}
@@ -84,14 +84,14 @@ export function ContactDetails({
           <button
             type="button"
             onClick={() => onEdit(contact)}
-            className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="flex-1 btn btn-primary"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => onDelete(contact)}
-            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            className="rounded-lg border border-red-200 bg-surface px-3 py-2 text-sm font-medium text-[color:var(--app-danger-text)] hover:bg-red-50"
           >
             Delete
           </button>

@@ -23,6 +23,8 @@ import { LEAD_STATUS_ORDER } from '../utils/leadTransitions'
 import { formatMoney } from '../utils/money'
 import { formatDateTime } from '../utils/taskDates'
 import { relatedTypeLabel } from '../types/task'
+import { EmptyState } from '../components/ui/Feedback'
+import { useChartTheme } from '../components/ui/useChartTheme'
 
 const LEAD_LABELS: Record<string, string> = {
   NEW: 'New',
@@ -39,6 +41,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const chart = useChartTheme()
 
   useEffect(() => {
     let cancelled = false
@@ -83,10 +86,10 @@ export function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-64 animate-pulse rounded-lg bg-slate-200" />
+        <div className="skeleton h-8 w-64" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-slate-200" />
+            <div key={i} className="skeleton h-28" />
           ))}
         </div>
       </div>
@@ -95,13 +98,9 @@ export function DashboardPage() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div className="alert alert-error">
         {error}
-        <button
-          type="button"
-          onClick={() => setReloadKey((k) => k + 1)}
-          className="ml-3 font-medium underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-        >
+        <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="ml-3 font-medium underline">
           Retry
         </button>
       </div>
@@ -176,28 +175,32 @@ export function DashboardPage() {
         <ChartCard title="Lead status" empty={data.totalLeads === 0 ? 'No leads yet' : null}>
           <ResponsiveContainer>
             <BarChart data={leadChart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="count" name="Leads" fill="#2563eb" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: chart.tick }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: chart.tick }} />
+              <Tooltip
+                contentStyle={{ background: chart.tooltipBg, border: `1px solid ${chart.tooltipBorder}`, color: chart.ink }}
+              />
+              <Bar dataKey="count" name="Leads" fill={chart.brand} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Deal pipeline" empty={data.openDeals + data.wonDeals === 0 && dealChart.every((r) => r.count === 0) ? 'No deals yet' : null}>
           <ResponsiveContainer>
             <BarChart data={dealChart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} height={60} textAnchor="end" />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="count" name="Deals" fill="#059669" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: chart.tick }} interval={0} angle={-20} height={60} textAnchor="end" />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: chart.tick }} />
+              <Tooltip
+                contentStyle={{ background: chart.tooltipBg, border: `1px solid ${chart.tooltipBorder}`, color: chart.ink }}
+              />
+              <Bar dataKey="count" name="Deals" fill={chart.success} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
-      <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
+      <section className="panel p-5">
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-ink">Upcoming work</h3>
@@ -208,7 +211,7 @@ export function DashboardPage() {
           </Link>
         </div>
         {upcoming.length === 0 ? (
-          <p className="text-sm text-muted">Nothing due right now.</p>
+          <EmptyState title="Nothing due right now" description="When tasks, meetings, or calls are upcoming, they will appear here." />
         ) : (
           <ul className="divide-y divide-border">
             {upcoming.map((item) => (

@@ -36,7 +36,7 @@ export function AccountDetails({
   if (!open || !account) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/30">
+    <div className="fixed inset-0 z-40 flex justify-end overlay-backdrop">
       <button type="button" aria-label="Close account details" className="flex-1 cursor-default" onClick={onClose} />
       <aside
         role="dialog"
@@ -51,7 +51,7 @@ export function AccountDetails({
             </h2>
             <p className="mt-0.5 text-sm text-muted">{account.industry || 'No industry'}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas">
             Close
           </button>
         </header>
@@ -64,7 +64,7 @@ export function AccountDetails({
             <Row label="Created" value={formatDateTime(account.createdAt)} />
           </dl>
           {account.description ? (
-            <p className="whitespace-pre-wrap text-sm text-slate-700">{account.description}</p>
+            <p className="whitespace-pre-wrap text-sm text-ink">{account.description}</p>
           ) : null}
 
           <section>
@@ -80,7 +80,7 @@ export function AccountDetails({
                     <button
                       type="button"
                       onClick={() => onOpenContact?.(c)}
-                      className="w-full rounded-lg border border-border px-3 py-2 text-left text-sm hover:bg-slate-50"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-left text-sm hover:bg-canvas"
                     >
                       <div className="font-medium text-ink">
                         {c.firstName} {c.lastName}
@@ -98,17 +98,17 @@ export function AccountDetails({
 
         <footer className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
           {onAddTask ? (
-            <button type="button" onClick={() => onAddTask(account)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => onAddTask(account)} className="btn btn-secondary">
               + Task
             </button>
           ) : null}
           {onAddMeeting ? (
-            <button type="button" onClick={() => onAddMeeting(account)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => onAddMeeting(account)} className="btn btn-secondary">
               + Meeting
             </button>
           ) : null}
           {onAddCall ? (
-            <button type="button" onClick={() => onAddCall(account)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <button type="button" onClick={() => onAddCall(account)} className="btn btn-secondary">
               + Call
             </button>
           ) : null}
@@ -116,14 +116,14 @@ export function AccountDetails({
           <button
             type="button"
             onClick={() => onEdit(account)}
-            className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="flex-1 btn btn-primary"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => onDelete(account)}
-            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            className="rounded-lg border border-red-200 bg-surface px-3 py-2 text-sm font-medium text-[color:var(--app-danger-text)] hover:bg-red-50"
           >
             Delete
           </button>

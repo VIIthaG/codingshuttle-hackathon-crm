@@ -168,7 +168,7 @@ export function ContactsPage() {
             type="button"
             onClick={() => void refresh()}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 btn btn-secondary disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -179,7 +179,7 @@ export function ContactsPage() {
               setFormMode('create')
               setFormOpen(true)
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="inline-flex items-center gap-1.5 btn btn-primary"
           >
             <Plus className="h-4 w-4" />
             Add contact
@@ -195,12 +195,12 @@ export function ContactsPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search name, email, phone, title"
-              className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-500"
+              className="w-full rounded-lg border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-500"
             />
           </div>
           <button
             type="submit"
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="btn btn-secondary"
           >
             Search
           </button>
@@ -213,7 +213,7 @@ export function ContactsPage() {
               setPage(0)
               setAccountFilter(e.target.value)
             }}
-            className="min-w-[12rem] rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand-500"
+            className="min-w-[12rem] rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand-500"
           >
             <option value="">All accounts</option>
             {accounts.map((a) => (
@@ -226,7 +226,7 @@ export function ContactsPage() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="alert alert-error">
           {error}
           <button type="button" onClick={() => void refresh()} className="ml-3 font-medium underline">
             Retry
@@ -263,15 +263,15 @@ export function ContactsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {contacts.map((contact) => (
-                  <tr key={contact.id} className="hover:bg-slate-50/80">
+                  <tr key={contact.id} className="hover:bg-canvas/80">
                     <td className="px-4 py-3 font-medium text-ink">
                       {contact.firstName} {contact.lastName}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{contact.accountName || '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{contact.jobTitle || '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{contact.email || '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{contact.phone || '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{contact.ownerName}</td>
+                    <td className="px-4 py-3 text-muted">{contact.accountName || '—'}</td>
+                    <td className="px-4 py-3 text-muted">{contact.jobTitle || '—'}</td>
+                    <td className="px-4 py-3 text-muted">{contact.email || '—'}</td>
+                    <td className="px-4 py-3 text-muted">{contact.phone || '—'}</td>
+                    <td className="px-4 py-3 text-muted">{contact.ownerName}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <button
@@ -287,7 +287,7 @@ export function ContactsPage() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(contact)}
-                          className="text-sm font-medium text-red-600"
+                          className="text-sm font-medium text-[color:var(--app-danger-text)]"
                         >
                           Delete
                         </button>
@@ -306,7 +306,7 @@ export function ContactsPage() {
                   {contact.firstName} {contact.lastName}
                 </h3>
                 <p className="text-sm text-muted">{contact.accountName || 'No account'}</p>
-                <p className="mt-1 text-sm text-slate-600">{contact.email || contact.phone || contact.jobTitle}</p>
+                <p className="mt-1 text-sm text-muted">{contact.email || contact.phone || contact.jobTitle}</p>
                 <div className="mt-3 flex gap-3">
                   <button
                     type="button"
@@ -321,7 +321,7 @@ export function ContactsPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(contact)}
-                    className="text-sm font-medium text-red-600"
+                    className="text-sm font-medium text-[color:var(--app-danger-text)]"
                   >
                     Delete
                   </button>
@@ -340,7 +340,7 @@ export function ContactsPage() {
                   type="button"
                   disabled={page === 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  className="rounded-lg border border-border bg-white px-3 py-1.5 disabled:opacity-50"
+                  className="rounded-lg border border-border bg-surface px-3 py-1.5 disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -348,7 +348,7 @@ export function ContactsPage() {
                   type="button"
                   disabled={page + 1 >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="rounded-lg border border-border bg-white px-3 py-1.5 disabled:opacity-50"
+                  className="rounded-lg border border-border bg-surface px-3 py-1.5 disabled:opacity-50"
                 >
                   Next
                 </button>

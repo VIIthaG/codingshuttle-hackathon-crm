@@ -42,7 +42,7 @@ export function LeadDetails({
   const terminal = isTerminalLeadStatus(lead.status)
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/30">
+    <div className="fixed inset-0 z-40 flex justify-end overlay-backdrop">
       <button
         type="button"
         aria-label="Close lead details"
@@ -65,7 +65,7 @@ export function LeadDetails({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100"
+            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-canvas"
           >
             Close
           </button>
@@ -167,7 +167,7 @@ export function LeadDetails({
                     className={[
                       'rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-60',
                       status === 'LOST'
-                        ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'border border-border bg-surface text-ink hover:bg-canvas'
                         : 'bg-brand-600 text-white hover:bg-brand-700',
                     ].join(' ')}
                   >
@@ -177,7 +177,7 @@ export function LeadDetails({
               </div>
             )}
             {statusError ? (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="mt-3 alert alert-error">
                 {statusError}
               </div>
             ) : null}
@@ -191,7 +191,7 @@ export function LeadDetails({
             type="button"
             onClick={() => onAddTask(lead)}
             disabled={statusPending}
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="btn btn-secondary disabled:opacity-60"
           >
             + Task
           </button>
@@ -199,7 +199,7 @@ export function LeadDetails({
             type="button"
             onClick={() => onAddMeeting(lead)}
             disabled={statusPending}
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="btn btn-secondary disabled:opacity-60"
           >
             + Meeting
           </button>
@@ -207,7 +207,7 @@ export function LeadDetails({
             type="button"
             onClick={() => onAddCall(lead)}
             disabled={statusPending}
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="btn btn-secondary disabled:opacity-60"
           >
             + Call
           </button>
@@ -216,7 +216,7 @@ export function LeadDetails({
             type="button"
             onClick={() => onEdit(lead)}
             disabled={statusPending}
-            className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            className="flex-1 btn btn-primary disabled:opacity-60"
           >
             Edit
           </button>
@@ -224,7 +224,7 @@ export function LeadDetails({
             type="button"
             onClick={() => onDelete(lead)}
             disabled={statusPending}
-            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60"
+            className="rounded-lg border border-red-200 bg-surface px-3 py-2 text-sm font-medium text-[color:var(--app-danger-text)] hover:bg-red-50 disabled:opacity-60"
           >
             Delete
           </button>

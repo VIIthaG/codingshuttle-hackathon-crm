@@ -36,18 +36,18 @@ export function LeadTable({ leads, onOpenLead, onDeleteLead, onConvertLead }: Le
           </thead>
           <tbody className="divide-y divide-border">
             {leads.map((lead) => (
-              <tr key={lead.id} className="hover:bg-slate-50/80">
+              <tr key={lead.id} className="hover:bg-canvas/80">
                 <td className="px-4 py-3 font-medium text-ink">{lead.fullName}</td>
-                <td className="px-4 py-3 text-slate-600">{lead.company || '—'}</td>
-                <td className="px-4 py-3 text-slate-600">{lead.email || '—'}</td>
-                <td className="px-4 py-3 text-slate-600">{lead.phone || '—'}</td>
+                <td className="px-4 py-3 text-muted">{lead.company || '—'}</td>
+                <td className="px-4 py-3 text-muted">{lead.email || '—'}</td>
+                <td className="px-4 py-3 text-muted">{lead.phone || '—'}</td>
                 <td className="px-4 py-3">
                   <LeadSourceBadge source={lead.source} />
                 </td>
                 <td className="px-4 py-3">
                   <LeadStatusBadge status={lead.status} />
                 </td>
-                <td className="px-4 py-3 text-slate-600">{lead.assignedToName}</td>
+                <td className="px-4 py-3 text-muted">{lead.assignedToName}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <button
@@ -69,7 +69,7 @@ export function LeadTable({ leads, onOpenLead, onDeleteLead, onConvertLead }: Le
                     <button
                       type="button"
                       onClick={() => onDeleteLead(lead)}
-                      className="text-sm font-medium text-red-600 hover:text-red-700"
+                      className="text-sm font-medium text-[color:var(--app-danger-text)] hover:text-[color:var(--app-danger-text)]"
                     >
                       Delete
                     </button>
@@ -95,7 +95,7 @@ export function LeadTable({ leads, onOpenLead, onDeleteLead, onConvertLead }: Le
               </div>
               <LeadStatusBadge status={lead.status} />
             </div>
-            <dl className="mt-3 space-y-1 text-sm text-slate-600">
+            <dl className="mt-3 space-y-1 text-sm text-muted">
               <div>{lead.email || 'No email'}</div>
               <div>{lead.phone || 'No phone'}</div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -123,7 +123,7 @@ export function LeadTable({ leads, onOpenLead, onDeleteLead, onConvertLead }: Le
               <button
                 type="button"
                 onClick={() => onDeleteLead(lead)}
-                className="text-sm font-medium text-red-600"
+                className="text-sm font-medium text-[color:var(--app-danger-text)]"
               >
                 Delete
               </button>

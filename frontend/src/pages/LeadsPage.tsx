@@ -187,7 +187,7 @@ export function LeadsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-border bg-white p-0.5 shadow-sm">
+          <div className="inline-flex rounded-lg border border-border bg-surface p-0.5 shadow-sm">
             <button
               type="button"
               onClick={() => setView('pipeline')}
@@ -215,7 +215,7 @@ export function LeadsPage() {
             type="button"
             onClick={() => void refresh()}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 btn btn-secondary disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -223,7 +223,7 @@ export function LeadsPage() {
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="inline-flex items-center gap-1.5 btn btn-primary"
           >
             <Plus className="h-4 w-4" />
             Add lead
@@ -232,7 +232,7 @@ export function LeadsPage() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="alert alert-error">
           {error}
           <button
             type="button"

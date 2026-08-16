@@ -105,7 +105,7 @@ export function FlowAiDrawer({ sessionKey }: { sessionKey: number }) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end bg-slate-900/30">
+    <div className="fixed inset-0 z-[60] flex justify-end overlay-backdrop">
       <button type="button" aria-label="Close Flow AI" className="flex-1 cursor-default" onClick={close} />
       <aside
         role="dialog"
@@ -123,12 +123,12 @@ export function FlowAiDrawer({ sessionKey }: { sessionKey: number }) {
             </div>
             <p className="mt-0.5 text-sm text-muted">CRM-aware assistant · read-only</p>
             {context ? (
-              <p className="mt-1 text-xs font-medium text-brand-700">
+              <p className="badge badge-brand mt-2">
                 Context: {context.entityType} · {context.label || context.entityId}
               </p>
             ) : null}
           </div>
-          <button type="button" onClick={close} className="rounded-lg p-1.5 text-muted hover:bg-slate-100" aria-label="Close">
+          <button type="button" onClick={close} className="icon-btn" aria-label="Close Flow AI">
             <X className="h-5 w-5" />
           </button>
         </header>
@@ -145,7 +145,7 @@ export function FlowAiDrawer({ sessionKey }: { sessionKey: number }) {
                     key={prompt}
                     type="button"
                     onClick={() => void send(prompt)}
-                    className="rounded-full border border-border bg-white px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50"
+                    className="chip"
                   >
                     {prompt}
                   </button>
@@ -159,7 +159,7 @@ export function FlowAiDrawer({ sessionKey }: { sessionKey: number }) {
                 className={
                   msg.role === 'user'
                     ? 'ml-8 overflow-visible whitespace-pre-wrap break-words rounded-xl bg-brand-50 px-3 py-2 text-sm text-ink'
-                    : 'mr-4 overflow-visible whitespace-pre-wrap break-words rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink'
+                    : 'mr-4 overflow-visible whitespace-pre-wrap break-words rounded-xl border border-border bg-surface px-3 py-2 text-sm text-ink'
                 }
               >
                 {msg.role === 'assistant' ? <SafeText text={msg.content} /> : msg.content}
@@ -168,7 +168,7 @@ export function FlowAiDrawer({ sessionKey }: { sessionKey: number }) {
           )}
           {pending ? <p className="text-sm text-muted">Flow AI is thinking…</p> : null}
           {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+            <div className="alert alert-error">{error}</div>
           ) : null}
           {suggestions.length > 0 && !pending ? (
             <div className="flex flex-wrap gap-2">
@@ -177,7 +177,7 @@ export function FlowAiDrawer({ sessionKey }: { sessionKey: number }) {
                   key={prompt}
                   type="button"
                   onClick={() => void send(prompt)}
-                  className="rounded-full border border-border px-3 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                  className="chip"
                 >
                   {prompt}
                 </button>
@@ -200,14 +200,14 @@ export function FlowAiDrawer({ sessionKey }: { sessionKey: number }) {
             rows={3}
             maxLength={2000}
             placeholder="Ask Flow AI…"
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="ui-input min-h-[4.5rem] resize-none"
           />
           <div className="mt-2 flex items-center justify-between">
             <p className="text-xs text-muted">Enter to send · Shift+Enter for a new line</p>
             <button
               type="submit"
               disabled={pending || input.trim() === ''}
-              className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
+              className="btn btn-primary"
             >
               Send
             </button>

@@ -1,69 +1,80 @@
 import type { LeadSource, LeadStatus } from '../types/lead'
 import type { DealStage } from '../types/deal'
 import type { TaskStatus } from '../types/task'
+import type { MeetingStatus } from '../types/meeting'
+import type { CallStatus } from '../types/call'
 import { formatDealStage } from '../utils/dealTransitions'
 import { formatLeadSource } from '../utils/leadTransitions'
 
-const leadStyles: Record<LeadStatus, string> = {
-  NEW: 'bg-sky-50 text-sky-700 border-sky-200',
-  CONTACTED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  QUALIFIED: 'bg-violet-50 text-violet-700 border-violet-200',
-  CONVERTED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  LOST: 'bg-slate-100 text-slate-600 border-slate-200',
+type Tone = 'success' | 'danger' | 'warning' | 'info' | 'brand'
+
+const leadTone: Record<LeadStatus, Tone> = {
+  NEW: 'info',
+  CONTACTED: 'brand',
+  QUALIFIED: 'brand',
+  CONVERTED: 'success',
+  LOST: 'danger',
 }
 
-const sourceStyles =
-  'bg-slate-50 text-slate-600 border-slate-200'
-
-const taskStyles: Record<TaskStatus, string> = {
-  OPEN: 'bg-amber-50 text-amber-800 border-amber-200',
-  COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  CANCELLED: 'bg-slate-100 text-slate-600 border-slate-200',
+const dealTone: Record<DealStage, Tone> = {
+  PROSPECTING: 'info',
+  QUALIFICATION: 'info',
+  PROPOSAL: 'brand',
+  NEGOTIATION: 'warning',
+  CLOSED_WON: 'success',
+  CLOSED_LOST: 'danger',
 }
 
-const dealStyles: Record<DealStage, string> = {
-  PROSPECTING: 'bg-sky-50 text-sky-700 border-sky-200',
-  QUALIFICATION: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  PROPOSAL: 'bg-violet-50 text-violet-700 border-violet-200',
-  NEGOTIATION: 'bg-amber-50 text-amber-800 border-amber-200',
-  CLOSED_WON: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  CLOSED_LOST: 'bg-slate-100 text-slate-600 border-slate-200',
+const taskTone: Record<TaskStatus, Tone> = {
+  OPEN: 'info',
+  COMPLETED: 'success',
+  CANCELLED: 'danger',
+}
+
+const meetingTone: Record<MeetingStatus, Tone> = {
+  SCHEDULED: 'info',
+  COMPLETED: 'success',
+  CANCELLED: 'danger',
+}
+
+const callTone: Record<CallStatus, Tone> = {
+  PLANNED: 'info',
+  COMPLETED: 'success',
+  CANCELLED: 'danger',
+}
+
+export function StatusBadge({ label, tone }: { label: string; tone: Tone }) {
+  return <span className={`badge badge-${tone}`}>{label}</span>
 }
 
 export function LeadStatusBadge({ status }: { status: LeadStatus }) {
-  return (
-    <span
-      className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${leadStyles[status]}`}
-    >
-      {status}
-    </span>
-  )
+  return <StatusBadge label={status} tone={leadTone[status]} />
 }
 
 export function DealStageBadge({ stage }: { stage: DealStage }) {
-  return (
-    <span
-      className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${dealStyles[stage]}`}
-    >
-      {formatDealStage(stage)}
-    </span>
-  )
+  return <StatusBadge label={formatDealStage(stage)} tone={dealTone[stage]} />
 }
 
 export function LeadSourceBadge({ source }: { source: LeadSource }) {
-  return (
-    <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${sourceStyles}`}>
-      {formatLeadSource(source)}
-    </span>
-  )
+  return <StatusBadge label={formatLeadSource(source)} tone="info" />
 }
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
-  return (
-    <span
-      className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${taskStyles[status]}`}
-    >
-      {status}
-    </span>
-  )
+  return <StatusBadge label={status} tone={taskTone[status]} />
+}
+
+export function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
+  return <StatusBadge label={status} tone={meetingTone[status]} />
+}
+
+export function CallStatusBadge({ status }: { status: CallStatus }) {
+  return <StatusBadge label={status} tone={callTone[status]} />
+}
+
+export function UrgencyBadge({ urgency }: { urgency: string }) {
+  const value = urgency.toUpperCase()
+  const tone: Tone =
+    value.includes('OVERDUE') ? 'danger' : value.includes('TODAY') ? 'warning' : 'info'
+  const label = value.replaceAll('_', ' ')
+  return <StatusBadge label={label} tone={tone} />
 }

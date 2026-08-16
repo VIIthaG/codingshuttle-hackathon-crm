@@ -70,7 +70,7 @@ export function ActivityTimeline({ entityType, entityId, refreshKey = 0 }: Activ
       <h3 className="text-sm font-semibold text-ink">Activity</h3>
       <p className="mt-1 text-xs text-muted">Lifecycle, tasks, meetings, and calls — not a full audit log.</p>
       {loading ? <p className="mt-2 text-sm text-muted">Loading activity…</p> : null}
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="mt-2 text-sm text-[color:var(--app-danger-text)]">{error}</p> : null}
       {!loading && !error && groups.length === 0 ? (
         <p className="mt-2 text-sm text-muted">No activity yet.</p>
       ) : null}
@@ -86,7 +86,7 @@ export function ActivityTimeline({ entityType, entityId, refreshKey = 0 }: Activ
                     <span className="font-medium">{item.title}</span>
                     <span className="ml-2 text-xs text-muted">{formatDateTime(item.timestamp)}</span>
                   </div>
-                  {item.description ? <div className="mt-0.5 text-sm text-slate-600">{item.description}</div> : null}
+                  {item.description ? <div className="mt-0.5 text-sm text-muted">{item.description}</div> : null}
                 </li>
               ))}
             </ol>

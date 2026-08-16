@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
+import { ThemeProvider } from './theme/ThemeProvider'
 import { useAuth } from './auth/useAuth'
 import { GuestRoute } from './auth/GuestRoute'
 import { ProtectedRoute } from './auth/ProtectedRoute'
@@ -24,7 +25,7 @@ function RootRedirect() {
   const { isAuthenticated, isBootstrapping } = useAuth()
   if (isBootstrapping) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas text-muted">
+      <div className="flex min-h-screen items-center justify-center bg-canvas text-sm text-muted">
         Loading…
       </div>
     )
@@ -34,6 +35,7 @@ function RootRedirect() {
 
 export default function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <Routes>
         <Route path="/" element={<RootRedirect />} />
@@ -49,7 +51,18 @@ export default function App() {
             <Route
               path="/analytics"
               element={
-                <Suspense fallback={<p className="text-sm text-muted">Loading analytics…</p>}>
+                <Suspense
+                  fallback={
+                    <div className="space-y-4">
+                      <div className="skeleton h-8 w-48" />
+                      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <div key={i} className="skeleton h-28" />
+                        ))}
+                      </div>
+                    </div>
+                  }
+                >
                   <AnalyticsPage />
                 </Suspense>
               }
@@ -69,5 +82,6 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AuthProvider>
+    </ThemeProvider>
   )
 }

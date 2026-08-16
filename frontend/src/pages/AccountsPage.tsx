@@ -179,7 +179,7 @@ export function AccountsPage() {
             type="button"
             onClick={() => void refresh()}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 btn btn-secondary disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -190,7 +190,7 @@ export function AccountsPage() {
               setFormMode('create')
               setFormOpen(true)
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="inline-flex items-center gap-1.5 btn btn-primary"
           >
             <Plus className="h-4 w-4" />
             Add account
@@ -205,19 +205,19 @@ export function AccountsPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search name, website, industry"
-            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-500"
+            className="w-full rounded-lg border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-500"
           />
         </div>
         <button
           type="submit"
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="btn btn-secondary"
         >
           Search
         </button>
       </form>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="alert alert-error">
           {error}
           <button type="button" onClick={() => void refresh()} className="ml-3 font-medium underline">
             Retry
@@ -254,13 +254,13 @@ export function AccountsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {accounts.map((account) => (
-                  <tr key={account.id} className="hover:bg-slate-50/80">
+                  <tr key={account.id} className="hover:bg-canvas/80">
                     <td className="px-4 py-3 font-medium text-ink">{account.name}</td>
-                    <td className="px-4 py-3 text-slate-600">{account.industry || '—'}</td>
-                    <td className="max-w-[12rem] truncate px-4 py-3 text-slate-600">{account.website || '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{account.phone || '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{account.ownerName}</td>
-                    <td className="px-4 py-3 text-slate-600">{account.contactCount}</td>
+                    <td className="px-4 py-3 text-muted">{account.industry || '—'}</td>
+                    <td className="max-w-[12rem] truncate px-4 py-3 text-muted">{account.website || '—'}</td>
+                    <td className="px-4 py-3 text-muted">{account.phone || '—'}</td>
+                    <td className="px-4 py-3 text-muted">{account.ownerName}</td>
+                    <td className="px-4 py-3 text-muted">{account.contactCount}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <button
@@ -276,7 +276,7 @@ export function AccountsPage() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(account)}
-                          className="text-sm font-medium text-red-600"
+                          className="text-sm font-medium text-[color:var(--app-danger-text)]"
                         >
                           Delete
                         </button>
@@ -293,7 +293,7 @@ export function AccountsPage() {
               <article key={account.id} className="rounded-xl border border-border bg-surface p-4 shadow-sm">
                 <h3 className="font-semibold text-ink">{account.name}</h3>
                 <p className="text-sm text-muted">{account.industry || 'No industry'}</p>
-                <p className="mt-2 text-sm text-slate-600">{account.ownerName}</p>
+                <p className="mt-2 text-sm text-muted">{account.ownerName}</p>
                 <div className="mt-3 flex gap-3">
                   <button
                     type="button"
@@ -308,7 +308,7 @@ export function AccountsPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(account)}
-                    className="text-sm font-medium text-red-600"
+                    className="text-sm font-medium text-[color:var(--app-danger-text)]"
                   >
                     Delete
                   </button>
@@ -327,7 +327,7 @@ export function AccountsPage() {
                   type="button"
                   disabled={page === 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  className="rounded-lg border border-border bg-white px-3 py-1.5 disabled:opacity-50"
+                  className="rounded-lg border border-border bg-surface px-3 py-1.5 disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -335,7 +335,7 @@ export function AccountsPage() {
                   type="button"
                   disabled={page + 1 >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="rounded-lg border border-border bg-white px-3 py-1.5 disabled:opacity-50"
+                  className="rounded-lg border border-border bg-surface px-3 py-1.5 disabled:opacity-50"
                 >
                   Next
                 </button>

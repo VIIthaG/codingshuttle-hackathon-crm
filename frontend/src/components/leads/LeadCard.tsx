@@ -11,7 +11,7 @@ export function LeadCard({ lead, onOpen }: LeadCardProps) {
     <button
       type="button"
       onClick={() => onOpen(lead)}
-      className="w-full rounded-xl border border-border bg-white p-3.5 text-left shadow-sm transition hover:border-brand-100 hover:shadow"
+      className="w-full rounded-xl border border-border bg-surface p-3.5 text-left shadow-sm transition hover:border-brand-100 hover:shadow"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -22,7 +22,7 @@ export function LeadCard({ lead, onOpen }: LeadCardProps) {
         </div>
         <LeadStatusBadge status={lead.status} />
       </div>
-      <div className="mt-3 space-y-1 text-xs text-slate-600">
+      <div className="mt-3 space-y-1 text-xs text-muted">
         <div className="truncate">{lead.email?.trim() || 'No email'}</div>
         <div className="flex flex-wrap items-center gap-2">
           <LeadSourceBadge source={lead.source} />

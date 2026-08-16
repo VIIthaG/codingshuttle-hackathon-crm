@@ -214,7 +214,7 @@ export function DealsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-border bg-white p-0.5">
+          <div className="inline-flex rounded-lg border border-border bg-surface p-0.5">
             <button
               type="button"
               onClick={() => {
@@ -223,7 +223,7 @@ export function DealsPage() {
               }}
               className={[
                 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium',
-                view === 'pipeline' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50',
+                view === 'pipeline' ? 'bg-brand-50 text-brand-700' : 'text-muted hover:bg-canvas',
               ].join(' ')}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -234,7 +234,7 @@ export function DealsPage() {
               onClick={() => setView('list')}
               className={[
                 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium',
-                view === 'list' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50',
+                view === 'list' ? 'bg-brand-50 text-brand-700' : 'text-muted hover:bg-canvas',
               ].join(' ')}
             >
               <List className="h-4 w-4" />
@@ -245,7 +245,7 @@ export function DealsPage() {
             type="button"
             onClick={() => void refresh()}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 btn btn-secondary disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -256,7 +256,7 @@ export function DealsPage() {
               setFormMode('create')
               setFormOpen(true)
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="inline-flex items-center gap-1.5 btn btn-primary"
           >
             <Plus className="h-4 w-4" />
             Add deal
@@ -285,7 +285,7 @@ export function DealsPage() {
               setPage(0)
               setStageFilter((e.target.value || '') as DealStage | '')
             }}
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
           >
             <option value="">All stages</option>
             {DEAL_STAGE_ORDER.map((stage) => (
@@ -303,7 +303,7 @@ export function DealsPage() {
               setPage(0)
               setAccountFilter(e.target.value)
             }}
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
           >
             <option value="">All accounts</option>
             {accounts.map((a) => (
@@ -322,7 +322,7 @@ export function DealsPage() {
                 setPage(0)
                 setOwnerFilter(e.target.value)
               }}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             >
               <option value="">All owners</option>
               {users.map((u) => (
@@ -335,14 +335,14 @@ export function DealsPage() {
         ) : null}
         <button
           type="submit"
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="btn btn-secondary"
         >
           Apply
         </button>
       </form>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="alert alert-error">
           {error}
           <button type="button" onClick={() => void refresh()} className="ml-3 font-medium underline">
             Retry
@@ -398,7 +398,7 @@ export function DealsPage() {
                     type="button"
                     disabled={page === 0}
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    className="rounded-lg border border-border bg-white px-3 py-1.5 disabled:opacity-50"
+                    className="rounded-lg border border-border bg-surface px-3 py-1.5 disabled:opacity-50"
                   >
                     Previous
                   </button>
@@ -406,7 +406,7 @@ export function DealsPage() {
                     type="button"
                     disabled={page + 1 >= totalPages}
                     onClick={() => setPage((p) => p + 1)}
-                    className="rounded-lg border border-border bg-white px-3 py-1.5 disabled:opacity-50"
+                    className="rounded-lg border border-border bg-surface px-3 py-1.5 disabled:opacity-50"
                   >
                     Next
                   </button>
