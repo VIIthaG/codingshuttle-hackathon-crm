@@ -4,7 +4,19 @@ A production-oriented Mini CRM / Zoho-lite built for the **Coding Shuttle Build-
 
 FlowCRM is a **modular Spring Boot backend** (not a microservices split) that uses PostgreSQL, Redis, and RabbitMQ so sales workflows stay correct under retries, duplicate delivery, and multiple app instances.
 
+> Reminder “delivery” is currently **simulated with structured logging**. Real email/SMS delivery is intentionally out of scope for this hackathon MVP.
 
+---
+
+## Live demo
+
+- **Frontend:** https://flowcrm.up.railway.app
+- **Backend API:** https://backend-production-8441.up.railway.app
+- **Health:** https://backend-production-8441.up.railway.app/api/v1/health
+- **Swagger UI:** https://backend-production-8441.up.railway.app/swagger-ui/index.html
+- **OpenAPI JSON:** https://backend-production-8441.up.railway.app/v3/api-docs
+
+> Flow AI is enabled in the hosted demo and operates as a read-only, permission-aware CRM assistant.
 
 ---
 
@@ -14,13 +26,14 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 |------------|--------------|
 | JWT authentication | Register / login / me; passwords stored with BCrypt |
 | Roles | `ADMIN` and `SALES_REP` with role-aware data access |
-| React SPA | Vite + React UI for auth, dashboard, accounts, contacts, deals, leads, and tasks (`frontend/`) |
+| React SPA | React/Vite SaaS-style UI with dark/light themes for auth, dashboard, analytics, accounts, contacts, deals, leads, tasks, meetings, calls, calendar, workqueue, global search, Quick Create, notifications, and Flow AI |
 | Accounts | Company records with owner scoping (`ADMIN` all / `SALES_REP` owned) |
 | Contacts | People records, optionally linked to an account |
 | Deals | Opportunity pipeline (`DealStage`) with validated transitions, amounts, and owner scoping |
 | Lead CRUD | Create, list (paginated/filterable), get, update, delete |
 | Lead assignment | Defaults to the current user; only `ADMIN` can assign others |
 | Lead pipeline | Validated PATCH transitions: `NEW → CONTACTED → QUALIFIED`, with `LOST` from active stages; `CONVERTED` only via convert API |
+| Lead conversion | Transactionally converts a `QUALIFIED` lead into an Account + Contact + optional Deal, then marks the lead `CONVERTED` |
 | Follow-up tasks | Tasks linked to exactly one Lead, Account, Contact, or Deal; `dueAt` / optional `reminderAt`; SPA list/filters/complete/cancel |
 | Activity timeline | Per-record activity (created/updated, conversion, tasks, meetings, calls) — not a full audit log |
 | Meetings / Calls | Scheduled meetings and planned calls linked to exactly one CRM record |
@@ -40,6 +53,8 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 ## Engineering features (and why they exist)
 
 These are not decorative patterns—they map to real CRM failure modes.
+
+**Architecture highlights:** durable request idempotency, transactional outbox, RabbitMQ retry/DLQ, idempotent consumers, Redis caching, Redis rate limiting, and Redis distributed locking.
 
 | Feature | Why it is in FlowCRM |
 |---------|----------------------|
@@ -242,6 +257,16 @@ PostgreSQL is the **durable source of truth** for users, leads, tasks, outbox, c
 
 ## API documentation (Swagger)
 
+### Hosted API
+
+| Resource | URL |
+|----------|-----|
+| **Swagger UI** | https://backend-production-8441.up.railway.app/swagger-ui/index.html |
+| **OpenAPI JSON** | https://backend-production-8441.up.railway.app/v3/api-docs |
+| **Health check** | https://backend-production-8441.up.railway.app/api/v1/health |
+
+### Local development
+
 | Resource | URL |
 |----------|-----|
 | Swagger UI | http://localhost:8080/swagger-ui.html |
@@ -411,11 +436,18 @@ Run `.\mvnw.cmd test` in `backend/` for the current count.
 
 ## Deployment (Railway)
 
-Production/deployment preparation (Dockerfile, env wiring, healthcheck) is documented in:
+FlowCRM is deployed on Railway as separate frontend and backend services.
+
+- **Frontend:** https://flowcrm.up.railway.app
+- **Backend:** https://backend-production-8441.up.railway.app
+- **Swagger UI:** https://backend-production-8441.up.railway.app/swagger-ui/index.html
+- **Health:** https://backend-production-8441.up.railway.app/api/v1/health
+
+Production/deployment preparation (Dockerfile, environment wiring, and healthcheck) is documented in:
 
 **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
 
-Summary: Railway Root Directory = `backend`, Dockerfile at `backend/Dockerfile`, healthcheck `GET /api/v1/health`, configure Postgres/Redis/RabbitMQ/JWT via environment variables. This repository does not embed production secrets.
+Summary: Railway Root Directory = `backend`, Dockerfile at `backend/Dockerfile`, healthcheck `GET /api/v1/health`, and production Postgres/Redis/RabbitMQ/JWT/AI configuration is supplied through environment variables. This repository does not embed production secrets.
 
 ---
 
