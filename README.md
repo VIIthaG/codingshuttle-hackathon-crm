@@ -4,8 +4,6 @@ A production-oriented Mini CRM / Zoho-lite built for the **Coding Shuttle Build-
 
 FlowCRM is a **modular Spring Boot backend** (not a microservices split) that uses PostgreSQL, Redis, and RabbitMQ so sales workflows stay correct under retries, duplicate delivery, and multiple app instances.
 
-> Reminder “delivery” is currently **simulated with structured logging**. Real email/SMS delivery is intentionally out of scope for this hackathon MVP.
-
 ---
 
 ## Live demo
