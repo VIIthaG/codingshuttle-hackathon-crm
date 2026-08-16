@@ -1,4 +1,5 @@
 import { ActivityTimeline } from '../activity/ActivityTimeline'
+import { AskFlowAiButton } from '../assistant/AskFlowAiButton'
 import type { Contact } from '../../types/contact'
 import { formatDateTime } from '../../utils/taskDates'
 
@@ -79,6 +80,7 @@ export function ContactDetails({
               + Call
             </button>
           ) : null}
+          <AskFlowAiButton entityType="CONTACT" entityId={contact.id} label={`${contact.firstName} ${contact.lastName}`} />
           <button
             type="button"
             onClick={() => onEdit(contact)}

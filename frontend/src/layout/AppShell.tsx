@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
+import { FlowAiProvider } from '../assistant/FlowAiProvider'
 
 const titles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -36,6 +37,7 @@ export function AppShell() {
   }, [navOpen])
 
   return (
+    <FlowAiProvider>
     <div className="flex min-h-screen bg-canvas">
       <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
@@ -43,5 +45,6 @@ export function AppShell() {
         <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6">{<Outlet />}</main>
       </div>
     </div>
+    </FlowAiProvider>
   )
 }

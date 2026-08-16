@@ -72,6 +72,7 @@ Capabilities:
 - **Tasks / Meetings / Calls** — each related to exactly one CRM record
 - **Calendar** — week agenda of OPEN tasks, SCHEDULED meetings, PLANNED calls
 - **Workqueue** — overdue / today / upcoming next actions with complete/cancel
-- **Header** — global search (Ctrl/Cmd+K), Quick Create, notification bell
+- **Header** — global search (Ctrl/Cmd+K), Quick Create, Flow AI drawer, notification bell
+- **Flow AI** — optional read-only assistant. Header **Flow AI** and **Ask Flow AI** on Lead/Account/Contact/Deal details. Conversation is session-only (not persisted). If the provider is unconfigured, the UI shows an unavailable message; CRM still works.
 
 Reminders are scheduled by sending `reminderAt` to the backend; the SPA does not deliver email/SMS or run local reminder timers. Assignment notifications are polled (~45s) and stored on the server.

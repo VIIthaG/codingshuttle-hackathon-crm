@@ -1,4 +1,5 @@
 import { ActivityTimeline } from '../activity/ActivityTimeline'
+import { AskFlowAiButton } from '../assistant/AskFlowAiButton'
 import { Link } from 'react-router-dom'
 import type { Lead, LeadStatus } from '../../types/lead'
 import { allowedLeadTransitions, isTerminalLeadStatus } from '../../utils/leadTransitions'
@@ -210,6 +211,7 @@ export function LeadDetails({
           >
             + Call
           </button>
+          <AskFlowAiButton entityType="LEAD" entityId={lead.id} label={lead.fullName} />
           <button
             type="button"
             onClick={() => onEdit(lead)}

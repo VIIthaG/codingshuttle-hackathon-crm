@@ -67,4 +67,12 @@ public interface DealRepository extends JpaRepository<Deal, UUID>, JpaSpecificat
             """)
     BigDecimal sumAmountTimesProbabilityWhereOwnerAndStageNotIn(
             @Param("ownerId") UUID ownerId, @Param("stages") Collection<DealStage> stages);
+
+    List<Deal> findTop8ByStageNotInOrderByAmountDesc(Collection<DealStage> stages);
+
+    List<Deal> findTop8ByOwner_IdAndStageNotInOrderByAmountDesc(UUID ownerId, Collection<DealStage> stages);
+
+    List<Deal> findTop8ByAccount_IdOrderByAmountDesc(UUID accountId);
+
+    List<Deal> findTop8ByPrimaryContact_IdOrderByUpdatedAtDesc(UUID contactId);
 }

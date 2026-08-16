@@ -1,4 +1,5 @@
 import { ActivityTimeline } from '../activity/ActivityTimeline'
+import { AskFlowAiButton } from '../assistant/AskFlowAiButton'
 import { useState } from 'react'
 import type { Deal, DealStage } from '../../types/deal'
 import { allowedDealTransitions, formatDealStage, isTerminalDealStage } from '../../utils/dealTransitions'
@@ -144,6 +145,7 @@ export function DealDetails({
               + Call
             </button>
           ) : null}
+          <AskFlowAiButton entityType="DEAL" entityId={deal.id} label={deal.name} />
           <button
             type="button"
             onClick={() => onEdit(deal)}

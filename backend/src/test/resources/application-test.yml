@@ -49,3 +49,10 @@ app:
       enabled: false
       key: lock:flowcrm:outbox-publisher
       ttl-seconds: 30
+  ai:
+    enabled: false
+    api-key:
+    base-url: https://api.openai.com/v1
+    model: gpt-4o-mini
+    timeout-seconds: 5
+    max-output-tokens: 200

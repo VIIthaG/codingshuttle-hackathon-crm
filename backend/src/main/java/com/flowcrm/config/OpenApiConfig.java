@@ -21,7 +21,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("FlowCRM API")
                         .description(
-                                "Mini CRM backend with accounts, contacts, deals, lead conversion, meetings, calls, calendar, workqueue, global search, in-app notifications, analytics, lead pipeline management, follow-up tasks, reminders, "
+                                "Mini CRM backend with accounts, contacts, deals, lead conversion, meetings, calls, calendar, workqueue, global search, in-app notifications, analytics, optional Flow AI assistant, lead pipeline management, follow-up tasks, reminders, "
                                         + "durable idempotency, Redis caching/rate limiting/distributed locking, "
                                         + "transactional outbox, and RabbitMQ processing.")
                         .version("1.0.0"))
@@ -56,6 +56,10 @@ public class OpenApiConfig {
                                 .name("Analytics")
                                 .description(
                                         "Role-scoped lead/deal/activity analytics with UTC date windows; ADMIN team workload overview"),
+                        new Tag()
+                                .name("Flow AI")
+                                .description(
+                                        "Read-only, permission-aware CRM assistant. Optional external LLM; never mutates data"),
                         new Tag().name("Dashboard").description("Pipeline and task summary metrics"),
                         new Tag().name("Health").description("Service health check")));
     }

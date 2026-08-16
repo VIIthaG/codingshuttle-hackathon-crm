@@ -100,6 +100,14 @@ app:
       key: ${OUTBOX_LOCK_KEY:lock:flowcrm:outbox-publisher}
       ttl-seconds: ${OUTBOX_LOCK_TTL_SECONDS:30}
 
+  ai:
+    enabled: ${FLOW_AI_ENABLED:false}
+    api-key: ${FLOW_AI_API_KEY:}
+    base-url: ${FLOW_AI_BASE_URL:https://api.openai.com/v1}
+    model: ${FLOW_AI_MODEL:gpt-4o-mini}
+    timeout-seconds: ${FLOW_AI_TIMEOUT_SECONDS:20}
+    max-output-tokens: ${FLOW_AI_MAX_OUTPUT_TOKENS:1000}
+
 logging:
   level:
     org.springframework.security: INFO
@@ -108,3 +116,4 @@ logging:
     com.flowcrm.dashboard: INFO
     com.flowcrm.ratelimit: INFO
     com.flowcrm.lock: INFO
+    com.flowcrm.assistant: INFO

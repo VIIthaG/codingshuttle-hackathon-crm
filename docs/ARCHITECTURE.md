@@ -11,7 +11,7 @@ Related diagram source: [architecture.mmd](architecture.mmd)
 FlowCRM is a **modular monolith**:
 
 - One Spring Boot process (`backend/`)
-- Package boundaries by domain (`auth`, `account`, `contact`, `lead`, `deal`, `task`, `activity`, `analytics`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
+- Package boundaries by domain (`auth`, `account`, `contact`, `lead`, `deal`, `task`, `activity`, `analytics`, `assistant`, `dashboard`, `outbox`, `reminder`, `idempotency`, `ratelimit`, `lock`, …)
 - Shared PostgreSQL as the durable system of record
 - Redis for cache / rate-limit / distributed lock
 - RabbitMQ for asynchronous reminder processing
@@ -151,6 +151,8 @@ It is **not** an immutable audit log and does **not** reconstruct unsaved status
 `GET /api/v1/search?q=` is role-scoped global search (min 2 characters, bounded results, no user search). Security filters are applied in the query, not after fetch.
 
 `GET /api/v1/analytics/summary` is role-scoped aggregation (JPQL counts/sums, not loading every CRM row into memory for totals). Date windows are UTC: `from <= created_at < toExclusive`. Presets: `7d`, `30d` (default), `90d`, `all`. Lead conversion rate is `converted / (converted + lost)` on the **current** status of the created-at cohort (0 if the denominator is 0). Conversion trend uses `converted_at`. Deal pipeline/weighted values are the **current** snapshot; FlowCRM does **not** store stage-change history, so charts never claim historical funnel transitions. Weighted pipeline = `sum(open amount × probability / 100)`. `SALES_REP` sees only own assigned/owned records; `assignedTo` for another user is 403. ADMIN default is the whole team; optional `assignedTo` narrows results. The ADMIN `team` array is an operational workload/pipeline overview, not a performance score. Analytics responses are **not** Redis-cached (dashboard summary remains the cached hot path).
+
+`POST /api/v1/assistant/chat` is Flow AI: a **read-only** assistant. `AssistantContextBuilder` loads dashboard, 30-day analytics, workqueue, and optional LEAD/ACCOUNT/CONTACT/DEAL context using the same service-layer access checks as the rest of the API. A compact prompt is sent to an `AiClient` (OpenAI-compatible HTTP when `FLOW_AI_ENABLED` and `FLOW_AI_API_KEY` are set; otherwise a disabled client). The LLM never receives a repository, JWT, or password hash. CRM field text is wrapped as untrusted `BEGIN CRM DATA` / `END CRM DATA`. There is no conversation table, no Redis cache of answers, and no RabbitMQ path. If the provider is missing or fails, HTTP 503 is returned and the rest of the CRM is unchanged.
 
 In-app notifications (`GET /api/v1/notifications`) are written in the **same PostgreSQL transaction** as assignment mutations. They do **not** use the outbox or RabbitMQ. Task reminder delivery remains the only RabbitMQ/outbox path.
 

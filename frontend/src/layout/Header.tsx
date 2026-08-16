@@ -1,6 +1,7 @@
-import { LogOut, Menu } from 'lucide-react'
+import { LogOut, Menu, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../auth/useAuth'
+import { useFlowAi } from '../assistant/flow-ai-context'
 import { GlobalSearch } from './GlobalSearch'
 import { NotificationBell } from './NotificationBell'
 import { QuickCreateMenu } from './QuickCreateMenu'
@@ -12,6 +13,7 @@ type HeaderProps = {
 
 export function Header({ title, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth()
+  const { openGlobal } = useFlowAi()
   const [toast, setToast] = useState<string | null>(null)
 
   function showToast(message: string) {
@@ -36,6 +38,14 @@ export function Header({ title, onMenuClick }: HeaderProps) {
       <GlobalSearch />
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <QuickCreateMenu onCreated={showToast} />
+        <button
+          type="button"
+          onClick={openGlobal}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-100 bg-brand-50 px-2.5 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 sm:px-3"
+        >
+          <Sparkles className="h-4 w-4" aria-hidden />
+          <span className="hidden sm:inline">Flow AI</span>
+        </button>
         <NotificationBell />
         <div className="hidden text-right lg:block">
           <div className="text-sm font-medium text-ink">{user?.fullName}</div>

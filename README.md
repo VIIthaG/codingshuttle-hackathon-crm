@@ -31,6 +31,7 @@ FlowCRM is a **modular Spring Boot backend** (not a microservices split) that us
 | Scheduled reminders | Reminder times become durable outbox events, then RabbitMQ work (delivery is log-simulated) |
 | Dashboard summary | Per-user aggregates (leads, deals/pipeline value, open/overdue tasks, upcoming follow-ups) in API + SPA |
 | Analytics | Role-scoped lead/deal/activity metrics, UTC date presets, ADMIN team workload table (`GET /api/v1/analytics/summary`); uncached |
+| Flow AI | Optional read-only CRM assistant (`POST /api/v1/assistant/chat`). Context is built server-side with existing role scoping. The LLM never queries the database or mutates records. |
 
 **First-user behavior:** the first registered account becomes `ADMIN`; later registrations become `SALES_REP`.
 
@@ -308,7 +309,15 @@ Defaults in `backend/src/main/resources/application.yml` match Compose. Override
 ```powershell
 $env:DB_URL = "jdbc:postgresql://127.0.0.1:5433/flowcrm"
 $env:JWT_SECRET = "replace-with-a-long-local-secret"
+$env:FLOW_AI_ENABLED = "false"
+$env:FLOW_AI_API_KEY = "your-key-here"
+$env:FLOW_AI_BASE_URL = "https://api.openai.com/v1"
+$env:FLOW_AI_MODEL = "gpt-4o-mini"
+$env:FLOW_AI_TIMEOUT_SECONDS = "20"
+$env:FLOW_AI_MAX_OUTPUT_TOKENS = "1000"
 ```
+
+Flow AI is **optional**. Leave `FLOW_AI_ENABLED=false` (default) if you have no provider key. The CRM still starts; `POST /api/v1/assistant/chat` returns HTTP 503 with a friendly message. Do not put real API keys in the repo.
 
 ### 3. Run the backend
 

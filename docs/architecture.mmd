@@ -12,6 +12,7 @@ flowchart TB
     CON[ReminderConsumer]
     API --> SVC
     SVC --> OUT
+    SVC -->|optional Flow AI| AIC[AiClient HTTP provider]
     PUB -->|poll due PENDING| PG[(PostgreSQL)]
     PUB -->|publish| RMQ
     CON -->|consume| RMQ
@@ -46,6 +47,8 @@ flowchart TB
   RD --- C[dashboard-summary cache]
   RD --- R[login rate-limit counters]
   RD --- K["lock:flowcrm:outbox-publisher"]
+
+  AIC -.->|only if FLOW_AI_ENABLED and key set| LLM[External LLM]
 
   RMQ --- Q1[flowcrm.reminders.queue]
   RMQ --- Q2[flowcrm.reminders.retry.queue]

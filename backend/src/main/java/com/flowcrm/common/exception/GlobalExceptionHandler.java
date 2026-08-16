@@ -72,6 +72,11 @@ public class GlobalExceptionHandler {
                 .body(body);
     }
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleUnavailable(ServiceUnavailableException ex) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", ex.getMessage(), null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         log.error("Unhandled exception", ex);

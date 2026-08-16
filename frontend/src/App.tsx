@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import { useAuth } from './auth/useAuth'
@@ -5,7 +6,7 @@ import { GuestRoute } from './auth/GuestRoute'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { AppShell } from './layout/AppShell'
 import { DashboardPage } from './pages/DashboardPage'
-import { AnalyticsPage } from './pages/AnalyticsPage'
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })))
 import { AccountsPage } from './pages/AccountsPage'
 import { ContactsPage } from './pages/ContactsPage'
 import { DealsPage } from './pages/DealsPage'
@@ -45,7 +46,14 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route
+              path="/analytics"
+              element={
+                <Suspense fallback={<p className="text-sm text-muted">Loading analytics…</p>}>
+                  <AnalyticsPage />
+                </Suspense>
+              }
+            />
             <Route path="/accounts" element={<AccountsPage />} />
             <Route path="/contacts" element={<ContactsPage />} />
             <Route path="/deals" element={<DealsPage />} />

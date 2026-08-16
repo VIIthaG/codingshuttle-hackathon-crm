@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface ContactRepository extends JpaRepository<Contact, UUID>, JpaSpecificationExecutor<Contact> {
 
     long countByAccountId(UUID accountId);
+
+    java.util.List<Contact> findTop8ByAccount_IdOrderByLastNameAsc(UUID accountId);
 }
